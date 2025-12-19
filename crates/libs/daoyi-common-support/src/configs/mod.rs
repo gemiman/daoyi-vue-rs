@@ -1,4 +1,5 @@
 pub mod server_config;
+mod log_config;
 
 use anyhow::{Context, anyhow};
 use config::{Config, FileFormat};
