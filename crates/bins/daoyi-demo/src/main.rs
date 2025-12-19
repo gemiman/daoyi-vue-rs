@@ -1,13 +1,15 @@
 use axum::{Router, debug_handler, routing};
+use daoyi_common_support::configs::AppConfig;
 use daoyi_common_support::logger::{self, log};
 use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() {
-    logger::init();
+    logger::init().await;
+    let port = AppConfig::get().await.server().port();
     let router = Router::new().route("/", routing::get(index));
 
-    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = TcpListener::bind(format!("0.0.0.0:{port}")).await.unwrap();
 
     log::info!(
         "Server is listening on: http://{}",
