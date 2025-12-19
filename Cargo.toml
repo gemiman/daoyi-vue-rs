@@ -14,8 +14,11 @@ authors = ["Gemiman <<gemiman@vip.qq.com>>"]
 readme = "README.md"
 
 [workspace.dependencies]
+daoyi-common-support = { version = "0.1.0", path = "./crates/libs/daoyi-common-support" }
 axum = { version = "0.8.7", features = ["macros"] }
 tokio = { version = "1.48.0", features = ["full"] }
+tracing = { version = "0.1.44", features = ["async-await"] }
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "chrono"] }
 
 [package]
 name = "daoyi-vue-rs"
