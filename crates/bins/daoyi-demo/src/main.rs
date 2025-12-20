@@ -12,7 +12,7 @@ async fn main() -> anyhow::Result<()> {
 
     let listener = TcpListener::bind(format!("0.0.0.0:{port}")).await?;
 
-    log::info!("Server is listening on: http://{}", listener.local_addr()?);
+    log::info!("Server is listening on: http://127.0.0.1:{}", port);
 
     axum::serve(listener, router).await?;
     Ok(())
