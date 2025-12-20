@@ -17,8 +17,8 @@ impl LogConfig {
         self.dir.as_deref().unwrap_or("./logs")
     }
 
-    pub fn filename(&self) -> &str {
-        self.filename.as_deref().unwrap_or("app.log")
+    pub fn filename(&self) -> Option<&str> {
+        self.filename.as_deref()
     }
 
     /// 获取日志滚动策略: daily, hourly, minutely, never

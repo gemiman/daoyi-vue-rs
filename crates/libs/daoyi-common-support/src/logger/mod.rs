@@ -1,19 +1,26 @@
 use crate::configs::AppConfig;
 pub use tracing as log;
 use tracing_appender::{non_blocking, rolling};
-use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
+use tracing_subscriber::EnvFilter;
 
 pub async fn init() {
-    let log_config = AppConfig::get().await.log();
+    let app_config = AppConfig::get().await;
+    let log_config = app_config.log();
 
     // 根据配置创建文件 appender
+    let filename = log_config.filename().unwrap_or(app_config.app_name());
+    let filename = if !filename.ends_with(".log") {
+        format!("{}.log", filename)
+    } else {
+        filename.to_string()
+    };
     let file_appender = match log_config.rolling() {
-        "hourly" => rolling::hourly(log_config.dir(), log_config.filename()),
-        "minutely" => rolling::minutely(log_config.dir(), log_config.filename()),
-        "never" => rolling::never(log_config.dir(), log_config.filename()),
-        _ => rolling::daily(log_config.dir(), log_config.filename()), // 默认按天分割
+        "hourly" => rolling::hourly(log_config.dir(), filename),
+        "minutely" => rolling::minutely(log_config.dir(), filename),
+        "never" => rolling::never(log_config.dir(), filename),
+        _ => rolling::daily(log_config.dir(), filename), // 默认按天分割
     };
 
     // 创建非阻塞写入器

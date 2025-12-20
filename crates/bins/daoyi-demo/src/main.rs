@@ -4,19 +4,18 @@ use daoyi_common_support::logger::{self, log};
 use tokio::net::TcpListener;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> anyhow::Result<()> {
+    AppConfig::load(env!("CARGO_PKG_NAME")).await?;
     logger::init().await;
     let port = AppConfig::get().await.server().port();
     let router = Router::new().route("/", routing::get(index));
 
-    let listener = TcpListener::bind(format!("0.0.0.0:{port}")).await.unwrap();
+    let listener = TcpListener::bind(format!("0.0.0.0:{port}")).await?;
 
-    log::info!(
-        "Server is listening on: http://{}",
-        listener.local_addr().unwrap()
-    );
+    log::info!("Server is listening on: http://{}", listener.local_addr()?);
 
-    axum::serve(listener, router).await.unwrap();
+    axum::serve(listener, router).await?;
+    Ok(())
 }
 
 #[debug_handler]

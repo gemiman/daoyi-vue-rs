@@ -11,4 +11,5 @@ readme.workspace = true
 [dependencies]
 axum.workspace = true
 tokio.workspace = true
+anyhow.workspace = true
 daoyi-common-support.workspace = true
