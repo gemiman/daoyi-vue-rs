@@ -15,7 +15,7 @@ readme = "README.md"
 
 [workspace.dependencies]
 daoyi-common-support = { version = "0.1.0", path = "./crates/libs/daoyi-common-support" }
-axum = { version = "0.8.7", features = ["macros"] }
+axum = { version = "0.8.8", features = ["macros"] }
 tokio = { version = "1.48.0", features = ["full"] }
 tracing = { version = "0.1.44", features = ["async-await"] }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "chrono"] }
@@ -24,7 +24,7 @@ config = { version = "0.15.19", features = ["yaml"] }
 serde = { version = "1.0.228", features = ["derive"] }
 anyhow = { version = "1.0.100" }
 merge = { version = "0.2.0" }
-sea-orm = { version = "2.0.0-rc.21", features = ["with-chrono", "debug-print", "sqlx-postgres", "with-rust_decimal", "runtime-tokio"] }
+sea-orm = { version = "1.1.19", features = ["with-chrono", "debug-print", "sqlx-postgres", "with-rust_decimal", "runtime-tokio"] }
 
 [package]
 name = "daoyi-vue-rs"
