@@ -24,6 +24,7 @@ config = { version = "0.15.19", features = ["yaml"] }
 serde = { version = "1.0.228", features = ["derive"] }
 anyhow = { version = "1.0.100" }
 merge = { version = "0.2.0" }
+sea-orm = { version = "2.0.0-rc.21", features = ["with-chrono", "debug-print", "sqlx-postgres", "with-rust_decimal", "runtime-tokio"] }
 
 [package]
 name = "daoyi-vue-rs"

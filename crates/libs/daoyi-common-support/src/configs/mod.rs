@@ -1,7 +1,10 @@
+pub mod database_config;
 pub mod log_config;
 pub mod server_config;
+
 use anyhow::{Context, anyhow};
 use config::{Config, FileFormat};
+pub use database_config::DatabaseConfig;
 pub use log_config::LogConfig;
 use merge::Merge;
 use serde::Deserialize;
@@ -12,6 +15,8 @@ use tokio::sync::OnceCell;
 static APP_CONFIG: OnceCell<AppConfig> = OnceCell::const_new();
 static DEFAULT_SERVER_CONFIG: LazyLock<ServerConfig> = LazyLock::new(|| ServerConfig::default());
 static DEFAULT_LOG_CONFIG: LazyLock<LogConfig> = LazyLock::new(|| LogConfig::default());
+static DEFAULT_DATABASE_CONFIG: LazyLock<DatabaseConfig> =
+    LazyLock::new(|| DatabaseConfig::default());
 
 #[derive(Debug, Deserialize, Merge, Default)]
 pub struct AppConfig {
@@ -23,6 +28,8 @@ pub struct AppConfig {
     server: Option<ServerConfig>,
     #[merge(strategy = merge::option::recurse)]
     log: Option<LogConfig>,
+    #[merge(strategy = merge::option::recurse)]
+    database: Option<DatabaseConfig>,
 }
 
 impl AppConfig {
@@ -37,6 +44,9 @@ impl AppConfig {
     }
     pub fn log(&self) -> &LogConfig {
         self.log.as_ref().unwrap_or(&DEFAULT_LOG_CONFIG)
+    }
+    pub fn database(&self) -> &DatabaseConfig {
+        self.database.as_ref().unwrap_or(&DEFAULT_DATABASE_CONFIG)
     }
     pub async fn load(app_name: &str) -> anyhow::Result<()> {
         let app_config = APP_CONFIG.get();
@@ -75,7 +85,8 @@ impl AppConfig {
         // 4. {app_name}-{profile}.yaml
         init_config = merge_config(
             init_config,
-            load_one_config_file(&format!("{}/{}-{}", config_dir, app_name, active_profile)).await?,
+            load_one_config_file(&format!("{}/{}-{}", config_dir, app_name, active_profile))
+                .await?,
         );
 
         // 5. 环境变量配置
@@ -89,10 +100,7 @@ impl AppConfig {
             .build()
             .and_then(|c| c.try_deserialize::<AppConfig>())
         {
-            init_config = merge_config(
-                init_config,
-                Some(env_config),
-            );
+            init_config = merge_config(init_config, Some(env_config));
         }
         init_config.name = Some(app_name.to_string());
         init_config.active_profile = Some(active_profile);
