@@ -1,8 +1,10 @@
+use merge::Merge;
 use serde::Deserialize;
 
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Merge)]
 pub struct ServerConfig {
+    #[merge(strategy = merge::option::overwrite_none)]
     port: Option<u16>,
 }
 

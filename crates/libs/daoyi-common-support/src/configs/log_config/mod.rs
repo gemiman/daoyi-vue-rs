@@ -1,10 +1,15 @@
+use merge::Merge;
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize, Default)]
+#[derive(Debug, Deserialize, Default, Merge)]
 pub struct LogConfig {
+    #[merge(strategy = merge::option::overwrite_none)]
     level: Option<String>,
+    #[merge(strategy = merge::option::overwrite_none)]
     dir: Option<String>,
+    #[merge(strategy = merge::option::overwrite_none)]
     filename: Option<String>,
+    #[merge(strategy = merge::option::overwrite_none)]
     rolling: Option<String>,
 }
 
