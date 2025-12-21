@@ -4,6 +4,8 @@ use serde::Deserialize;
 #[derive(Debug, Deserialize, Default, Merge)]
 pub struct DatabaseConfig {
     #[merge(strategy = merge::option::overwrite_none)]
+    driver: Option<String>,
+    #[merge(strategy = merge::option::overwrite_none)]
     host: Option<String>,
     #[merge(strategy = merge::option::overwrite_none)]
     port: Option<u16>,
@@ -18,6 +20,9 @@ pub struct DatabaseConfig {
 }
 
 impl DatabaseConfig {
+    pub fn driver(&self) -> &str {
+        self.driver.as_deref().unwrap_or("postgres")
+    }
     pub fn host(&self) -> &str {
         self.host.as_deref().unwrap_or("127.0.0.1")
     }
