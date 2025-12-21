@@ -1,5 +1,5 @@
 [package]
-name = "daoyi-demo"
+name = "daoyi-entity-demo"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,9 +9,5 @@ authors.workspace = true
 readme.workspace = true
 
 [dependencies]
-axum.workspace = true
-tokio.workspace = true
-anyhow.workspace = true
-daoyi-common-support.workspace = true
-daoyi-entity-demo.workspace = true
 sea-orm.workspace = true
+serde.workspace = true
