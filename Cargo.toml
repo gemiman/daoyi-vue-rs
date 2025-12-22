@@ -16,6 +16,7 @@ readme = "README.md"
 [workspace.dependencies]
 daoyi-common-support = { version = "0.1.0", path = "./crates/libs/daoyi-common-support" }
 daoyi-entity-demo = { version = "0.1.0", path = "./crates/libs/daoyi-entity-demo" }
+daoyi-api-demo = { version = "0.1.0", path = "./crates/libs/daoyi-api-demo" }
 axum = { version = "0.8.8", features = ["macros"] }
 tokio = { version = "1.48.0", features = ["full"] }
 tracing = { version = "0.1.44", features = ["async-await"] }

@@ -1,7 +1,7 @@
 use crate::app::AppState;
 use crate::configs::ServerConfig;
 use crate::logger::log;
-use axum::Router;
+use axum::{Router, debug_handler, routing};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
@@ -14,11 +14,7 @@ impl Server {
         Server { config }
     }
 
-    pub async fn start(
-        &self,
-        state: AppState,
-        router: Router<AppState>,
-    ) -> anyhow::Result<()> {
+    pub async fn start(&self, state: AppState, router: Router<AppState>) -> anyhow::Result<()> {
         let router = self.build_router(state, router);
         let port = self.config.port();
         let listener = TcpListener::bind(format!("0.0.0.0:{port}",)).await?;
@@ -32,6 +28,14 @@ impl Server {
     }
 
     fn build_router(&self, state: AppState, router: Router<AppState>) -> Router {
-        Router::new().merge(router).with_state(state)
+        Router::new()
+            .route("/", routing::get(index))
+            .merge(router)
+            .with_state(state)
     }
+}
+
+#[debug_handler]
+async fn index() -> &'static str {
+    "Hello, Daoyi Vue Rust!"
 }
