@@ -1,5 +1,5 @@
-use axum::response::IntoResponse;
 use crate::error::ApiError;
+use axum::response::IntoResponse;
 use serde::{Deserialize, Serialize};
 
 pub type ApiResult<T> = Result<ApiResponse<T>, ApiError>;
@@ -10,6 +10,7 @@ pub struct ApiResponse<T> {
     message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<T>,
+    success: bool,
 }
 
 impl<T> IntoResponse for ApiResponse<T>
@@ -22,21 +23,21 @@ where
     }
 }
 
-
 impl<T> ApiResponse<T> {
-    pub fn new(code: i32, message: String, data: Option<T>) -> Self {
+    pub fn new<M: AsRef<str>>(code: i32, message: M, data: Option<T>) -> Self {
         ApiResponse {
             code,
-            message,
+            message: String::from(message.as_ref()),
             data,
+            success: code == 0,
         }
     }
 
     pub fn ok(data: Option<T>) -> Self {
-        ApiResponse::new(0, String::from("OK"), data)
+        ApiResponse::new(0, "", data)
     }
 
-    pub fn err(message: String) -> Self {
+    pub fn err<M: AsRef<str>>(message: M) -> Self {
         ApiResponse::new(1, message, None)
     }
 }

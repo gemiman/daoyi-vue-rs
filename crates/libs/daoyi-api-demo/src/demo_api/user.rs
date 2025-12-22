@@ -1,7 +1,7 @@
 use axum::extract::State;
-use axum::response::IntoResponse;
 use axum::{debug_handler, routing, Router};
 use daoyi_common_support::app::AppState;
+use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
 use sea_orm::prelude::*;
@@ -12,7 +12,7 @@ pub fn create_router() -> Router<AppState> {
 }
 
 #[debug_handler]
-async fn query_users(State(AppState { db }): State<AppState>) -> impl IntoResponse {
+async fn query_users(State(AppState { db }): State<AppState>) -> ApiResult<Vec<sys_user::Model>> {
     let users = SysUser::find()
         .filter(
             Condition::all()
@@ -27,5 +27,5 @@ async fn query_users(State(AppState { db }): State<AppState>) -> impl IntoRespon
         .all(&db)
         .await
         .unwrap();
-    axum::Json(users)
+    Ok(ApiResponse::ok(Some(users)))
 }
