@@ -20,3 +20,4 @@ merge.workspace = true
 sea-orm.workspace = true
 num_cpus.workspace = true
 axum.workspace = true
+thiserror.workspace = true

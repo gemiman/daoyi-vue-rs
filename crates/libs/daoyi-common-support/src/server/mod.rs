@@ -1,6 +1,8 @@
 use crate::app::AppState;
 use crate::configs::ServerConfig;
+use crate::error::ApiError;
 use crate::logger::log;
+use crate::response::ApiResult;
 use axum::{Router, debug_handler, routing};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
@@ -31,10 +33,17 @@ impl Server {
         Router::new()
             .route("/", routing::get(index))
             .merge(router)
+            .fallback(async || -> ApiResult<()> {
+                log::warn!("Not found");
+                Err(ApiError::NotFound)
+            })
+            .method_not_allowed_fallback(async || -> ApiResult<()> {
+                log::warn!("Method not allowed");
+                Err(ApiError::MethodNotAllowed)
+            })
             .with_state(state)
     }
 }
-
 #[debug_handler]
 async fn index() -> &'static str {
     "Hello, Daoyi Vue Rust!"
