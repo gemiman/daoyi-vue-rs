@@ -34,7 +34,7 @@ impl<T> ApiResponse<T> {
     }
 
     pub fn ok(data: Option<T>) -> Self {
-        ApiResponse::new(0, "", data)
+        ApiResponse::new(0, "ok", data)
     }
 
     pub fn err<M: AsRef<str>>(message: M) -> Self {
