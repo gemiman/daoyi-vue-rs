@@ -1,7 +1,6 @@
 use crate::app::AppState;
 use crate::configs::ServerConfig;
 use crate::error::ApiError;
-use crate::logger::log;
 use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::ApiResult;
 use axum::extract::Request;
@@ -23,7 +22,7 @@ impl Server {
         let router = self.build_router(state, router).await;
         let port = self.config.port();
         let listener = TcpListener::bind(format!("0.0.0.0:{port}",)).await?;
-        log::info!("Server is listening on: http://127.0.0.1:{port}",);
+        tracing::info!("Server is listening on: http://127.0.0.1:{port}",);
         axum::serve(
             listener,
             router.into_make_service_with_connect_info::<SocketAddr>(),
@@ -48,11 +47,11 @@ impl Server {
             .merge(router)
             .layer(tracing)
             .fallback(async || -> ApiResult<()> {
-                log::warn!("Not found");
+                tracing::warn!("Not found");
                 Err(ApiError::NotFound)
             })
             .method_not_allowed_fallback(async || -> ApiResult<()> {
-                log::warn!("Method not allowed");
+                tracing::warn!("Method not allowed");
                 Err(ApiError::MethodNotAllowed)
             })
             .with_state(state)

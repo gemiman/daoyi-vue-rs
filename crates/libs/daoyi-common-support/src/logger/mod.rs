@@ -1,5 +1,4 @@
 use crate::configs::AppConfig;
-pub use tracing as log;
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;

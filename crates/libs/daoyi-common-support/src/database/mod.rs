@@ -1,5 +1,4 @@
 use crate::configs::AppConfig;
-use crate::logger::log;
 use sea_orm::{
     ConnectOptions, ConnectionTrait, Database, DatabaseConnection, DbBackend, Statement,
 };
@@ -29,7 +28,7 @@ pub async fn init() -> anyhow::Result<DatabaseConnection> {
         .set_schema_search_path(database_config.schema());
     let db = Database::connect(options).await?;
     db.ping().await?;
-    log::info!("Database connection established");
+    tracing::info!("Database connection established");
     log_database_version(&db).await?;
     Ok(db)
 }
@@ -42,7 +41,7 @@ async fn log_database_version(db: &DatabaseConnection) -> anyhow::Result<()> {
         ))
         .await?
         .ok_or_else(|| anyhow::anyhow!("Database version unknown"))?;
-    log::info!(
+    tracing::info!(
         "Database version: {}",
         version_result.try_get_by_index::<String>(0)?
     );

@@ -13,7 +13,9 @@ pub fn create_router() -> Router<AppState> {
 }
 
 #[debug_handler]
+#[tracing::instrument(name = "Query users", skip_all, fields(pay_method = "alipay"))]
 async fn query_users(State(AppState { db }): State<AppState>) -> ApiResult<Vec<sys_user::Model>> {
+    tracing::warn!("出错了吗？");
     let users = SysUser::find()
         .filter(
             Condition::all()
