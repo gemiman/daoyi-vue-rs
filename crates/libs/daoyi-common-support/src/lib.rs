@@ -1,8 +1,10 @@
-pub mod logger;
+pub mod app;
 pub mod configs;
 pub mod database;
-pub mod app;
-pub mod server;
 pub mod error;
-pub mod response;
+pub mod logger;
 pub mod middlewares;
+pub mod models;
+pub mod response;
+pub mod serde;
+pub mod server;

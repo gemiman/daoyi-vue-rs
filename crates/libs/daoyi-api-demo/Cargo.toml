@@ -15,3 +15,4 @@ daoyi-entity-demo.workspace = true
 sea-orm.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
+serde.workspace = true

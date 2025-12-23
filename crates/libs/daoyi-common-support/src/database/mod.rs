@@ -1,11 +1,18 @@
 use crate::configs::AppConfig;
+use anyhow::{Context, anyhow};
 use sea_orm::{
     ConnectOptions, ConnectionTrait, Database, DatabaseConnection, DbBackend, Statement,
 };
 use std::cmp::max;
 use std::time::Duration;
+use tokio::sync::OnceCell;
 
-pub async fn init() -> anyhow::Result<DatabaseConnection> {
+static DB_CONN: OnceCell<DatabaseConnection> = OnceCell::const_new();
+
+pub async fn init() -> anyhow::Result<()> {
+    if DB_CONN.get().is_some() {
+        return Ok(());
+    }
     let cpus = num_cpus::get() as u32;
     let database_config = AppConfig::get().await.database();
     let mut options = ConnectOptions::new(format!(
@@ -28,9 +35,17 @@ pub async fn init() -> anyhow::Result<DatabaseConnection> {
         .set_schema_search_path(database_config.schema());
     let db = Database::connect(options).await?;
     db.ping().await?;
-    tracing::info!("Database connection established");
+    tracing::info!("Database connection successful");
     log_database_version(&db).await?;
-    Ok(db)
+    DB_CONN
+        .set(db)
+        .with_context(|| anyhow!("Failed to set database config"))?;
+    Ok(())
+}
+pub async fn get() -> &'static DatabaseConnection {
+    DB_CONN
+        .get()
+        .unwrap_or_else(|| panic!("Failed to load database config"))
 }
 
 async fn log_database_version(db: &DatabaseConnection) -> anyhow::Result<()> {

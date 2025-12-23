@@ -1,15 +1,51 @@
 use anyhow::Context;
-use axum::extract::State;
+use axum::extract::{Query, State};
 use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
+use daoyi_common_support::database;
+use daoyi_common_support::models::pagination::{Page, PaginationParams};
 use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
-use sea_orm::Condition;
 use sea_orm::prelude::*;
+use sea_orm::{Condition, QueryOrder, QueryTrait};
+use serde::Deserialize;
 
 pub fn create_router() -> Router<AppState> {
-    Router::new().route("/list", routing::get(query_users))
+    Router::new()
+        .route("/list", routing::get(query_users))
+        .route("/page", routing::get(find_page))
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserQueryParams {
+    keyword: Option<String>,
+    #[serde(flatten)]
+    pagination: PaginationParams,
+}
+
+#[debug_handler]
+async fn find_page(
+    Query(UserQueryParams {
+        keyword,
+        pagination,
+    }): Query<UserQueryParams>,
+) -> ApiResult<Page<sys_user::Model>> {
+    let paginator = SysUser::find()
+        .apply_if(keyword.as_ref(), |query, keyword| {
+            query.filter(
+                Condition::any()
+                    .add(sys_user::Column::Name.contains(keyword))
+                    .add(sys_user::Column::MobilePhone.contains(keyword)),
+            )
+        })
+        .order_by_desc(sys_user::Column::CreatedAt)
+        .paginate(database::get().await, pagination.size);
+    let total = paginator.num_items().await?;
+    let users = paginator.fetch_page(pagination.page - 1).await?;
+    let page = Page::from_pagination(pagination, total, users);
+    Ok(ApiResponse::ok(Some(page)))
 }
 
 #[debug_handler]
@@ -27,7 +63,7 @@ async fn query_users(State(AppState { db }): State<AppState>) -> ApiResult<Vec<s
                         .add(sys_user::Column::Name.contains("王")),
                 ),
         )
-        .all(&db)
+        .all(db)
         .await
         .context("Fail to query users")?;
     Ok(ApiResponse::ok(Some(users)))

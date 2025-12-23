@@ -6,11 +6,11 @@ use tracing::log;
 
 #[derive(Clone)]
 pub struct AppState {
-    pub db: DatabaseConnection,
+    pub db: &'static DatabaseConnection,
 }
 
 impl AppState {
-    pub fn new(db: DatabaseConnection) -> Self {
+    pub fn new(db: &'static DatabaseConnection) -> Self {
         Self { db }
     }
 }
@@ -19,8 +19,8 @@ pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Re
     AppConfig::load(app_name.unwrap_or("app")).await?;
     logger::init().await;
     log::info!("Starting app server...");
-    let db = database::init().await?;
-    let state = AppState::new(db);
+    database::init().await?;
+    let state = AppState::new(database::get().await);
     let server = server::Server::new(AppConfig::get().await.server());
     server.start(state, router).await
 }
