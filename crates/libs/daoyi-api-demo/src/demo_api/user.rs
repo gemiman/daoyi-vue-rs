@@ -15,7 +15,7 @@ use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
 use daoyi_entity_demo::demo_entity::sys_user::ActiveModel;
 use sea_orm::prelude::*;
-use sea_orm::{ActiveValue, Condition, IntoActiveModel, QueryOrder, QueryTrait};
+use sea_orm::{ActiveValue, Condition, IntoActiveModel, QueryOrder, QueryTrait, Unchanged};
 use serde::Deserialize;
 use validator::Validate;
 
@@ -58,20 +58,22 @@ async fn update(
     ValidJson(params): ValidJson<UserParams>,
 ) -> ApiResult<sys_user::Model> {
     let db = database::get().await;
-    let existed_user = SysUser::find_by_id(id)
+    let mut existed_active_model = SysUser::find_by_id(&id)
         .one(db)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?;
+        .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?
+        .into_active_model();
+    let old_password = existed_active_model.password.clone();
     let password = params.password.clone();
-    let mut active_model = params.into_active_model();
-    active_model.id = ActiveValue::Unchanged(existed_user.id);
+    let active_model = params.into_active_model();
+    existed_active_model.clone_from(&active_model);
+    existed_active_model.id = Unchanged(id);
     if password.is_empty() {
-        active_model.password = ActiveValue::Unchanged(existed_user.password);
+        existed_active_model.password = ActiveValue::Unchanged(old_password.unwrap());
     } else {
-        active_model.password =
-            ActiveValue::Set(hash_password(active_model.password.as_ref()).await?);
+        existed_active_model.password = ActiveValue::Set(hash_password(password.as_ref()).await?);
     }
-    let model = active_model.update(db).await?;
+    let model = existed_active_model.update(db).await?;
     Ok(ApiResponse::ok(Some(model)))
 }
 
