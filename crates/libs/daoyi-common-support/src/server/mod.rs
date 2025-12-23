@@ -1,13 +1,14 @@
 use crate::app::AppState;
-use crate::configs::{AppConfig, ServerConfig};
+use crate::configs::ServerConfig;
 use crate::error::ApiError;
 use crate::logger::log;
+use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::ApiResult;
 use axum::extract::Request;
-use axum::{debug_handler, routing, Router};
+use axum::{Router, debug_handler, routing};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
-use tower_http::trace::{DefaultOnResponse, TraceLayer};
+use tower_http::trace::TraceLayer;
 
 pub struct Server {
     config: &'static ServerConfig,
@@ -32,7 +33,6 @@ impl Server {
     }
 
     async fn build_router(&self, state: AppState, router: Router<AppState>) -> Router {
-        let log_config = AppConfig::get().await.log();
         let tracing = TraceLayer::new_for_http()
             .make_span_with(|request: &Request| {
                 let method = request.method();
@@ -42,7 +42,7 @@ impl Server {
             })
             .on_request(())
             .on_failure(())
-            .on_response(DefaultOnResponse::new().level(log_config.tracing_level()));
+            .on_response(LatencyOnResponse);
         Router::new()
             .route("/", routing::get(index))
             .merge(router)

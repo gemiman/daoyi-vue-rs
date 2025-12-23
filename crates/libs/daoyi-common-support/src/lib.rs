@@ -5,3 +5,4 @@ pub mod app;
 pub mod server;
 pub mod error;
 pub mod response;
+pub mod middlewares;
