@@ -1,11 +1,13 @@
 use crate::app::AppState;
-use crate::configs::ServerConfig;
+use crate::configs::{AppConfig, ServerConfig};
 use crate::error::ApiError;
 use crate::logger::log;
 use crate::response::ApiResult;
-use axum::{Router, debug_handler, routing};
+use axum::extract::Request;
+use axum::{debug_handler, routing, Router};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
+use tower_http::trace::{DefaultOnResponse, TraceLayer};
 
 pub struct Server {
     config: &'static ServerConfig,
@@ -17,7 +19,7 @@ impl Server {
     }
 
     pub async fn start(&self, state: AppState, router: Router<AppState>) -> anyhow::Result<()> {
-        let router = self.build_router(state, router);
+        let router = self.build_router(state, router).await;
         let port = self.config.port();
         let listener = TcpListener::bind(format!("0.0.0.0:{port}",)).await?;
         log::info!("Server is listening on: http://127.0.0.1:{port}",);
@@ -29,10 +31,22 @@ impl Server {
         Ok(())
     }
 
-    fn build_router(&self, state: AppState, router: Router<AppState>) -> Router {
+    async fn build_router(&self, state: AppState, router: Router<AppState>) -> Router {
+        let log_config = AppConfig::get().await.log();
+        let tracing = TraceLayer::new_for_http()
+            .make_span_with(|request: &Request| {
+                let method = request.method();
+                let path = request.uri().path();
+                let id = xid::new();
+                tracing::info_span!("Api request ", id = %id, method = %method, path = %path)
+            })
+            .on_request(())
+            .on_failure(())
+            .on_response(DefaultOnResponse::new().level(log_config.tracing_level()));
         Router::new()
             .route("/", routing::get(index))
             .merge(router)
+            .layer(tracing)
             .fallback(async || -> ApiResult<()> {
                 log::warn!("Not found");
                 Err(ApiError::NotFound)

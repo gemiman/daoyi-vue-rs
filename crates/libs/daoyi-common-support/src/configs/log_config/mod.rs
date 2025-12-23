@@ -14,6 +14,9 @@ pub struct LogConfig {
 }
 
 impl LogConfig {
+    pub fn tracing_level(&self) -> tracing::Level {
+        self.level().parse().unwrap_or(tracing::Level::INFO)
+    }
     pub fn level(&self) -> &str {
         self.level.as_deref().unwrap_or("info")
     }
