@@ -15,7 +15,7 @@ use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
 use daoyi_entity_demo::demo_entity::sys_user::ActiveModel;
 use sea_orm::prelude::*;
-use sea_orm::{ActiveValue, Condition, IntoActiveModel, QueryOrder, QueryTrait, Unchanged};
+use sea_orm::{ActiveValue, Condition, IntoActiveModel, QueryOrder, QueryTrait};
 use serde::Deserialize;
 use validator::Validate;
 
@@ -67,7 +67,7 @@ async fn update(
     let password = params.password.clone();
     let active_model = params.into_active_model();
     existed_active_model.clone_from(&active_model);
-    existed_active_model.id = Unchanged(id);
+    existed_active_model.id = ActiveValue::Unchanged(id);
     if password.is_empty() {
         existed_active_model.password = ActiveValue::Unchanged(old_password.unwrap());
     } else {
