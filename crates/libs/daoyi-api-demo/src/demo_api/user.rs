@@ -1,6 +1,7 @@
 use anyhow::Context;
 use axum::extract::{Query, State};
 use axum::{Router, debug_handler, routing};
+use axum_valid::Valid;
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::database;
 use daoyi_common_support::models::pagination::{Page, PaginationParams};
@@ -10,6 +11,7 @@ use daoyi_entity_demo::demo_entity::sys_user;
 use sea_orm::prelude::*;
 use sea_orm::{Condition, QueryOrder, QueryTrait};
 use serde::Deserialize;
+use validator::Validate;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -17,20 +19,21 @@ pub fn create_router() -> Router<AppState> {
         .route("/page", routing::get(find_page))
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct UserQueryParams {
     keyword: Option<String>,
     #[serde(flatten)]
+    #[validate(nested)]
     pagination: PaginationParams,
 }
 
 #[debug_handler]
 async fn find_page(
-    Query(UserQueryParams {
+    Valid(Query(UserQueryParams {
         keyword,
         pagination,
-    }): Query<UserQueryParams>,
+    })): Valid<Query<UserQueryParams>>,
 ) -> ApiResult<Page<sys_user::Model>> {
     let paginator = SysUser::find()
         .apply_if(keyword.as_ref(), |query, keyword| {

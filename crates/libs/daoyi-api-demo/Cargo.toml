@@ -16,3 +16,5 @@ sea-orm.workspace = true
 anyhow.workspace = true
 tracing.workspace = true
 serde.workspace = true
+validator.workspace = true
+axum-valid.workspace = true
