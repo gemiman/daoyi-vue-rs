@@ -29,7 +29,7 @@ merge = { version = "0.2.0" }
 sea-orm = { version = "1.1.19", features = ["with-chrono", "debug-print", "sqlx-postgres", "with-rust_decimal", "runtime-tokio"] }
 num_cpus = { version = "1.17.0" }
 thiserror = { version = "2.0.17" }
-tower-http = { version = "0.6.8", features = ["trace", "timeout", "limit", "cors", "normalize-path"] }
+tower-http = { version = "0.6.8", features = ["trace", "timeout", "limit", "cors", "normalize-path", "auth"] }
 xid = { version = "1.1.1" }
 bytesize = "2.3.1"
 validator = { version = "0.20.0", features = ["derive"] }
@@ -37,6 +37,7 @@ axum-valid = { version = "0.24.0", features = ["full_validator"] }
 regex = "1.12.2"
 idgenerator = "2.0.0"
 bcrypt = "0.17.1"
+jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 
 [package]
 name = "daoyi-vue-rs"

@@ -12,3 +12,4 @@ pub mod request;
 pub mod id;
 pub mod password;
 pub mod enumeration;
+pub mod auth;
