@@ -29,10 +29,59 @@ pub enum ApiError {
 impl From<ValidRejection<ApiError>> for ApiError {
     fn from(value: ValidRejection<ApiError>) -> Self {
         match value {
-            ValidationRejection::Valid(errors) => ApiError::Validation(errors.to_string()),
+            ValidationRejection::Valid(errors) => {
+                let error_messages = format_validation_errors(&errors, None);
+                let combined_message = if error_messages.is_empty() {
+                    "参数验证失败".to_string()
+                } else {
+                    error_messages.join(" | ")
+                };
+                ApiError::Validation(combined_message)
+            }
             ValidationRejection::Inner(errors) => errors,
         }
     }
+}
+
+fn format_validation_errors(
+    errors: &validator::ValidationErrors,
+    prefix: Option<&str>,
+) -> Vec<String> {
+    use validator::ValidationErrorsKind;
+    errors
+        .errors()
+        .iter()
+        .flat_map(|(field, errors_kind)| {
+            let field_name = if let Some(p) = prefix {
+                format!("{}.{}", p, field)
+            } else {
+                field.to_string()
+            };
+            match errors_kind {
+                ValidationErrorsKind::Field(field_errors) => field_errors
+                    .iter()
+                    .map(|error| {
+                        let message = error
+                            .message
+                            .as_ref()
+                            .map(|m| m.to_string())
+                            .unwrap_or_else(|| "验证失败".to_string());
+                        format!("{}: {}", field_name, message)
+                    })
+                    .collect::<Vec<_>>(),
+                ValidationErrorsKind::Struct(struct_errors) => {
+                    format_validation_errors(struct_errors, Some(&field_name))
+                }
+                ValidationErrorsKind::List(list_errors) => list_errors
+                    .iter()
+                    .flat_map(|(index, errors)| {
+                        let indexed_field = format!("{}[{}]", field_name, index);
+                        format_validation_errors(errors, Some(&indexed_field))
+                    })
+                    .collect::<Vec<_>>(),
+            }
+        })
+        .collect()
 }
 
 impl ApiError {

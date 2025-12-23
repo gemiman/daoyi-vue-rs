@@ -4,8 +4,7 @@ use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::database;
 use daoyi_common_support::models::pagination::{Page, PaginationParams};
-use daoyi_common_support::request::query::Query;
-use daoyi_common_support::request::valid::Valid;
+use daoyi_common_support::request::valid::ValidQuery;
 use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
@@ -31,10 +30,10 @@ pub struct UserQueryParams {
 
 #[debug_handler]
 async fn find_page(
-    Valid(Query(UserQueryParams {
+    ValidQuery(UserQueryParams {
         keyword,
         pagination,
-    })): Valid<Query<UserQueryParams>>,
+    }): ValidQuery<UserQueryParams>,
 ) -> ApiResult<Page<sys_user::Model>> {
     let paginator = SysUser::find()
         .apply_if(keyword.as_ref(), |query, keyword| {
