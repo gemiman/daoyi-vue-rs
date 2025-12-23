@@ -13,3 +13,4 @@ daoyi-common-support.workspace = true
 axum.workspace = true
 daoyi-entity-demo.workspace = true
 sea-orm.workspace = true
+anyhow.workspace = true

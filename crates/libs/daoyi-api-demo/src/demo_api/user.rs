@@ -1,11 +1,12 @@
+use anyhow::Context;
 use axum::extract::State;
-use axum::{debug_handler, routing, Router};
+use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
-use sea_orm::prelude::*;
 use sea_orm::Condition;
+use sea_orm::prelude::*;
 
 pub fn create_router() -> Router<AppState> {
     Router::new().route("/list", routing::get(query_users))
@@ -26,6 +27,6 @@ async fn query_users(State(AppState { db }): State<AppState>) -> ApiResult<Vec<s
         )
         .all(&db)
         .await
-        .unwrap();
+        .context("Fail to query users")?;
     Ok(ApiResponse::ok(Some(users)))
 }
