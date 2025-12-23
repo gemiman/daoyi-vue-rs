@@ -64,6 +64,7 @@ async fn update(
         .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?;
     let password = params.password.clone();
     let mut active_model = params.into_active_model();
+    active_model.id = ActiveValue::Unchanged(existed_user.id);
     if password.is_empty() {
         active_model.password = ActiveValue::Unchanged(existed_user.password);
     } else {
@@ -80,7 +81,7 @@ async fn delete(Path(id): Path<String>) -> ApiResult<u64> {
     let existed_user = SysUser::find_by_id(id)
         .one(db)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?;
+        .ok_or_else(|| ApiError::Biz(String::from("待删除的用户不存在")))?;
     let result = existed_user.delete(db).await?.rows_affected;
     Ok(ApiResponse::ok(Some(result)))
 }
