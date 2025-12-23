@@ -9,5 +9,6 @@ authors.workspace = true
 readme.workspace = true
 
 [dependencies]
+daoyi-common-support.workspace = true
 sea-orm.workspace = true
 serde.workspace = true

@@ -3,13 +3,19 @@ use axum::extract::State;
 use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::database;
+use daoyi_common_support::enumeration::Gender;
+use daoyi_common_support::error::ApiError;
 use daoyi_common_support::models::pagination::{Page, PaginationParams};
-use daoyi_common_support::request::valid::ValidQuery;
+use daoyi_common_support::password::hash_password;
+use daoyi_common_support::request::path::Path;
+use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
+use daoyi_common_support::request::validation;
 use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
+use daoyi_entity_demo::demo_entity::sys_user::ActiveModel;
 use sea_orm::prelude::*;
-use sea_orm::{Condition, QueryOrder, QueryTrait};
+use sea_orm::{ActiveValue, Condition, IntoActiveModel, QueryOrder, QueryTrait};
 use serde::Deserialize;
 use validator::Validate;
 
@@ -17,6 +23,66 @@ pub fn create_router() -> Router<AppState> {
     Router::new()
         .route("/list", routing::get(query_users))
         .route("/page", routing::get(find_page))
+        .route("/", routing::post(create))
+        .route("/{id}", routing::put(update))
+        .route("/{id}", routing::delete(delete))
+}
+
+#[derive(Debug, Deserialize, Validate, DeriveIntoActiveModel)]
+#[serde(rename_all = "camelCase")]
+pub struct UserParams {
+    #[validate(length(min = 1, max = 16, message = "姓名长度为1-16"))]
+    pub name: String,
+    pub gender: Gender,
+    #[validate(length(min = 1, max = 16, message = "账号长度为1-16"))]
+    pub account: String,
+    #[validate(length(min = 6, max = 16, message = "密码长度为6-16"))]
+    pub password: String,
+    #[validate(custom(function = "validation::is_mobile_phone"))]
+    pub mobile_phone: String,
+    pub birthday: Date,
+    #[serde(default)]
+    pub enabled: bool,
+}
+
+#[debug_handler]
+async fn create(ValidJson(params): ValidJson<UserParams>) -> ApiResult<sys_user::Model> {
+    let active_model = params.into_active_model();
+    let model = active_model.insert(database::get().await).await?;
+    Ok(ApiResponse::ok(Some(model)))
+}
+
+#[debug_handler]
+async fn update(
+    Path(id): Path<String>,
+    ValidJson(params): ValidJson<UserParams>,
+) -> ApiResult<sys_user::Model> {
+    let db = database::get().await;
+    let existed_user = SysUser::find_by_id(id)
+        .one(db)
+        .await?
+        .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?;
+    let password = params.password.clone();
+    let mut active_model = params.into_active_model();
+    if password.is_empty() {
+        active_model.password = ActiveValue::Unchanged(existed_user.password);
+    } else {
+        active_model.password =
+            ActiveValue::Set(hash_password(active_model.password.as_ref()).await?);
+    }
+    let model = active_model.update(db).await?;
+    Ok(ApiResponse::ok(Some(model)))
+}
+
+#[debug_handler]
+async fn delete(Path(id): Path<String>) -> ApiResult<u64> {
+    let db = database::get().await;
+    let existed_user = SysUser::find_by_id(id)
+        .one(db)
+        .await?
+        .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?;
+    let result = existed_user.delete(db).await?.rows_affected;
+    Ok(ApiResponse::ok(Some(result)))
 }
 
 #[derive(Debug, Deserialize, Validate)]
