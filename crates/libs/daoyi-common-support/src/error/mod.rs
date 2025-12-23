@@ -2,6 +2,7 @@ use crate::response::ApiResponse;
 use axum::extract::rejection::{JsonRejection, PathRejection, QueryRejection};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
+use axum_valid::{ValidRejection, ValidationRejection};
 
 #[derive(Debug, thiserror::Error)]
 pub enum ApiError {
@@ -17,10 +18,21 @@ pub enum ApiError {
     Path(#[from] PathRejection),
     #[error("请求体参数错误: {0}")]
     Json(#[from] JsonRejection),
+    #[error("参数校验错误: {0}")]
+    Validation(String),
     #[error("{0}")]
     Biz(String),
     #[error("Error: {0}")]
     Internal(#[from] anyhow::Error),
+}
+
+impl From<ValidRejection<ApiError>> for ApiError {
+    fn from(value: ValidRejection<ApiError>) -> Self {
+        match value {
+            ValidationRejection::Valid(errors) => ApiError::Validation(errors.to_string()),
+            ValidationRejection::Inner(errors) => errors,
+        }
+    }
 }
 
 impl ApiError {
@@ -30,7 +42,7 @@ impl ApiError {
             NotFound => StatusCode::NOT_FOUND,
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Internal(_) | Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Query(_) | Path(_) | Json(_) => StatusCode::BAD_REQUEST,
+            Query(_) | Path(_) | Json(_) | Validation(_) => StatusCode::BAD_REQUEST,
             Biz(_) => StatusCode::OK,
         }
     }

@@ -1,11 +1,11 @@
 use anyhow::Context;
 use axum::extract::State;
 use axum::{Router, debug_handler, routing};
-use axum_valid::Valid;
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::database;
 use daoyi_common_support::models::pagination::{Page, PaginationParams};
 use daoyi_common_support::request::query::Query;
+use daoyi_common_support::request::valid::Valid;
 use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
