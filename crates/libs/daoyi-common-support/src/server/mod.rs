@@ -3,10 +3,14 @@ use crate::configs::ServerConfig;
 use crate::error::ApiError;
 use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::ApiResult;
-use axum::extract::Request;
+use axum::extract::{DefaultBodyLimit, Request};
+use axum::http::StatusCode;
 use axum::{Router, debug_handler, routing};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
+use tower_http::cors::{self, CorsLayer};
+use tower_http::normalize_path::NormalizePathLayer;
+use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
 
 pub struct Server {
@@ -32,6 +36,15 @@ impl Server {
     }
 
     async fn build_router(&self, state: AppState, router: Router<AppState>) -> Router {
+        let timeout =
+            TimeoutLayer::with_status_code(StatusCode::REQUEST_TIMEOUT, self.config.timeout());
+        let body_limit = DefaultBodyLimit::max(self.config.max_body_size());
+        let cors = CorsLayer::new()
+            .allow_origin(cors::Any)
+            .allow_methods(cors::Any)
+            .allow_headers(cors::Any)
+            .allow_credentials(false)
+            .max_age(self.config.max_age());
         let tracing = TraceLayer::new_for_http()
             .make_span_with(|request: &Request| {
                 let method = request.method();
@@ -42,10 +55,15 @@ impl Server {
             .on_request(())
             .on_failure(())
             .on_response(LatencyOnResponse);
+        let normalize_path = NormalizePathLayer::trim_trailing_slash();
         Router::new()
             .route("/", routing::get(index))
             .merge(router)
+            .layer(timeout)
+            .layer(body_limit)
             .layer(tracing)
+            .layer(cors)
+            .layer(normalize_path)
             .fallback(async || -> ApiResult<()> {
                 tracing::warn!("Not found");
                 Err(ApiError::NotFound)
