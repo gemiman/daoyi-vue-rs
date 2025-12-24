@@ -1,0 +1,8 @@
+nacos:
+  enable: true
+  server_addr: 127.0.0.1:8848
+  namespace: public
+  app_name: app
+  group: DEFAULT_GROUP
+  auth_username: nacos
+  auth_password: nacos
