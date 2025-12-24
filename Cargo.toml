@@ -24,6 +24,7 @@ tracing-subscriber = { version = "0.3.22", features = ["env-filter", "chrono"] }
 tracing-appender = { version = "0.2.4" }
 config = { version = "0.15.19", features = ["yaml"] }
 serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.147"
 anyhow = { version = "1.0.100" }
 merge = { version = "0.2.0" }
 sea-orm = { version = "1.1.19", features = ["with-chrono", "debug-print", "sqlx-postgres", "with-rust_decimal", "runtime-tokio"] }
@@ -41,6 +42,8 @@ jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 wax = { version = "0.6.0" }
 humantime = { version = "2.3.0" }
 nacos-sdk = { version = "0.5.3", features = ["default"] }
+redis = { version = "1.0.1", features = ["tokio-comp"] }
+deadpool-redis = { version = "0.22.0" }
 
 [package]
 name = "daoyi-vue-rs"

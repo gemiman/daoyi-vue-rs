@@ -27,6 +27,12 @@ auth:
   ignored_urls:
     - /
     - "**/login"
+redis:
+  host: localhost
+  port: 6379
+  password: 123456789
+  database: 0
+  expire_seconds: 60
 nacos:
   enabled: false
   server_addr: 127.0.0.1:8848
