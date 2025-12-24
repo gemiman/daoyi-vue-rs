@@ -1,5 +1,7 @@
 server:
   port: 3001
+  timeout: 120s
+  max_age: 12h
 auth:
   ignored_urls:
     - /

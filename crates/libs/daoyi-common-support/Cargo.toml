@@ -31,3 +31,4 @@ idgenerator.workspace = true
 bcrypt.workspace = true
 jsonwebtoken.workspace = true
 wax.workspace = true
+humantime.workspace = true

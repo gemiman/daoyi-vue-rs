@@ -8,11 +8,11 @@ pub struct ServerConfig {
     #[merge(strategy = merge::option::overwrite_none)]
     port: Option<u16>,
     #[merge(strategy = merge::option::overwrite_none)]
-    timeout: Option<Duration>,
+    timeout: Option<String>,
     #[merge(strategy = merge::option::overwrite_none)]
     max_body_size: Option<usize>,
     #[merge(strategy = merge::option::overwrite_none)]
-    max_age: Option<Duration>,
+    max_age: Option<String>,
 }
 
 impl ServerConfig {
@@ -20,7 +20,10 @@ impl ServerConfig {
         self.port.unwrap_or(3000)
     }
     pub fn timeout(&self) -> Duration {
-        self.timeout.unwrap_or(Duration::from_secs(120))
+        if let Some(timeout) = &self.timeout {
+            return humantime::parse_duration(timeout).unwrap_or(Duration::from_secs(120));
+        }
+        Duration::from_secs(120)
     }
 
     pub fn max_body_size(&self) -> usize {

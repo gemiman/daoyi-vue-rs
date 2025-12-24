@@ -39,6 +39,7 @@ idgenerator = "2.0.0"
 bcrypt = "0.17.1"
 jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 wax = { version = "0.6.0" }
+humantime = { version = "2.3.0" }
 
 [package]
 name = "daoyi-vue-rs"
