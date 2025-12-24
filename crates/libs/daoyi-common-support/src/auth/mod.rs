@@ -1,7 +1,7 @@
-use crate::configs::jwt_config::JwtConfig;
 use crate::configs::AppConfig;
+use crate::configs::jwt_config::JwtConfig;
 use jsonwebtoken::{
-    get_current_timestamp, Algorithm, DecodingKey, EncodingKey, Header, Validation,
+    Algorithm, DecodingKey, EncodingKey, Header, Validation, get_current_timestamp,
 };
 use serde::{Deserialize, Serialize};
 use std::time::Duration;

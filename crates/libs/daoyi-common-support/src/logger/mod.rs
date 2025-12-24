@@ -1,8 +1,8 @@
 use crate::configs::AppConfig;
 use tracing_appender::{non_blocking, rolling};
+use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
-use tracing_subscriber::EnvFilter;
 
 pub async fn init() {
     let app_config = AppConfig::get().await;
@@ -49,11 +49,12 @@ pub async fn init() {
         .with_target(false)
         .with_ansi(false); // 文件输出不需要颜色代码
 
+    let mut log_level =
+        std::env::var("RUST_LOG").unwrap_or_else(|_| log_config.level().to_string());
+    log_level.push_str(",nacos=warn,h2=warn,hyper=warn,tower=warn");
+
     tracing_subscriber::registry()
-        .with(
-            EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| EnvFilter::new(log_config.level())),
-        )
+        .with(EnvFilter::new(log_level))
         .with(console_layer)
         .with(file_layer)
         .init();
