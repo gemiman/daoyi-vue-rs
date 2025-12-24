@@ -37,7 +37,7 @@ pub struct LoginResult {
 }
 
 #[debug_handler]
-#[tracing::instrument(name="login",skip_all,fields(ip=%addr,account=%params.account,password=%params.password))]
+#[tracing::instrument(name="login",skip_all,fields(ip=%addr.ip(),account=%params.account,password=%params.password))]
 async fn login(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     ValidJson(params): ValidJson<LoginParams>,
