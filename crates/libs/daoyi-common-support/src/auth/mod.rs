@@ -9,7 +9,7 @@ use tokio::sync::OnceCell;
 
 static DEFAULT_JWT: OnceCell<JWT> = OnceCell::const_new();
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Default)]
 pub struct Principal {
     pub id: String,
     pub name: String,

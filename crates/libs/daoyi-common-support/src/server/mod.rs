@@ -1,4 +1,5 @@
 use crate::app::AppState;
+use crate::auth::Principal;
 use crate::configs::ServerConfig;
 use crate::error::ApiError;
 use crate::middlewares::jwt_auth_layer::get_auth_layer;
@@ -51,7 +52,11 @@ impl Server {
                 let method = request.method();
                 let path = request.uri().path();
                 let id = xid::new();
-                tracing::info_span!("Api request ", id = %id, method = %method, path = %path)
+                if let Some(principal) = request.extensions().get::<Principal>() {
+                    tracing::info_span!("Api request ", id = %id, method = %method, path = %path, user_id = %principal.id, user_name = %principal.name)
+                } else {
+                    tracing::info_span!("Api request ", id = %id, method = %method, path = %path)
+                }
             })
             .on_request(())
             .on_failure(())
