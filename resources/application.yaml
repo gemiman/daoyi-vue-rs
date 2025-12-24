@@ -1,8 +1,37 @@
+name: app
+active_profile: dev
 server:
   port: 3001
   timeout: 120s
+  max_body_size: 11m
   max_age: 12h
+log:
+  level: info
+  dir: ./logs
+  filename: app.log
+  rolling: daily
+database:
+  driver: postgres
+  host: 127.0.0.1
+  port: 5432
+  user: postgres
+  password: 1234567
+  database: postgres
+  schema: public
+jwt:
+  secret: 1234567890
+  expire: 3600s
+  audience: audience
+  issuer: issuer
 auth:
   ignored_urls:
     - /
     - "**/login"
+nacos:
+  enabled: false
+  server_addr: 127.0.0.1:8848
+  namespace: public
+  app_name: app
+  group: DEFAULT_GROUP
+  auth_username: nacos
+  auth_password: nacos

@@ -32,3 +32,4 @@ bcrypt.workspace = true
 jsonwebtoken.workspace = true
 wax.workspace = true
 humantime.workspace = true
+nacos-sdk.workspace = true

@@ -20,7 +20,7 @@ impl JwtConfig {
     }
     pub fn expiration(&self) -> Duration {
         if let Some(expiration) = &self.expiration {
-            return humantime::parse_duration(expiration).unwrap_or(Duration::from_secs(120));
+            return humantime::parse_duration(expiration).unwrap_or(Duration::from_secs(60 * 60));
         }
         Duration::from_secs(60 * 60)
     }

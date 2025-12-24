@@ -2,15 +2,18 @@ mod auth_config;
 pub mod database_config;
 pub mod jwt_config;
 pub mod log_config;
+pub mod nacos_config;
 pub mod server_config;
 
 use crate::configs::jwt_config::JwtConfig;
+use crate::configs::nacos_config::NacosConfig;
 use anyhow::{Context, anyhow};
 pub use auth_config::AuthConfig;
 use config::{Config, FileFormat};
 pub use database_config::DatabaseConfig;
 pub use log_config::LogConfig;
 use merge::Merge;
+use nacos_sdk::api::config::ConfigServiceBuilder;
 use serde::Deserialize;
 pub use server_config::ServerConfig;
 use std::sync::LazyLock;
@@ -23,6 +26,7 @@ static DEFAULT_DATABASE_CONFIG: LazyLock<DatabaseConfig> =
     LazyLock::new(|| DatabaseConfig::default());
 static DEFAULT_JWT_CONFIG: LazyLock<JwtConfig> = LazyLock::new(|| JwtConfig::default());
 static DEFAULT_AUTH_CONFIG: LazyLock<AuthConfig> = LazyLock::new(|| AuthConfig::default());
+static DEFAULT_NACOS_CONFIG: LazyLock<NacosConfig> = LazyLock::new(|| NacosConfig::default());
 
 #[derive(Debug, Deserialize, Merge, Default)]
 pub struct AppConfig {
@@ -40,6 +44,8 @@ pub struct AppConfig {
     jwt: Option<JwtConfig>,
     #[merge(strategy = merge::option::recurse)]
     auth: Option<AuthConfig>,
+    #[merge(strategy = merge::option::recurse)]
+    nacos: Option<NacosConfig>,
 }
 
 impl AppConfig {
@@ -63,6 +69,9 @@ impl AppConfig {
     }
     pub fn auth(&self) -> &AuthConfig {
         self.auth.as_ref().unwrap_or(&DEFAULT_AUTH_CONFIG)
+    }
+    pub fn nacos(&self) -> &NacosConfig {
+        self.nacos.as_ref().unwrap_or(&DEFAULT_NACOS_CONFIG)
     }
     pub async fn load(app_name: &str) -> anyhow::Result<()> {
         let app_config = APP_CONFIG.get();
@@ -120,6 +129,18 @@ impl AppConfig {
         }
         init_config.name = Some(app_name.to_string());
         init_config.active_profile = Some(active_profile);
+        if init_config.nacos().enable() {
+            let data_id = format!(
+                "{}-{}.yaml",
+                init_config.app_name(),
+                init_config.active_profile()
+            );
+            let nacos_config = init_config.nacos().clone();
+            init_config = merge_config(
+                init_config,
+                load_nacos_config(data_id, &nacos_config).await?,
+            )
+        }
         APP_CONFIG
             .set(init_config)
             .with_context(|| anyhow!("Failed to set application config"))?;
@@ -131,6 +152,30 @@ impl AppConfig {
             .get()
             .unwrap_or_else(|| panic!("Failed to load application config"))
     }
+}
+
+async fn load_nacos_config(
+    data_id: String,
+    nacos_config: &NacosConfig,
+) -> anyhow::Result<Option<AppConfig>> {
+    let config_service = ConfigServiceBuilder::new(nacos_config.into())
+        .enable_auth_plugin_http()
+        .build()?;
+    let config_resp = config_service
+        .get_config(data_id, String::from(nacos_config.group()))
+        .await;
+    if let Ok(config_resp) = config_resp {
+        return Ok(Some(
+            Config::builder()
+                .add_source(
+                    config::File::from_str(&config_resp.content(), FileFormat::Yaml)
+                        .required(false),
+                )
+                .build()?
+                .try_deserialize()?,
+        ));
+    }
+    Ok(None)
 }
 
 fn merge_config(left: AppConfig, right: Option<AppConfig>) -> AppConfig {
