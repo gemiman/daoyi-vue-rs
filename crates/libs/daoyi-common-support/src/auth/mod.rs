@@ -1,13 +1,13 @@
+use crate::configs::jwt_config::JwtConfig;
+use crate::configs::AppConfig;
 use jsonwebtoken::{
     get_current_timestamp, Algorithm, DecodingKey, EncodingKey, Header, Validation,
 };
 use serde::{Deserialize, Serialize};
-use std::borrow::Cow;
-use std::sync::LazyLock;
 use std::time::Duration;
+use tokio::sync::OnceCell;
 
-const DEFAULT_SECRET: &str = r#"2234!QW@#ESDX234GVYBHKJU@234#$WEBHJ@#WSEDRCFrdcftghuyj"#;
-static DEFAULT_JWT: LazyLock<JWT> = LazyLock::new(|| JWT::default());
+static DEFAULT_JWT: OnceCell<JWT> = OnceCell::const_new();
 
 #[derive(Debug, Clone, Serialize)]
 pub struct Principal {
@@ -25,25 +25,6 @@ pub struct Claims {
     exp: u64,
 }
 
-#[derive(Debug)]
-pub struct JwtConfig {
-    pub secret: Cow<'static, str>,
-    pub expiration: Duration,
-    pub audience: String,
-    pub issuer: String,
-}
-
-impl Default for JwtConfig {
-    fn default() -> Self {
-        Self {
-            secret: Cow::Borrowed(DEFAULT_SECRET),
-            expiration: Duration::from_secs(60 * 60),
-            audience: "audience".to_string(),
-            issuer: "issuer".to_string(),
-        }
-    }
-}
-
 pub struct JWT {
     encode_secret: EncodingKey,
     decode_secret: DecodingKey,
@@ -55,18 +36,18 @@ pub struct JWT {
 }
 
 impl JWT {
-    pub fn new(config: JwtConfig) -> Self {
-        let secret = config.secret.as_bytes();
+    pub fn new(config: &JwtConfig) -> Self {
+        let secret = config.secret().as_bytes();
         let encode_secret = EncodingKey::from_secret(secret);
         let decode_secret = DecodingKey::from_secret(secret);
         let header = Header::new(Algorithm::HS256);
         let mut validation = Validation::new(Algorithm::HS256);
-        validation.set_audience(&[&config.audience]);
-        validation.set_issuer(&[&config.issuer]);
+        validation.set_audience(&[&config.audience()]);
+        validation.set_issuer(&[&config.issuer()]);
         validation.set_required_spec_claims(&["jti", "sub", "aud", "iss", "iat", "exp"]);
-        let expiration = config.expiration;
-        let audience = config.audience;
-        let issuer = config.issuer;
+        let expiration = config.expiration();
+        let audience = String::from(config.audience());
+        let issuer = String::from(config.issuer());
 
         Self {
             encode_secret,
@@ -106,12 +87,8 @@ impl JWT {
     }
 }
 
-impl Default for JWT {
-    fn default() -> Self {
-        Self::new(JwtConfig::default())
-    }
-}
-
-pub fn get_default_jwt() -> &'static JWT {
-    &DEFAULT_JWT
+pub async fn get_default_jwt() -> &'static JWT {
+    DEFAULT_JWT
+        .get_or_init(async || JWT::new(AppConfig::get().await.jwt()))
+        .await
 }

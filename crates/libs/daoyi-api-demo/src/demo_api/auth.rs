@@ -1,10 +1,9 @@
 use axum::extract::ConnectInfo;
-use axum::{debug_handler, routing, Extension, Router};
+use axum::{Extension, Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
-use daoyi_common_support::auth::{get_default_jwt, Principal};
+use daoyi_common_support::auth::{Principal, get_default_jwt};
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiError;
-use daoyi_common_support::middlewares::jwt_auth_layer::get_auth_layer;
 use daoyi_common_support::password::verify_password;
 use daoyi_common_support::request::valid::ValidJson;
 use daoyi_common_support::response::{ApiResponse, ApiResult};
@@ -18,7 +17,6 @@ use validator::Validate;
 pub fn create_router() -> Router<AppState> {
     Router::new()
         .route("/user-info", routing::get(get_user_info))
-        .route_layer(get_auth_layer())
         .route("/login", routing::post(login))
 }
 
@@ -56,7 +54,7 @@ async fn login(
         id: user.id,
         name: user.name,
     };
-    let access_token = get_default_jwt().encode(principal).await?;
+    let access_token = get_default_jwt().await.encode(principal).await?;
     tracing::info!("登录成功，access_token={access_token}");
     ApiResponse::success(LoginResult { access_token })
 }

@@ -1,2 +1,6 @@
 server:
   port: 3001
+auth:
+  ignored_urls:
+    - /
+    - "**/login"

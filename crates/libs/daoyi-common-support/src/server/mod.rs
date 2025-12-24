@@ -1,6 +1,7 @@
 use crate::app::AppState;
 use crate::configs::ServerConfig;
 use crate::error::ApiError;
+use crate::middlewares::jwt_auth_layer::get_auth_layer;
 use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::ApiResult;
 use axum::extract::{DefaultBodyLimit, Request};
@@ -61,9 +62,10 @@ impl Server {
             .merge(router)
             .layer(timeout)
             .layer(body_limit)
-            .layer(tracing)
             .layer(cors)
             .layer(normalize_path)
+            .layer(tracing)
+            .route_layer(get_auth_layer().await)
             .fallback(async || -> ApiResult<()> {
                 tracing::warn!("Not found");
                 Err(ApiError::NotFound)

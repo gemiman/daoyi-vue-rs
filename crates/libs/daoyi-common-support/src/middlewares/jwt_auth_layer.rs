@@ -1,14 +1,13 @@
 use crate::auth::{JWT, get_default_jwt};
+use crate::configs::AppConfig;
 use crate::error::ApiError;
 use axum::body::Body;
 use axum::http::{Request, Response, header};
 use std::pin::Pin;
-use std::sync::LazyLock;
+use tokio::sync::OnceCell;
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
 
-static AUTH_LAYER: LazyLock<AsyncRequireAuthorizationLayer<JWTAuth>> = LazyLock::new(|| {
-    AsyncRequireAuthorizationLayer::new(JWTAuth::new(get_default_jwt()))
-});
+static AUTH_LAYER: OnceCell<AsyncRequireAuthorizationLayer<JWTAuth>> = OnceCell::const_new();
 
 #[derive(Clone)]
 pub struct JWTAuth {
@@ -35,6 +34,8 @@ impl AsyncAuthorizeRequest<Body> for JWTAuth {
     fn authorize(&mut self, mut request: Request<Body>) -> Self::Future {
         let jwt = self.jwt;
         Box::pin(async move {
+            let auth_config = AppConfig::get().await.auth();
+            let url = request.uri().path();
             let token = request
                 .headers()
                 .get(header::AUTHORIZATION)
@@ -54,17 +55,27 @@ impl AsyncAuthorizeRequest<Body> for JWTAuth {
                         })?;
                     Ok(token)
                 })
-                .transpose()?
-                .ok_or_else(|| {
-                    ApiError::Unauthenticated(String::from("No Authorization header"))
-                })?;
-            let principal = jwt.decode(token).await.map_err(|err| ApiError::Internal(err))?;
+                .transpose()?;
+            if token.is_none() && auth_config.is_ignored_url(url) {
+                return Ok(request);
+            }
+            let token = token.ok_or_else(|| {
+                ApiError::Unauthenticated(String::from("No Authorization header"))
+            })?;
+            let principal = jwt
+                .decode(token)
+                .await
+                .map_err(|err| ApiError::Internal(err))?;
             request.extensions_mut().insert(principal);
             Ok(request)
         })
     }
 }
 
-pub fn get_auth_layer() -> &'static AsyncRequireAuthorizationLayer<JWTAuth> {
-    &AUTH_LAYER
+pub async fn get_auth_layer() -> &'static AsyncRequireAuthorizationLayer<JWTAuth> {
+    AUTH_LAYER
+        .get_or_init(async || {
+            AsyncRequireAuthorizationLayer::new(JWTAuth::new(get_default_jwt().await))
+        })
+        .await
 }

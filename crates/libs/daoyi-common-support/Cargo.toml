@@ -30,3 +30,4 @@ regex.workspace = true
 idgenerator.workspace = true
 bcrypt.workspace = true
 jsonwebtoken.workspace = true
+wax.workspace = true
