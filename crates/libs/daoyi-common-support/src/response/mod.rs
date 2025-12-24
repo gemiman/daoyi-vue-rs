@@ -33,6 +33,10 @@ impl<T> ApiResponse<T> {
         }
     }
 
+    pub fn success(data: T) -> ApiResult<T> {
+        Ok(Self::ok(Some(data)))
+    }
+
     pub fn ok(data: Option<T>) -> Self {
         ApiResponse::new(0, "ok", data)
     }

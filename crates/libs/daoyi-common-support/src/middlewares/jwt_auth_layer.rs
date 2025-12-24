@@ -3,7 +3,12 @@ use crate::error::ApiError;
 use axum::body::Body;
 use axum::http::{Request, Response, header};
 use std::pin::Pin;
+use std::sync::LazyLock;
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
+
+static AUTH_LAYER: LazyLock<AsyncRequireAuthorizationLayer<JWTAuth>> = LazyLock::new(|| {
+    AsyncRequireAuthorizationLayer::new(JWTAuth::new(get_default_jwt()))
+});
 
 #[derive(Clone)]
 pub struct JWTAuth {
@@ -53,13 +58,13 @@ impl AsyncAuthorizeRequest<Body> for JWTAuth {
                 .ok_or_else(|| {
                     ApiError::Unauthenticated(String::from("No Authorization header"))
                 })?;
-            let principal = jwt.decode(token).map_err(|err| ApiError::Internal(err))?;
+            let principal = jwt.decode(token).await.map_err(|err| ApiError::Internal(err))?;
             request.extensions_mut().insert(principal);
             Ok(request)
         })
     }
 }
 
-pub fn get_auth_layer() -> AsyncRequireAuthorizationLayer<JWTAuth> {
-    AsyncRequireAuthorizationLayer::new(JWTAuth::new(get_default_jwt()))
+pub fn get_auth_layer() -> &'static AsyncRequireAuthorizationLayer<JWTAuth> {
+    &AUTH_LAYER
 }

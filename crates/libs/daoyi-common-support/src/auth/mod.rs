@@ -79,7 +79,7 @@ impl JWT {
         }
     }
 
-    pub fn encode(&self, principal: Principal) -> anyhow::Result<String> {
+    pub async fn encode(&self, principal: Principal) -> anyhow::Result<String> {
         let current_timestamp = get_current_timestamp();
         let claims = Claims {
             jti: xid::new().to_string(),
@@ -95,7 +95,7 @@ impl JWT {
             &self.encode_secret,
         )?)
     }
-    pub fn decode(&self, token: &str) -> anyhow::Result<Principal> {
+    pub async fn decode(&self, token: &str) -> anyhow::Result<Principal> {
         let claims = jsonwebtoken::decode::<Claims>(token, &self.decode_secret, &self.validation)?;
         let sub = claims.claims.sub;
         let mut parts = sub.splitn(2, ':');
