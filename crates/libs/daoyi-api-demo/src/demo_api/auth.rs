@@ -1,7 +1,7 @@
 use axum::extract::ConnectInfo;
-use axum::{Router, debug_handler, routing};
+use axum::{debug_handler, routing, Extension, Router};
 use daoyi_common_support::app::AppState;
-use daoyi_common_support::auth::{Principal, get_default_jwt};
+use daoyi_common_support::auth::{get_default_jwt, Principal};
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::middlewares::jwt_auth_layer::get_auth_layer;
@@ -62,6 +62,6 @@ async fn login(
 }
 
 #[debug_handler]
-async fn get_user_info() -> ApiResult<String> {
-    Ok(ApiResponse::ok(Some(String::from(""))))
+async fn get_user_info(Extension(principal): Extension<Principal>) -> ApiResult<Principal> {
+    ApiResponse::success(principal)
 }

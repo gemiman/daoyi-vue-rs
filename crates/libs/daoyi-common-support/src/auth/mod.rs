@@ -9,7 +9,7 @@ use std::time::Duration;
 const DEFAULT_SECRET: &str = r#"2234!QW@#ESDX234GVYBHKJU@234#$WEBHJ@#WSEDRCFrdcftghuyj"#;
 static DEFAULT_JWT: LazyLock<JWT> = LazyLock::new(|| JWT::default());
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct Principal {
     pub id: String,
     pub name: String,
