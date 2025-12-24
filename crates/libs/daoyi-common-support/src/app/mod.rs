@@ -9,9 +9,9 @@ pub struct AppState {}
 pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Result<()> {
     AppConfig::load(app_name.unwrap_or("app")).await?;
     logger::init().await;
-    log::info!("Starting app server...");
     id::init().await?;
     database::init().await?;
+    log::info!("基础配置、logger、id、database 初始化完成... Starting app server...");
     let state = AppState::default();
     let server = server::Server::new(AppConfig::get().await.server());
     server.start(state, router).await
