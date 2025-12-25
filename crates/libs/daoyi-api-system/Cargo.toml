@@ -14,3 +14,4 @@ axum.workspace = true
 daoyi-entity-system.workspace = true
 serde.workspace = true
 validator.workspace = true
+tracing.workspace = true

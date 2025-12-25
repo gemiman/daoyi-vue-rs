@@ -3,6 +3,7 @@ use crate::context::HttpRequestContext;
 use crate::error::ApiError;
 use axum::body::Body;
 use axum::http::{Request, Response};
+use axum::middleware::Next;
 use axum::response::IntoResponse;
 use std::pin::Pin;
 use tokio::sync::OnceCell;
@@ -90,4 +91,15 @@ pub async fn get_auth_layer() -> &'static AsyncRequireAuthorizationLayer<ThreadL
     THREAD_LOCAL_LAYER
         .get_or_init(async || AsyncRequireAuthorizationLayer::new(ThreadLocalLayer))
         .await
+}
+
+pub async fn thread_local_middleware(request: Request<Body>, next: Next) -> Response<Body> {
+    if let Some(context) = request.extensions().get::<HttpRequestContext>() {
+        HttpRequestContext::set_current(context.clone());
+    } else {
+        HttpRequestContext::set_current(HttpRequestContext::new());
+    }
+    let response = next.run(request).await;
+    HttpRequestContext::clear();
+    response
 }

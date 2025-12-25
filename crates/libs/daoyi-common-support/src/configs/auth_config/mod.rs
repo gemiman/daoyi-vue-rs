@@ -1,6 +1,7 @@
 use axum::http::header;
 use merge::Merge;
 use serde::Deserialize;
+use std::time::Duration;
 use wax::{Glob, Pattern};
 
 #[derive(Debug, Deserialize, Default, Merge)]
@@ -13,6 +14,8 @@ pub struct AuthConfig {
     header_key_token: Option<String>,
     #[merge(strategy = merge::option::overwrite_none)]
     header_key_tenant: Option<String>,
+    #[merge(strategy = merge::option::overwrite_none)]
+    token_expiration: Option<String>,
 }
 impl AuthConfig {
     pub fn header_key_token(&self) -> &str {
@@ -31,6 +34,13 @@ impl AuthConfig {
     pub fn is_ignored_tenant(&self, url: &str) -> bool {
         self.tenant_ignored_urls.is_none()
             || path_any_matches(&self.tenant_ignored_urls.as_deref().unwrap(), url).unwrap_or(false)
+    }
+    pub fn token_expiration(&self) -> Duration {
+        if let Some(token_expiration) = &self.token_expiration {
+            return humantime::parse_duration(token_expiration)
+                .unwrap_or(Duration::from_secs(3600 * 12));
+        }
+        Duration::from_secs(3600 * 12)
     }
 }
 

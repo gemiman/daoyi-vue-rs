@@ -1,4 +1,5 @@
 use crate::app::AppState;
+use crate::auth::Principal;
 use crate::configs::ServerConfig;
 use crate::error::ApiError;
 use crate::middlewares::simple_auth_layer;
@@ -6,14 +7,13 @@ use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::ApiResult;
 use axum::extract::{DefaultBodyLimit, Request};
 use axum::http::StatusCode;
-use axum::{Router, debug_handler, routing};
+use axum::{debug_handler, middleware, routing, Router};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{self, CorsLayer};
 use tower_http::normalize_path::NormalizePathLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
-use crate::auth::Principal;
 
 pub struct Server {
     config: &'static ServerConfig,
@@ -70,6 +70,9 @@ impl Server {
             .layer(cors)
             .layer(normalize_path)
             .layer(tracing)
+            .layer(middleware::from_fn(
+                simple_auth_layer::thread_local_middleware,
+            ))
             .route_layer(simple_auth_layer::get_auth_layer().await)
             .fallback(async || -> ApiResult<()> {
                 tracing::warn!("Not found");
