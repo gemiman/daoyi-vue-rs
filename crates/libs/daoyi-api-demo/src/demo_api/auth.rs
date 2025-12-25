@@ -12,6 +12,7 @@ use daoyi_entity_demo::demo_entity::sys_user;
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
+use sa_token_plugin_axum::{StpUtil, TokenValue};
 use validator::Validate;
 
 pub fn create_router() -> Router<AppState> {
@@ -31,7 +32,7 @@ pub struct LoginParams {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LoginResult {
-    access_token: String,
+    access_token: TokenValue,
 }
 
 #[debug_handler]
@@ -54,7 +55,8 @@ async fn login(
         id: user.id,
         name: user.name,
     };
-    let access_token = get_default_jwt().await.encode(principal).await?;
+    let access_token = StpUtil::login(principal.id).await?;
+    // let access_token = get_default_jwt().await.encode(principal).await?;
     tracing::info!("登录成功，access_token={access_token}");
     ApiResponse::success(LoginResult { access_token })
 }

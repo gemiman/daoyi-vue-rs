@@ -70,7 +70,7 @@ impl Server {
             .layer(cors)
             .layer(normalize_path)
             .layer(tracing)
-            .route_layer(get_auth_layer().await)
+            // .route_layer(get_auth_layer().await)
             .fallback(async || -> ApiResult<()> {
                 tracing::warn!("Not found");
                 Err(ApiError::NotFound)

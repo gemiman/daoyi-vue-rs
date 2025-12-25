@@ -26,6 +26,8 @@ pub enum ApiError {
     JWT(#[from] jsonwebtoken::errors::Error),
     #[error("未授权：{0}")]
     Unauthenticated(String),
+    #[error("未授权: {0}")]
+    SaTokenAuth(#[from] sa_token_plugin_axum::error::SaTokenError),
     #[error("{0}")]
     Biz(String),
     #[error("Error: {0}")]
@@ -98,7 +100,7 @@ impl ApiError {
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Internal(_) | Database(_) | Bcrypt(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Query(_) | Path(_) | Json(_) | Validation(_) => StatusCode::BAD_REQUEST,
-            JWT(_) | Unauthenticated(_) => StatusCode::UNAUTHORIZED,
+            JWT(_) | Unauthenticated(_) | SaTokenAuth(_) => StatusCode::UNAUTHORIZED,
             Biz(_) => StatusCode::OK,
         }
     }

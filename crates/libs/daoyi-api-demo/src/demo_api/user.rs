@@ -1,5 +1,6 @@
 use anyhow::Context;
 use axum::{Router, debug_handler, routing};
+use sa_token_plugin_axum::*;
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::Gender;
@@ -95,7 +96,7 @@ pub struct UserQueryParams {
     #[validate(nested)]
     pagination: PaginationParams,
 }
-
+#[sa_check_login]
 #[debug_handler]
 async fn find_page(
     ValidQuery(UserQueryParams {
