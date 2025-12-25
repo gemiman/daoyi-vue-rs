@@ -24,3 +24,8 @@ pub async fn init() -> anyhow::Result<SaTokenState> {
     StpUtil::register_listener(Arc::new(LoggingListener));
     Ok(state)
 }
+
+// struct CusSaTokenListener;
+// impl SaTokenListener for CusSaTokenListener {
+//
+// }
