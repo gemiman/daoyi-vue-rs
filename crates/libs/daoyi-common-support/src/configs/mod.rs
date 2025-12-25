@@ -1,15 +1,13 @@
 mod auth_config;
 pub mod database_config;
-pub mod jwt_config;
 pub mod log_config;
 pub mod nacos_config;
 pub mod redis_config;
 pub mod server_config;
 
-use crate::configs::jwt_config::JwtConfig;
 use crate::configs::nacos_config::NacosConfig;
 use crate::configs::redis_config::RedisConfig;
-use anyhow::{Context, anyhow};
+use anyhow::{anyhow, Context};
 pub use auth_config::AuthConfig;
 use config::{Config, FileFormat};
 pub use database_config::DatabaseConfig;
@@ -26,7 +24,6 @@ static DEFAULT_SERVER_CONFIG: LazyLock<ServerConfig> = LazyLock::new(|| ServerCo
 static DEFAULT_LOG_CONFIG: LazyLock<LogConfig> = LazyLock::new(|| LogConfig::default());
 static DEFAULT_DATABASE_CONFIG: LazyLock<DatabaseConfig> =
     LazyLock::new(|| DatabaseConfig::default());
-static DEFAULT_JWT_CONFIG: LazyLock<JwtConfig> = LazyLock::new(|| JwtConfig::default());
 static DEFAULT_AUTH_CONFIG: LazyLock<AuthConfig> = LazyLock::new(|| AuthConfig::default());
 static DEFAULT_NACOS_CONFIG: LazyLock<NacosConfig> = LazyLock::new(|| NacosConfig::default());
 static DEFAULT_REDIS_CONFIG: LazyLock<RedisConfig> = LazyLock::new(|| RedisConfig::default());
@@ -43,8 +40,6 @@ pub struct AppConfig {
     log: Option<LogConfig>,
     #[merge(strategy = merge::option::recurse)]
     database: Option<DatabaseConfig>,
-    #[merge(strategy = merge::option::recurse)]
-    jwt: Option<JwtConfig>,
     #[merge(strategy = merge::option::recurse)]
     auth: Option<AuthConfig>,
     #[merge(strategy = merge::option::recurse)]
@@ -68,9 +63,6 @@ impl AppConfig {
     }
     pub fn database(&self) -> &DatabaseConfig {
         self.database.as_ref().unwrap_or(&DEFAULT_DATABASE_CONFIG)
-    }
-    pub fn jwt(&self) -> &JwtConfig {
-        self.jwt.as_ref().unwrap_or(&DEFAULT_JWT_CONFIG)
     }
     pub fn auth(&self) -> &AuthConfig {
         self.auth.as_ref().unwrap_or(&DEFAULT_AUTH_CONFIG)

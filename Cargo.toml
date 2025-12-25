@@ -41,14 +41,11 @@ axum-valid = { version = "0.24.0", features = ["full_validator"] }
 regex = "1.12.2"
 idgenerator = "2.0.0"
 bcrypt = "0.17.1"
-jsonwebtoken = { version = "10.2.0", features = ["rust_crypto"] }
 wax = { version = "0.6.0" }
 humantime = { version = "2.3.0" }
 nacos-sdk = { version = "0.5.3", features = ["default"] }
 redis = { version = "1.0.1", features = ["tokio-comp"] }
 deadpool-redis = { version = "0.22.0" }
-sa-token-plugin-axum = { version = "0.1.12", features = ["redis"] }
-sa-token-storage-redis = { version = "0.1.12" }
 
 [package]
 name = "daoyi-vue-rs"

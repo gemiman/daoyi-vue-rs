@@ -48,7 +48,7 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                 use sea_orm::Set;
                 use daoyi_common_support::id;
                 use daoyi_common_support::password::hash_password;
-                use sa_token_plugin_axum::StpUtil;
+                use daoyi_common_support::context::HttpRequestContext;
                 use sea_orm::sqlx::types::chrono::Local;
 
                 if insert {
@@ -56,13 +56,13 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                     #password_logic
                     self.create_time = Set(Local::now().naive_local());
                     self.update_time = Set(Local::now().naive_local());
-                    if let Ok(login_id) = StpUtil::get_login_id_as_string().await {
+                    if let Ok(login_id) = HttpRequestContext::get_login_id_as_string().await {
                         self.creator = Set(Some(login_id.clone()));
                         self.updater = Set(Some(login_id));
                     }
                 } else {
                     self.update_time = Set(Local::now().naive_local());
-                    if let Ok(login_id) = StpUtil::get_login_id_as_string().await {
+                    if let Ok(login_id) = HttpRequestContext::get_login_id_as_string().await {
                         self.updater = Set(Some(login_id));
                     }
                 }

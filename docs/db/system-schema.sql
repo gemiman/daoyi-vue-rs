@@ -11,26 +11,26 @@ alter schema system owner to daoyivuers;
 DROP TABLE IF EXISTS system.system_users;
 CREATE TABLE system.system_users
 (
-    id          varchar(32)  NOT NULL primary key,
-    username    varchar(30)  NOT NULL,
-    password    varchar(100) NOT NULL DEFAULT '',
-    nickname    varchar(256) NOT NULL DEFAULT '',
-    remark      varchar(500) NULL     DEFAULT NULL,
-    dept_id     varchar(32)  NULL     DEFAULT NULL,
+    id          varchar(32)    NOT NULL primary key,
+    username    varchar(30)    NOT NULL,
+    password    varchar(100)   NOT NULL DEFAULT '',
+    nickname    varchar(256)   NOT NULL DEFAULT '',
+    remark      varchar(500)   NULL     DEFAULT NULL,
+    dept_id     varchar(32)    NULL     DEFAULT NULL,
     post_ids    varchar(255)[] NULL     DEFAULT NULL,
-    email       varchar(50)  NULL     DEFAULT '',
-    mobile      varchar(11)  NULL     DEFAULT '',
-    sex         varchar(1)   NULL     DEFAULT '0',
-    avatar      varchar(512) NULL     DEFAULT '',
-    status      varchar(1)   NOT NULL DEFAULT '0',
-    login_ip    varchar(50)  NULL     DEFAULT '',
-    login_date  timestamp    NULL     DEFAULT NULL,
-    creator     varchar(64)  NULL     DEFAULT '',
-    create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updater     varchar(64)  NULL     DEFAULT '',
-    update_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted     boolean      NOT NULL DEFAULT false,
-    tenant_id   varchar(32)  NOT NULL DEFAULT '0'
+    email       varchar(128)   NULL     DEFAULT '',
+    mobile      varchar(128)   NULL     DEFAULT '',
+    sex         varchar(1)     NULL     DEFAULT '0',
+    avatar      varchar(512)   NULL     DEFAULT '',
+    status      varchar(1)     NOT NULL DEFAULT '0',
+    login_ip    varchar(128)   NULL     DEFAULT '',
+    login_date  timestamp      NULL     DEFAULT NULL,
+    creator     varchar(32)    NULL     DEFAULT '',
+    create_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(32)    NULL     DEFAULT '',
+    update_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean        NOT NULL DEFAULT false,
+    tenant_id   varchar(32)    NOT NULL DEFAULT '0'
 );
 
 COMMENT ON COLUMN system.system_users.id IS '用户ID';
@@ -54,3 +54,36 @@ COMMENT ON COLUMN system.system_users.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_users.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_users.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_users IS '用户信息表';
+
+
+-- ----------------------------
+-- Table structure for system.system_access_token
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_access_token;
+CREATE TABLE system.system_access_token
+(
+    id           varchar(32)  NOT NULL primary key,
+    user_id      varchar(32)  NOT NULL,
+    access_token varchar(255) NOT NULL,
+    expires_time timestamp    NOT NULL,
+    creator      varchar(32)  NULL     DEFAULT '',
+    create_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater      varchar(32)  NULL     DEFAULT '',
+    update_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted      boolean      NOT NULL DEFAULT false,
+    tenant_id    varchar(32)  NOT NULL DEFAULT '0'
+);
+
+CREATE INDEX idx_system_access_token_01 ON system.system_access_token (access_token);
+
+COMMENT ON COLUMN system.system_access_token.id IS '编号';
+COMMENT ON COLUMN system.system_access_token.user_id IS '用户编号';
+COMMENT ON COLUMN system.system_access_token.access_token IS '访问令牌';
+COMMENT ON COLUMN system.system_access_token.expires_time IS '过期时间';
+COMMENT ON COLUMN system.system_access_token.creator IS '创建者';
+COMMENT ON COLUMN system.system_access_token.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_access_token.updater IS '更新者';
+COMMENT ON COLUMN system.system_access_token.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_access_token.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_access_token.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_access_token IS '访问令牌';

@@ -13,7 +13,6 @@ use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
 use daoyi_entity_demo::demo_entity::sys_user::ActiveModel;
-use sa_token_plugin_axum::*;
 use sea_orm::prelude::*;
 use sea_orm::{ActiveValue, Condition, IntoActiveModel, QueryOrder, QueryTrait};
 use serde::Deserialize;
@@ -46,7 +45,6 @@ pub struct UserParams {
 }
 
 #[debug_handler]
-#[sa_check_permission("user:add")]
 async fn create(ValidJson(params): ValidJson<UserParams>) -> ApiResult<sys_user::Model> {
     let active_model = params.into_active_model();
     let model = active_model.insert(database::get().await).await?;
@@ -54,7 +52,6 @@ async fn create(ValidJson(params): ValidJson<UserParams>) -> ApiResult<sys_user:
 }
 
 #[debug_handler]
-#[sa_check_role("admin")]
 async fn update(
     Path(id): Path<String>,
     ValidJson(params): ValidJson<UserParams>,
@@ -80,7 +77,6 @@ async fn update(
 }
 
 #[debug_handler]
-#[sa_check_permission("user:delete")]
 async fn delete(Path(id): Path<String>) -> ApiResult<u64> {
     let db = database::get().await;
     let existed_user = SysUser::find_by_id(id)
@@ -99,9 +95,7 @@ pub struct UserQueryParams {
     #[validate(nested)]
     pagination: PaginationParams,
 }
-#[sa_check_login]
 #[debug_handler]
-#[sa_check_permission("user:list")]
 async fn find_page(
     ValidQuery(UserQueryParams {
         keyword,
