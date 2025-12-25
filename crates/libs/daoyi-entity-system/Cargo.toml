@@ -12,3 +12,4 @@ readme.workspace = true
 daoyi-common-support.workspace = true
 sea-orm.workspace = true
 serde.workspace = true
+sa-token-plugin-axum.workspace = true
