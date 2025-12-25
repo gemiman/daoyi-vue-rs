@@ -2,10 +2,13 @@ use crate::auth::sa_token_auth;
 use crate::configs::AppConfig;
 use crate::{database, id, logger, redis_utils, server};
 use axum::Router;
+use sa_token_plugin_axum::SaTokenState;
 use tracing::log;
 
-#[derive(Clone, Default)]
-pub struct AppState {}
+#[derive(Clone)]
+pub struct AppState {
+    pub sa_token_state: SaTokenState,
+}
 
 pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Result<()> {
     println!("==============================================开始加载配置...");
@@ -20,9 +23,9 @@ pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Re
     log::info!("id generator 初始化完成... Starting database...");
     database::init().await?;
     log::info!("database 初始化完成... Starting sa token...");
-    sa_token_auth::init().await?;
+    let sa_token_state = sa_token_auth::init().await?;
     log::info!("sa token 初始化完成... Starting app server...");
-    let state = AppState::default();
+    let state = AppState { sa_token_state};
     let server = server::Server::new(AppConfig::get().await.server());
     server.start(state, router).await
 }

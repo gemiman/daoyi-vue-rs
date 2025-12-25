@@ -1,7 +1,7 @@
 use axum::extract::ConnectInfo;
 use axum::{Extension, Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
-use daoyi_common_support::auth::jwt_auth::{Principal, get_default_jwt};
+use daoyi_common_support::auth::jwt_auth::Principal;
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::password::verify_password;
@@ -9,10 +9,10 @@ use daoyi_common_support::request::valid::ValidJson;
 use daoyi_common_support::response::{ApiResponse, ApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
+use sa_token_plugin_axum::{StpUtil, TokenValue};
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
-use sa_token_plugin_axum::{StpUtil, TokenValue};
 use validator::Validate;
 
 pub fn create_router() -> Router<AppState> {

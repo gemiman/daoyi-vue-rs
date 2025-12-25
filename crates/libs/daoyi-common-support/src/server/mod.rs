@@ -2,12 +2,12 @@ use crate::app::AppState;
 use crate::auth::jwt_auth::Principal;
 use crate::configs::ServerConfig;
 use crate::error::ApiError;
-use crate::middlewares::jwt_auth_layer::get_auth_layer;
 use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::ApiResult;
 use axum::extract::{DefaultBodyLimit, Request};
 use axum::http::StatusCode;
 use axum::{Router, debug_handler, routing};
+use sa_token_plugin_axum::SaTokenLayer;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{self, CorsLayer};
@@ -70,6 +70,7 @@ impl Server {
             .layer(cors)
             .layer(normalize_path)
             .layer(tracing)
+            .layer(SaTokenLayer::new(state.sa_token_state.clone()))
             // .route_layer(get_auth_layer().await)
             .fallback(async || -> ApiResult<()> {
                 tracing::warn!("Not found");
