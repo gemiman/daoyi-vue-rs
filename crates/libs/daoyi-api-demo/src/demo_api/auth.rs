@@ -1,7 +1,7 @@
 use axum::extract::ConnectInfo;
 use axum::{Extension, Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
-use daoyi_common_support::auth::{Principal, get_default_jwt};
+use daoyi_common_support::auth::jwt_auth::{Principal, get_default_jwt};
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::password::verify_password;

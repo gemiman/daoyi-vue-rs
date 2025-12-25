@@ -1,4 +1,4 @@
-use crate::auth::{JWT, get_default_jwt};
+use crate::auth::jwt_auth::{JWT, get_default_jwt};
 use crate::configs::AppConfig;
 use crate::error::ApiError;
 use axum::body::Body;

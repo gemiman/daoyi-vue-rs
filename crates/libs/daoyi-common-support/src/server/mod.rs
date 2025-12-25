@@ -1,5 +1,5 @@
 use crate::app::AppState;
-use crate::auth::Principal;
+use crate::auth::jwt_auth::Principal;
 use crate::configs::ServerConfig;
 use crate::error::ApiError;
 use crate::middlewares::jwt_auth_layer::get_auth_layer;
