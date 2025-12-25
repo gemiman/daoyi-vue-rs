@@ -1,0 +1,13 @@
+[package]
+name = "daoyi-macros"
+version = "0.1.0"
+edition = "2024"
+description = "Macros for Daoyi Vue RS"
+license = "MIT"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+syn = { version = "2.0.111", features = ["full", "extra-traits"] }
+quote = "1.0.42"

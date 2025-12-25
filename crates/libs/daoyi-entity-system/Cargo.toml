@@ -10,6 +10,7 @@ readme.workspace = true
 
 [dependencies]
 daoyi-common-support.workspace = true
+daoyi-macros.workspace = true
 sea-orm.workspace = true
 serde.workspace = true
 sa-token-plugin-axum.workspace = true
