@@ -34,8 +34,8 @@ auth:
   header_key_token: Authorization
   header_key_tenant: tenant-id
   token_expiration: 100000h
-  token_check_url: http://127.0.0.1:3001/admin-api/system/oauth2/check-token
-  tenant_check_url: http://127.0.0.1:3001/admin-api/system/tenant/check-token
+  token_check_url: http://127.0.0.1:48001/admin-api/system/oauth2/check-token
+  tenant_check_url: http://127.0.0.1:48001/admin-api/system/tenant/check-token
 redis:
   host: localhost
   port: 6379
