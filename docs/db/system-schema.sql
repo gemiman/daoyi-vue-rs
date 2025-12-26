@@ -221,3 +221,33 @@ COMMENT ON COLUMN system.system_dict_type.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_dict_type.deleted_time IS '删除时间';
 COMMENT ON COLUMN system.system_dict_type.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_dict_type IS '字典类型表';
+
+
+-- ----------------------------
+-- Table structure for system.system_user_role
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_user_role;
+CREATE TABLE system.system_user_role
+(
+    id          varchar(32) NOT NULL primary key,
+    user_id     varchar(32) NOT NULL,
+    role_id     varchar(32) NOT NULL,
+    creator     varchar(64) NULL     DEFAULT '',
+    create_time timestamp   NULL     DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(64) NULL     DEFAULT '',
+    update_time timestamp   NULL     DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean     NOT NULL DEFAULT false,
+    tenant_id   varchar(32) NOT NULL DEFAULT '0'
+);
+
+
+COMMENT ON COLUMN system.system_user_role.id IS '自增编号';
+COMMENT ON COLUMN system.system_user_role.user_id IS '用户ID';
+COMMENT ON COLUMN system.system_user_role.role_id IS '角色ID';
+COMMENT ON COLUMN system.system_user_role.creator IS '创建者';
+COMMENT ON COLUMN system.system_user_role.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_user_role.updater IS '更新者';
+COMMENT ON COLUMN system.system_user_role.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_user_role.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_user_role.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_user_role IS '用户和角色关联表';
