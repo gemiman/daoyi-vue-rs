@@ -25,7 +25,7 @@ pub async fn check_token(token: &str) -> ApiResult<AuthLoginRespVO> {
     let client = reqwest::Client::new();
 
     let resp = client
-        .get(token_check_url)
+        .post(token_check_url)
         .query(&[("token", token)])
         .send()
         .await
