@@ -251,3 +251,44 @@ COMMENT ON COLUMN system.system_user_role.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_user_role.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_user_role.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_user_role IS '用户和角色关联表';
+
+
+-- ----------------------------
+-- Table structure for system.system_role
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_role;
+CREATE TABLE system.system_role
+(
+    id                  varchar(32)  NOT NULL primary key,
+    name                varchar(30)  NOT NULL,
+    code                varchar(100) NOT NULL,
+    sort                int4         NOT NULL,
+    data_scope          varchar(1)   NOT NULL DEFAULT '1',
+    data_scope_dept_ids varchar(1)[] NOT NULL DEFAULT '{}',
+    status              varchar(1)   NOT NULL,
+    type                varchar(1)   NOT NULL,
+    remark              varchar(500) NULL     DEFAULT NULL,
+    creator             varchar(64)  NULL     DEFAULT '',
+    create_time         timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater             varchar(64)  NULL     DEFAULT '',
+    update_time         timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             boolean      NOT NULL DEFAULT false,
+    tenant_id           varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_role.id IS '角色ID';
+COMMENT ON COLUMN system.system_role.name IS '角色名称';
+COMMENT ON COLUMN system.system_role.code IS '角色权限字符串';
+COMMENT ON COLUMN system.system_role.sort IS '显示顺序';
+COMMENT ON COLUMN system.system_role.data_scope IS '数据范围（1：全部数据权限 2：自定数据权限 3：本部门数据权限 4：本部门及以下数据权限）';
+COMMENT ON COLUMN system.system_role.data_scope_dept_ids IS '数据范围 ( 指定部门数组)';
+COMMENT ON COLUMN system.system_role.status IS '角色状态（0正常 1停用）';
+COMMENT ON COLUMN system.system_role.type IS '角色类型';
+COMMENT ON COLUMN system.system_role.remark IS '备注';
+COMMENT ON COLUMN system.system_role.creator IS '创建者';
+COMMENT ON COLUMN system.system_role.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_role.updater IS '更新者';
+COMMENT ON COLUMN system.system_role.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_role.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_role.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_role IS '角色信息表';

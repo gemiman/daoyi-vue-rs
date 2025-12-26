@@ -1,6 +1,7 @@
 pub mod system_access_token_service;
 pub mod system_dict_data_service;
 pub mod system_dict_type_service;
+pub mod system_role_service;
 pub mod system_tenant_service;
 pub mod system_user_role_service;
 pub mod system_users_service;

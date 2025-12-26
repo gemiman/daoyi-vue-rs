@@ -2,6 +2,7 @@ use axum::extract::ConnectInfo;
 use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::context::HttpRequestContext;
+use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::password::verify_password;
 use daoyi_common_support::request::valid::ValidJson;
@@ -9,9 +10,12 @@ use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
     AuthLoginReqVO, AuthLoginRespVO, AuthPermissionInfoRespVO,
 };
+use daoyi_entity_system::system_entity::system_role;
 use daoyi_entity_system::system_service::{
-    system_access_token_service, system_user_role_service, system_users_service,
+    system_access_token_service, system_role_service, system_user_role_service,
+    system_users_service,
 };
+use std::collections::HashSet;
 use std::net::SocketAddr;
 
 pub fn create_router() -> Router<AppState> {
@@ -41,6 +45,24 @@ async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
     if role_ids.is_empty() {
         return ApiResponse::success(vo);
     }
+    let roles = system_role_service::get_role_list_by_ids(&role_ids)
+        .await?
+        .into_iter()
+        .filter(|r| r.status == CommonStatusEnum::Enable)
+        .collect::<Vec<system_role::Model>>();
+    let role_codes = roles
+        .iter()
+        .map(|r| r.code.to_owned())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+    vo.roles = role_codes;
+    let _role_ids = roles
+        .iter()
+        .map(|r| r.id.to_owned())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
     // 1.3 获得菜单列表
     // 2. 拼接结果返回
     ApiResponse::success(vo)
