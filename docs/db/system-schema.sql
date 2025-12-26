@@ -54,6 +54,15 @@ COMMENT ON COLUMN system.system_users.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_users.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_users.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_users IS '用户信息表';
+INSERT INTO system.system_users (id, username, password, nickname, remark, dept_id, post_ids, email, mobile, sex,
+                                 avatar, status, login_ip, login_date, creator, create_time, updater, update_time,
+                                 deleted, tenant_id)
+VALUES ('0'::varchar(32), 'admin'::varchar(30),
+        '$2b$04$oVX9LhAfLryctEw7L5iAk.R1XFXnW8Pq1KLi9MBvOA47nXisTnKKu'::varchar(100), '系统管理员'::varchar(256),
+        '系统管理员，默认初始化'::varchar(500), '0'::varchar(32), '{0}', 'gemiman@vip.qq.com'::varchar(50),
+        '17621038080'::varchar(11), '1'::varchar(1), DEFAULT, '0'::varchar(1), '0.0.0.0'::varchar(50),
+        '2025-12-26 12:16:02.000000'::timestamp, '0'::varchar(64), '2025-12-26 12:16:12.000000'::timestamp,
+        '0'::varchar(64), '2025-12-26 12:16:18.000000'::timestamp, false::boolean, '0'::varchar(32));
 
 
 -- ----------------------------
