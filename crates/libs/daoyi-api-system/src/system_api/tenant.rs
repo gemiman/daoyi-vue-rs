@@ -8,7 +8,24 @@ use serde::Deserialize;
 use validator::Validate;
 
 pub fn create_router() -> Router<AppState> {
-    Router::new().route("/check-tenant-id", routing::post(check_tenant_id))
+    Router::new()
+        .route("/check-tenant-id", routing::post(check_tenant_id))
+        .route("/get-by-website", routing::get(get_tenant_by_website))
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct GetTenantByWebsiteParams {
+    website: String,
+}
+#[debug_handler]
+async fn get_tenant_by_website(
+    ValidQuery(GetTenantByWebsiteParams { website }): ValidQuery<GetTenantByWebsiteParams>,
+) -> RestApiResult<Option<TenantRespVO>> {
+    if let Ok(model) = system_tenant_service::get_tenant_by_website(&website).await {
+        return ApiResponse::success(Some(model.into()));
+    }
+    ApiResponse::success(None)
 }
 
 #[derive(Debug, Deserialize, Validate)]

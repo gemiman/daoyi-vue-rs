@@ -91,7 +91,6 @@ impl Server {
             .merge(router)
             .layer(timeout)
             .layer(body_limit)
-            .layer(cors)
             .layer(normalize_path)
             .layer(tracing)
             .layer(middleware::from_fn(
@@ -106,6 +105,7 @@ impl Server {
                 tracing::warn!("Method not allowed");
                 Err(ApiError::MethodNotAllowed)
             })
+            .layer(cors)
             .with_state(state)
     }
 }

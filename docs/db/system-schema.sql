@@ -142,7 +142,7 @@ COMMENT ON TABLE system.system_tenant IS '租户表';
 INSERT INTO system.system_tenant (id, name, contact_user_id, contact_name, contact_mobile, status, websites, package_id,
                                   expire_time, account_count, creator, create_time, updater, update_time, deleted,
                                   tenant_id)
-VALUES ('0', '系统租户', '0', '兰陵王', '17621038080', '0', '', '0', '2035-12-26 16:15:46.000000', 3, '0',
+VALUES ('0', '系统租户', '0', '兰陵王', '17621038080', '0', 'localhost', '0', '2035-12-26 16:15:46.000000', 3, '0',
         '2025-12-26 16:16:16.000000', '0', '2025-12-26 16:16:25.000000', false, '0');
 commit;
 

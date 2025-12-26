@@ -1,8 +1,8 @@
+use crate::enumeration::CommonStatusEnum;
 use crate::serde::datetime_format;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
-use crate::enumeration::CommonStatusEnum;
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct AuthLoginReqVO {
@@ -34,4 +34,14 @@ pub struct TenantRespVO {
     pub package_id: String,
     pub expire_time: DateTime,
     pub account_count: i32,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictDataSimpleRespVO {
+    pub dict_type: String,
+    pub value: String,
+    pub label: String,
+    pub color_type: Option<String>,
+    pub css_class: Option<String>,
 }

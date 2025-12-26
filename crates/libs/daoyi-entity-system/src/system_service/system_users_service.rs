@@ -6,7 +6,8 @@ use sea_orm::entity::prelude::*;
 
 pub async fn get_by_username(username: &str) -> ApiResult<Option<system_users::Model>> {
     let db = database::get().await;
-    let option = SystemUsers::find()
+    let option = SystemUsers::find_perm()
+        .await
         .filter(system_users::Column::Username.eq(username))
         .one(db)
         .await?;

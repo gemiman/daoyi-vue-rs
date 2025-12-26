@@ -19,6 +19,17 @@ pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model
     Ok(option)
 }
 
+pub async fn get_tenant_by_website(website: &str) -> ApiResult<system_tenant::Model> {
+    let db = database::get().await;
+    let option = SystemTenant::find_perm()
+        .await
+        .filter(system_tenant::Column::Websites.eq(website))
+        .one(db)
+        .await?
+        .ok_or_else(|| ApiError::biz("租户不存在"))?;
+    Ok(option)
+}
+
 pub async fn check_tenant_id(tenant_id: &str) -> ApiResult<TenantRespVO> {
     let redis_key = RedisKey::CheckTenantId.key(tenant_id);
     // 1. Try to get from Redis
