@@ -6,11 +6,11 @@ pub type RestApiResult<T> = Result<ApiResponse<T>, ApiError>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ApiResponse<T> {
-    code: i32,
-    message: String,
+    pub code: i32,
+    pub message: String,
     #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<T>,
-    success: bool,
+    pub data: Option<T>,
+    pub success: bool,
 }
 
 impl<T> IntoResponse for ApiResponse<T>

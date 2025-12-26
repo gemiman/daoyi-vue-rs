@@ -11,7 +11,7 @@ pub struct AuthLoginReqVO {
     pub password: String,
 }
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct AuthLoginRespVO {
     pub tenant_id: String,

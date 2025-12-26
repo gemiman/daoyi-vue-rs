@@ -1,3 +1,4 @@
+use crate::auth;
 use crate::configs::AppConfig;
 use crate::context::HttpRequestContext;
 use crate::error::ApiError;
@@ -38,47 +39,48 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                     let token = value
                         .to_str()
                         .map_err(|_| {
-                            ApiError::Unauthenticated(String::from(
-                                "Authorization header value is not a string",
-                            ))
+                            ApiError::unauthenticated("Authorization header value is not a string")
                         })?
                         .strip_prefix("Bearer ")
                         .ok_or_else(|| {
-                            ApiError::Unauthenticated(String::from(
+                            ApiError::unauthenticated(
                                 "Authorization header value is not a Bearer token",
-                            ))
+                            )
                         })?;
                     Ok(token)
                 })
                 .transpose()?;
             if token.is_none() && !auth_config.is_ignored_auth(url) {
                 // token为空，返回错误信息
-                return Err(
-                    ApiError::Unauthenticated(String::from("No Authorization header"))
-                        .into_response(),
-                );
+                return Err(ApiError::unauthenticated("No Authorization header").into_response());
             }
+            let mut token_tenant_id = None;
             if let Some(token) = token {
+                let token_info = auth::check_token(token).await?;
+                token_tenant_id = Some(token_info.tenant_id);
                 context.token = Some(String::from(token));
             };
             let tenant_id = headers
                 .get(auth_config.header_key_tenant())
                 .map(|value| -> Result<_, ApiError> {
                     let tenant_id = value.to_str().map_err(|_| {
-                        ApiError::Unauthenticated(String::from(
-                            "Tenant header value is not a string",
-                        ))
+                        ApiError::unauthenticated("Tenant header value is not a string")
                     })?;
                     Ok(tenant_id)
                 })
                 .transpose()?;
             if tenant_id.is_none() && !auth_config.is_ignored_tenant(url) {
                 // Tenant 为空，返回错误信息
-                return Err(
-                    ApiError::Unauthenticated(String::from("No Tenant header")).into_response()
-                );
+                return Err(ApiError::unauthenticated("No Tenant header").into_response());
             }
             if let Some(tenant_id) = tenant_id {
+                if let Some(token_tenant_id) = token_tenant_id {
+                    if token_tenant_id != tenant_id {
+                        return Err(
+                            ApiError::unauthenticated("Token tenant id mismatch").into_response()
+                        );
+                    }
+                }
                 context.tenant_id = Some(String::from(tenant_id));
             };
             request.extensions_mut().insert(context);
