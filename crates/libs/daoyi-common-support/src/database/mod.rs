@@ -48,6 +48,16 @@ pub async fn get() -> &'static DatabaseConnection {
         .unwrap_or_else(|| panic!("Failed to load database config"))
 }
 
+/// 关闭数据库连接池
+/// 注意: SeaORM 的 DatabaseConnection 会在 Drop 时自动关闭连接
+/// 这个函数主要用于显式日志记录，实际的连接关闭会在程序退出时自动完成
+pub async fn shutdown() -> anyhow::Result<()> {
+    tracing::info!("Database connection pool will be closed on application exit");
+    // SeaORM 的 DatabaseConnection 实现了 Drop trait
+    // 当程序退出时会自动关闭所有连接
+    // 这里我们只记录日志，不需要手动关闭
+    Ok(())
+}
 async fn log_database_version(db: &DatabaseConnection) -> anyhow::Result<()> {
     let version_result = db
         .query_one(Statement::from_string(

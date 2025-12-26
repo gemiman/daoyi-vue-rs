@@ -7,7 +7,7 @@ use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::RestApiResult;
 use axum::extract::{DefaultBodyLimit, Request};
 use axum::http::StatusCode;
-use axum::{debug_handler, middleware, routing, Router};
+use axum::{Router, debug_handler, middleware, routing};
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 use tower_http::cors::{self, CorsLayer};
@@ -29,11 +29,35 @@ impl Server {
         let port = self.config.port();
         let listener = TcpListener::bind(format!("0.0.0.0:{port}",)).await?;
         tracing::info!("Server is listening on: http://127.0.0.1:{port}",);
-        axum::serve(
+        let result = axum::serve(
             listener,
             router.into_make_service_with_connect_info::<SocketAddr>(),
         )
-        .await?;
+        .with_graceful_shutdown(shutdown_signal())
+        .await;
+
+        // 服务关闭后执行清理工作
+        tracing::info!("Server shutdown initiated, cleaning up resources...");
+        self.cleanup().await?;
+        tracing::info!("Server has been gracefully shut down");
+
+        result?;
+        Ok(())
+    }
+
+    async fn cleanup(&self) -> anyhow::Result<()> {
+        use crate::{database, redis_utils};
+
+        // 关闭数据库连接池
+        if let Err(e) = database::shutdown().await {
+            tracing::error!("Failed to close database connection pool: {}", e);
+        }
+
+        // 关闭 Redis 连接池
+        if let Err(e) = redis_utils::shutdown().await {
+            tracing::error!("Failed to close Redis connection pool: {}", e);
+        }
+
         Ok(())
     }
 
@@ -83,6 +107,35 @@ impl Server {
                 Err(ApiError::MethodNotAllowed)
             })
             .with_state(state)
+    }
+}
+async fn shutdown_signal() {
+    use tokio::signal;
+
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("Failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("Failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {
+            tracing::info!("Received Ctrl+C signal, shutting down gracefully...");
+        },
+        _ = terminate => {
+            tracing::info!("Received SIGTERM signal, shutting down gracefully...");
+        },
     }
 }
 #[debug_handler]

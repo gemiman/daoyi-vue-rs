@@ -49,6 +49,15 @@ fn get_pool() -> anyhow::Result<&'static Pool> {
         .ok_or_else(|| anyhow::anyhow!("Redis pool not initialized"))
 }
 
+/// 关闭 Redis 连接池
+pub async fn shutdown() -> anyhow::Result<()> {
+    if let Some(pool) = REDIS.get() {
+        tracing::info!("Closing Redis connection pool...");
+        pool.close();
+        tracing::info!("Redis connection pool closed successfully");
+    }
+    Ok(())
+}
 /// 测试Redis连接
 pub async fn test_redis() -> anyhow::Result<String> {
     let v: String = get(CONNECTION_TEST_KEY).await?;
