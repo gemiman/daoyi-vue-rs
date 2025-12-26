@@ -45,3 +45,40 @@ pub struct DictDataSimpleRespVO {
     pub color_type: Option<String>,
     pub css_class: Option<String>,
 }
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct AuthPermissionInfoRespVO {
+    pub user: UserVO,
+    pub roles: Vec<String>,
+    pub permissions: Vec<String>,
+    pub menus: Vec<MenuVO>,
+}
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct UserVO {
+    pub id: String,
+    pub nickname: String,
+    pub avatar: Option<String>,
+    pub dept_id: Option<String>,
+    pub username: String,
+    pub email: Option<String>,
+}
+
+#[derive(Debug, Serialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct MenuVO {
+    pub id: String,
+    pub parent_id: String,
+    pub name: String,
+    pub path: String,
+    pub component: Option<String>,
+    pub component_name: Option<String>,
+    pub icon: String,
+    pub visible: bool,
+    pub keep_alive: bool,
+    pub always_show: bool,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub children: Vec<MenuVO>,
+}
