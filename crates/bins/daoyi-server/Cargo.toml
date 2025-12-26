@@ -1,0 +1,16 @@
+[package]
+name = "daoyi-server"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description.workspace = true
+license.workspace = true
+authors.workspace = true
+readme.workspace = true
+
+[dependencies]
+daoyi-common-support.workspace = true
+daoyi-api-system.workspace = true
+tokio.workspace = true
+anyhow.workspace = true
+axum.workspace = true
