@@ -28,14 +28,16 @@ auth:
     - /
     - "**/login"
     - /admin-api/system/oauth2/check-token
+    - /admin-api/system/tenant/check-tenant-id
   tenant_ignored_urls:
     - /
     - /admin-api/system/oauth2/check-token
+    - /admin-api/system/tenant/check-tenant-id
   header_key_token: Authorization
   header_key_tenant: tenant-id
   token_expiration: 100000h
   token_check_url: http://127.0.0.1:48001/admin-api/system/oauth2/check-token
-  tenant_check_url: http://127.0.0.1:48001/admin-api/system/tenant/check-token
+  tenant_check_url: http://127.0.0.1:48001/admin-api/system/tenant/check-tenant-id
 redis:
   host: localhost
   port: 6379

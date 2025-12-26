@@ -2,6 +2,7 @@
 #[strum(serialize_all = "snake_case")]
 pub enum RedisKey {
     CheckToken,
+    CheckTenantId,
 }
 
 impl RedisKey {

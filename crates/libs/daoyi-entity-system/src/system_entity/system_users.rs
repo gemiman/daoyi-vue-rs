@@ -3,6 +3,8 @@
 use daoyi_macros::{daoyi_model, DaoyiActiveModelBehavior};
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
+use daoyi_common_support::enumeration::CommonStatusEnum;
+
 #[daoyi_model]
 #[derive(
     Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, DaoyiActiveModelBehavior,
@@ -22,7 +24,7 @@ pub struct Model {
     pub mobile: Option<String>,
     pub sex: Option<String>,
     pub avatar: Option<String>,
-    pub status: String,
+    pub status: CommonStatusEnum,
     pub login_ip: Option<String>,
     pub login_date: Option<DateTime>,
 }

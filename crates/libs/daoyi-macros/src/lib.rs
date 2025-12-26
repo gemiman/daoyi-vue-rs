@@ -224,3 +224,32 @@ pub fn derive_before_insert(input: TokenStream) -> TokenStream {
     
     TokenStream::from(before_save_impl)
 }
+
+/// 自动实现 IntoActiveValue trait
+/// 
+/// 该宏为枚举自动实现 `IntoActiveValue<T>`，将枚举值包装为 `ActiveValue::Set(self)`。
+/// 
+/// # 示例
+/// 
+/// ```rust
+/// #[derive(DaoyiIntoActiveValue)]
+/// pub enum Gender {
+///     Male,
+///     Female,
+/// }
+/// ```
+#[proc_macro_derive(DaoyiIntoActiveValue)]
+pub fn derive_daoyi_into_active_value(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    let expanded = quote! {
+        impl sea_orm::IntoActiveValue<#name> for #name {
+            fn into_active_value(self) -> sea_orm::ActiveValue<#name> {
+                sea_orm::ActiveValue::Set(self)
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}

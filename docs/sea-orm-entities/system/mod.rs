@@ -3,4 +3,5 @@
 pub mod prelude;
 
 pub mod system_access_token;
+pub mod system_tenant;
 pub mod system_users;

@@ -80,6 +80,8 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                             ApiError::unauthenticated("Token tenant id mismatch").into_response()
                         );
                     }
+                } else {
+                    auth::check_tenant_id(tenant_id).await?;
                 }
                 context.tenant_id = Some(String::from(tenant_id));
             };

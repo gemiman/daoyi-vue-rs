@@ -2,6 +2,7 @@ use crate::serde::datetime_format;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
+use crate::enumeration::CommonStatusEnum;
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct AuthLoginReqVO {
@@ -19,4 +20,18 @@ pub struct AuthLoginRespVO {
     pub access_token: String,
     #[serde(with = "datetime_format")]
     pub expires_time: DateTime,
+}
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantRespVO {
+    pub id: String,
+    pub name: String,
+    pub contact_user_id: Option<String>,
+    pub contact_name: String,
+    pub contact_mobile: Option<String>,
+    pub status: CommonStatusEnum,
+    pub websites: Option<String>,
+    pub package_id: String,
+    pub expire_time: DateTime,
+    pub account_count: i32,
 }

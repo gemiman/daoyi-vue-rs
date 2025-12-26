@@ -1,10 +1,21 @@
 pub mod redis_keys;
 
+use daoyi_macros::DaoyiIntoActiveValue;
 use sea_orm::prelude::*;
-use sea_orm::{ActiveValue, IntoActiveValue};
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, EnumIter, DeriveActiveEnum)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+)]
 #[serde(rename_all = "snake_case")]
 #[sea_orm(
     rs_type = "String",
@@ -20,8 +31,23 @@ pub enum Gender {
     Female,
 }
 
-impl IntoActiveValue<Gender> for Gender {
-    fn into_active_value(self) -> ActiveValue<Gender> {
-        ActiveValue::Set(self)
-    }
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+)]
+#[serde(rename_all = "snake_case")]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum CommonStatusEnum {
+    #[sea_orm(string_value = "0")]
+    Enable,
+    #[sea_orm(string_value = "1")]
+    Disable,
 }
