@@ -1,3 +1,5 @@
+pub mod redis_keys;
+
 use sea_orm::prelude::*;
 use sea_orm::{ActiveValue, IntoActiveValue};
 use serde::{Deserialize, Serialize};

@@ -36,3 +36,5 @@ nacos-sdk.workspace = true
 redis.workspace = true
 deadpool-redis.workspace = true
 reqwest.workspace = true
+strum.workspace = true
+strum_macros.workspace = true

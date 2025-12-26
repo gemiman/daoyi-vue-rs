@@ -1,4 +1,5 @@
 use crate::configs::AppConfig;
+use crate::enumeration::redis_keys::RedisKey;
 use crate::error::{ApiError, ApiResult};
 use crate::redis_utils;
 use crate::response::ApiResponse;
@@ -13,7 +14,7 @@ pub struct Principal {
 }
 
 pub async fn check_token(token: &str) -> ApiResult<AuthLoginRespVO> {
-    let redis_key = format!("check_token:{token}");
+    let redis_key = RedisKey::CheckToken.key(token);
 
     // 1. Try to get from Redis
     if let Some(vo) = redis_utils::cache_get_json::<AuthLoginRespVO>(&redis_key).await? {
