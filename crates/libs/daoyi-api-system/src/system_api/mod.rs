@@ -4,7 +4,7 @@ use daoyi_common_support::app::AppState;
 mod auth;
 mod captcha;
 mod dept;
-mod dict;
+mod dict_data;
 mod ip;
 mod logger;
 mod mail;
@@ -22,7 +22,7 @@ pub fn create_router() -> Router<AppState> {
         .nest("/auth", auth::create_router())
         .nest("/captcha", captcha::create_router())
         .nest("/dept", dept::create_router())
-        .nest("/dict", dict::create_router())
+        .nest("/dict-data", dict_data::create_router())
         .nest("/ip", ip::create_router())
         .nest("/logger", logger::create_router())
         .nest("/mail", mail::create_router())

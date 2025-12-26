@@ -59,11 +59,11 @@ INSERT INTO system.system_users (id, username, password, nickname, remark, dept_
                                  deleted, tenant_id)
 VALUES ('0'::varchar(32), 'admin'::varchar(30),
         '$2b$04$oVX9LhAfLryctEw7L5iAk.R1XFXnW8Pq1KLi9MBvOA47nXisTnKKu'::varchar(100), '系统管理员'::varchar(256),
-        '系统管理员，默认初始化'::varchar(500), '0'::varchar(32), '{0}', 'gemiman@vip.qq.com'::varchar(50),
+        '系统管理员，默认初始化，密码：Aa123456'::varchar(500), '0'::varchar(32), '{0}', 'gemiman@vip.qq.com'::varchar(50),
         '17621038080'::varchar(11), '1'::varchar(1), DEFAULT, '0'::varchar(1), '0.0.0.0'::varchar(50),
         '2025-12-26 12:16:02.000000'::timestamp, '0'::varchar(64), '2025-12-26 12:16:12.000000'::timestamp,
         '0'::varchar(64), '2025-12-26 12:16:18.000000'::timestamp, false::boolean, '0'::varchar(32));
-
+commit;
 
 -- ----------------------------
 -- Table structure for system.system_access_token
@@ -111,7 +111,7 @@ CREATE TABLE system.system_tenant
     contact_mobile  varchar(128) NULL     DEFAULT NULL,
     status          varchar(1)   NOT NULL DEFAULT '0',
     websites        varchar(256) NULL     DEFAULT '',
-    package_id      varchar(32)         NOT NULL,
+    package_id      varchar(32)  NOT NULL,
     expire_time     timestamp    NOT NULL,
     account_count   int4         NOT NULL,
     creator         varchar(32)  NULL     DEFAULT '',
@@ -139,3 +139,85 @@ COMMENT ON COLUMN system.system_tenant.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_tenant.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_tenant.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_tenant IS '租户表';
+INSERT INTO system.system_tenant (id, name, contact_user_id, contact_name, contact_mobile, status, websites, package_id,
+                                  expire_time, account_count, creator, create_time, updater, update_time, deleted,
+                                  tenant_id)
+VALUES ('0', '系统租户', '0', '兰陵王', '17621038080', '0', '', '0', '2035-12-26 16:15:46.000000', 3, '0',
+        '2025-12-26 16:16:16.000000', '0', '2025-12-26 16:16:25.000000', false, '0');
+commit;
+
+
+-- ----------------------------
+-- Table structure for system.system_dict_data
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_dict_data;
+CREATE TABLE system.system_dict_data
+(
+    id          varchar(32)  NOT NULL primary key,
+    sort        int4         NOT NULL DEFAULT 0,
+    label       varchar(100) NOT NULL DEFAULT '',
+    value       varchar(100) NOT NULL DEFAULT '',
+    dict_type   varchar(100) NOT NULL DEFAULT '',
+    status      varchar(1)   NOT NULL DEFAULT '0',
+    color_type  varchar(100) NULL     DEFAULT '',
+    css_class   varchar(100) NULL     DEFAULT '',
+    remark      varchar(500) NULL     DEFAULT NULL,
+    creator     varchar(32)  NULL     DEFAULT '',
+    create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(32)  NULL     DEFAULT '',
+    update_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean      NOT NULL DEFAULT false,
+    tenant_id   varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_dict_data.id IS '字典编码';
+COMMENT ON COLUMN system.system_dict_data.sort IS '字典排序';
+COMMENT ON COLUMN system.system_dict_data.label IS '字典标签';
+COMMENT ON COLUMN system.system_dict_data.value IS '字典键值';
+COMMENT ON COLUMN system.system_dict_data.dict_type IS '字典类型';
+COMMENT ON COLUMN system.system_dict_data.status IS '状态（0正常 1停用）';
+COMMENT ON COLUMN system.system_dict_data.color_type IS '颜色类型';
+COMMENT ON COLUMN system.system_dict_data.css_class IS 'css 样式';
+COMMENT ON COLUMN system.system_dict_data.remark IS '备注';
+COMMENT ON COLUMN system.system_dict_data.creator IS '创建者';
+COMMENT ON COLUMN system.system_dict_data.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_dict_data.updater IS '更新者';
+COMMENT ON COLUMN system.system_dict_data.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_dict_data.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_dict_data.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_dict_data IS '字典数据表';
+
+
+-- ----------------------------
+-- Table structure for system.system_dict_type
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_dict_type;
+CREATE TABLE system.system_dict_type
+(
+    id           varchar(32)  NOT NULL primary key,
+    name         varchar(100) NOT NULL DEFAULT '',
+    type         varchar(100) NOT NULL DEFAULT '',
+    status       varchar(1)   NOT NULL DEFAULT '0',
+    remark       varchar(500) NULL     DEFAULT NULL,
+    deleted_time timestamp    NULL     DEFAULT NULL,
+    creator      varchar(32)  NULL     DEFAULT '',
+    create_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater      varchar(32)  NULL     DEFAULT '',
+    update_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted      boolean      NOT NULL DEFAULT false,
+    tenant_id    varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_dict_type.id IS '字典主键';
+COMMENT ON COLUMN system.system_dict_type.name IS '字典名称';
+COMMENT ON COLUMN system.system_dict_type.type IS '字典类型';
+COMMENT ON COLUMN system.system_dict_type.status IS '状态（0正常 1停用）';
+COMMENT ON COLUMN system.system_dict_type.remark IS '备注';
+COMMENT ON COLUMN system.system_dict_type.creator IS '创建者';
+COMMENT ON COLUMN system.system_dict_type.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_dict_type.updater IS '更新者';
+COMMENT ON COLUMN system.system_dict_type.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_dict_type.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_dict_type.deleted_time IS '删除时间';
+COMMENT ON COLUMN system.system_dict_type.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_dict_type IS '字典类型表';
