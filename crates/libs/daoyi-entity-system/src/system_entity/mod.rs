@@ -6,4 +6,5 @@ pub mod system_access_token;
 pub mod system_dict_data;
 pub mod system_dict_type;
 pub mod system_tenant;
+pub mod system_user_role;
 pub mod system_users;
