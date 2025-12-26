@@ -73,7 +73,8 @@ pub async fn cache_get_json<V>(key: &str) -> ApiResult<Option<V>>
 where
     V: DeserializeOwned,
 {
-    let json_str = get::<Option<String>>(key_generator(key).await.as_ref()).await?;
+    let key1 = key_generator(key).await;
+    let json_str = get::<Option<String>>(key1.as_str()).await?;
     if json_str.is_none() {
         return Ok(None);
     }
@@ -86,14 +87,14 @@ where
     V: Serialize,
 {
     let json_str = serde_json::to_string(value)?;
-    cache_set(key_generator(key).await.as_ref(), json_str).await
+    cache_set(key, json_str).await
 }
 pub async fn cache_set_json_ex<V>(key: &str, value: &V, expire_seconds: u64) -> ApiResult<()>
 where
     V: Serialize,
 {
     let json_str = serde_json::to_string(value)?;
-    cache_set_ex(key_generator(key).await.as_ref(), json_str, expire_seconds).await
+    cache_set_ex(key, json_str, expire_seconds).await
 }
 
 pub async fn cache_get<V>(key: &str) -> ApiResult<Option<V>>

@@ -34,7 +34,7 @@ impl RedisConfig {
     pub fn cache_key_prefix(&self) -> &str {
         self.cache_key_prefix
             .as_deref()
-            .unwrap_or("app:daoyi-vue-rs")
+            .unwrap_or("app:daoyivuers")
     }
 
     pub fn expire_seconds(&self) -> u64 {
