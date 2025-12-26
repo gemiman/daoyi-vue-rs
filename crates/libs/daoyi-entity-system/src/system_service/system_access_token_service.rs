@@ -14,7 +14,7 @@ pub async fn get_access_token(token: &str) -> anyhow::Result<system_access_token
         .filter(system_access_token::Column::AccessToken.eq(token))
         .one(db)
         .await?
-        .ok_or_else(|| anyhow::anyhow!("No system access token"))?;
+        .ok_or_else(|| anyhow::anyhow!("Token不存在"))?;
     Ok(option)
 }
 

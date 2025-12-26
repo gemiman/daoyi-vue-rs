@@ -9,7 +9,7 @@ use daoyi_common_support::password::hash_password;
 use daoyi_common_support::request::path::Path;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::request::validation;
-use daoyi_common_support::response::{ApiResponse, ApiResult};
+use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
 use daoyi_entity_demo::demo_entity::sys_user::ActiveModel;
@@ -45,7 +45,7 @@ pub struct UserParams {
 }
 
 #[debug_handler]
-async fn create(ValidJson(params): ValidJson<UserParams>) -> ApiResult<sys_user::Model> {
+async fn create(ValidJson(params): ValidJson<UserParams>) -> RestApiResult<sys_user::Model> {
     let active_model = params.into_active_model();
     let model = active_model.insert(database::get().await).await?;
     Ok(ApiResponse::ok(Some(model)))
@@ -55,7 +55,7 @@ async fn create(ValidJson(params): ValidJson<UserParams>) -> ApiResult<sys_user:
 async fn update(
     Path(id): Path<String>,
     ValidJson(params): ValidJson<UserParams>,
-) -> ApiResult<sys_user::Model> {
+) -> RestApiResult<sys_user::Model> {
     let db = database::get().await;
     let mut existed_active_model = SysUser::find_by_id(&id)
         .one(db)
@@ -77,7 +77,7 @@ async fn update(
 }
 
 #[debug_handler]
-async fn delete(Path(id): Path<String>) -> ApiResult<u64> {
+async fn delete(Path(id): Path<String>) -> RestApiResult<u64> {
     let db = database::get().await;
     let existed_user = SysUser::find_by_id(id)
         .one(db)
@@ -101,7 +101,7 @@ async fn find_page(
         keyword,
         pagination,
     }): ValidQuery<UserQueryParams>,
-) -> ApiResult<Page<sys_user::Model>> {
+) -> RestApiResult<Page<sys_user::Model>> {
     let paginator = SysUser::find()
         .apply_if(keyword.as_ref(), |query, keyword| {
             query.filter(
@@ -120,7 +120,7 @@ async fn find_page(
 
 #[debug_handler]
 #[tracing::instrument(name = "Query users", skip_all, fields(pay_method = "alipay"))]
-async fn query_users() -> ApiResult<Vec<sys_user::Model>> {
+async fn query_users() -> RestApiResult<Vec<sys_user::Model>> {
     let db = database::get().await;
     tracing::warn!("出错了吗？");
     let users = SysUser::find()

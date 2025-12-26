@@ -3,14 +3,14 @@ use axum::extract::rejection::{JsonRejection, PathRejection, QueryRejection};
 use axum::http::StatusCode;
 use axum::response::{IntoResponse, Response};
 use axum_valid::{ValidRejection, ValidationRejection};
-
+pub type ApiResult<T> = Result<T, ApiError>;
 #[derive(Debug, thiserror::Error)]
 pub enum ApiError {
-    #[error("Not Found")]
+    #[error("服务器迷路了")]
     NotFound,
-    #[error("Method not Allowed")]
+    #[error("请求方法不被允许")]
     MethodNotAllowed,
-    #[error("Database Error: {0}")]
+    #[error("数据库错误: {0}")]
     Database(#[from] sea_orm::DbErr),
     #[error("查询参数错误: {0}")]
     Query(#[from] QueryRejection),
@@ -26,7 +26,7 @@ pub enum ApiError {
     Unauthenticated(String),
     #[error("{0}")]
     Biz(String),
-    #[error("Error: {0}")]
+    #[error("系统错误: {0}")]
     Internal(#[from] anyhow::Error),
 }
 

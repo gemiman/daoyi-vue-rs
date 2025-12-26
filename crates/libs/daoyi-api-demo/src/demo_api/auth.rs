@@ -4,7 +4,7 @@ use daoyi_common_support::app::AppState;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::password::verify_password;
 use daoyi_common_support::request::valid::ValidJson;
-use daoyi_common_support::response::{ApiResponse, ApiResult};
+use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::{database, id};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
@@ -39,7 +39,7 @@ pub struct LoginResult {
 async fn login(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     ValidJson(params): ValidJson<LoginParams>,
-) -> ApiResult<LoginResult> {
+) -> RestApiResult<LoginResult> {
     tracing::info!("开始处理登录逻辑。。。");
     let db = database::get().await;
     let user = SysUser::find()
@@ -56,12 +56,12 @@ async fn login(
 }
 
 #[debug_handler]
-async fn logout() -> ApiResult<()> {
+async fn logout() -> RestApiResult<()> {
     ApiResponse::success(())
 }
 
 #[debug_handler]
-async fn get_user_info() -> ApiResult<sys_user::Model> {
+async fn get_user_info() -> RestApiResult<sys_user::Model> {
     let user = SysUser::find_by_id("1").one(database::get().await).await?;
     Ok(ApiResponse::ok(user))
 }

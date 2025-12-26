@@ -5,7 +5,7 @@ use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::password::verify_password;
 use daoyi_common_support::request::valid::ValidJson;
-use daoyi_common_support::response::{ApiResponse, ApiResult};
+use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{AuthLoginReqVO, AuthLoginRespVO};
 use daoyi_entity_system::system_service::{system_access_token_service, system_users_service};
 use std::net::SocketAddr;
@@ -21,7 +21,7 @@ pub fn create_router() -> Router<AppState> {
 async fn login(
     ConnectInfo(addr): ConnectInfo<SocketAddr>,
     ValidJson(params): ValidJson<AuthLoginReqVO>,
-) -> ApiResult<AuthLoginRespVO> {
+) -> RestApiResult<AuthLoginRespVO> {
     tracing::info!("开始处理登录逻辑。。。");
     let user = system_users_service::get_by_username(&params.username)
         .await?
@@ -40,6 +40,6 @@ async fn login(
 }
 
 #[debug_handler]
-async fn logout() -> ApiResult<()> {
+async fn logout() -> RestApiResult<()> {
     ApiResponse::success(())
 }

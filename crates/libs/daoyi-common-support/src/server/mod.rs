@@ -4,7 +4,7 @@ use crate::configs::ServerConfig;
 use crate::error::ApiError;
 use crate::middlewares::simple_auth_layer;
 use crate::middlewares::trace_layer::LatencyOnResponse;
-use crate::response::ApiResult;
+use crate::response::RestApiResult;
 use axum::extract::{DefaultBodyLimit, Request};
 use axum::http::StatusCode;
 use axum::{debug_handler, middleware, routing, Router};
@@ -74,11 +74,11 @@ impl Server {
                 simple_auth_layer::thread_local_middleware,
             ))
             .route_layer(simple_auth_layer::get_auth_layer().await)
-            .fallback(async || -> ApiResult<()> {
+            .fallback(async || -> RestApiResult<()> {
                 tracing::warn!("Not found");
                 Err(ApiError::NotFound)
             })
-            .method_not_allowed_fallback(async || -> ApiResult<()> {
+            .method_not_allowed_fallback(async || -> RestApiResult<()> {
                 tracing::warn!("Method not allowed");
                 Err(ApiError::MethodNotAllowed)
             })

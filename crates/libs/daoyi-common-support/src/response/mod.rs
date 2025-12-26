@@ -2,7 +2,7 @@ use crate::error::ApiError;
 use axum::response::IntoResponse;
 use serde::{Deserialize, Serialize};
 
-pub type ApiResult<T> = Result<ApiResponse<T>, ApiError>;
+pub type RestApiResult<T> = Result<ApiResponse<T>, ApiError>;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ApiResponse<T> {
@@ -33,7 +33,7 @@ impl<T> ApiResponse<T> {
         }
     }
 
-    pub fn success(data: T) -> ApiResult<T> {
+    pub fn success(data: T) -> RestApiResult<T> {
         Ok(Self::ok(Some(data)))
     }
 
