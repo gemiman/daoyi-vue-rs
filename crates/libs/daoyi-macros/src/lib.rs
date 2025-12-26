@@ -35,7 +35,22 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
         }
     }
 
-    TokenStream::from(quote! { #item_struct })
+    TokenStream::from(quote! {
+        #item_struct
+
+        impl Entity {
+            pub async fn find_perm() -> sea_orm::Select<Entity> {
+                use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
+                let mut query = <Self as EntityTrait>::find()
+                    .filter(Column::Deleted.eq(false));
+
+                if let Some(tenant_id) = daoyi_common_support::context::HttpRequestContext::get_tenant_id().await {
+                     query = query.filter(Column::TenantId.eq(tenant_id));
+                }
+                query
+            }
+        }
+    })
 }
 
 /// 自动实现 ActiveModelBehavior 的 before_save 方法（通用版本）

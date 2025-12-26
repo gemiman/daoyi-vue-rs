@@ -11,7 +11,8 @@ use sea_orm::Set;
 
 pub async fn get_access_token(token: &str) -> ApiResult<system_access_token::Model> {
     let db = database::get().await;
-    let option = SystemAccessToken::find()
+    let option = SystemAccessToken::find_perm()
+        .await
         .filter(system_access_token::Column::AccessToken.eq(token))
         .one(db)
         .await?

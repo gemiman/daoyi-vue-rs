@@ -59,7 +59,19 @@ impl HttpRequestContext {
     pub fn get_current() -> Option<HttpRequestContext> {
         CONTEXT.with(|c| c.borrow().clone())
     }
+    pub async fn get_login_id() -> Option<String> {
+        if let Ok(login_id) = Self::get_login_id_as_string().await {
+            return Some(login_id);
+        }
+        None
+    }
 
+    pub async fn get_tenant_id() -> Option<String> {
+        if let Ok(tenant_id) = Self::get_tenant_id_as_string().await {
+            return Some(tenant_id);
+        }
+        None
+    }
     pub async fn get_login_id_as_string() -> anyhow::Result<String> {
         Self::get_current()
             .and_then(|ctx| ctx.login_id)
