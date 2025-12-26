@@ -1,6 +1,42 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, Data, DeriveInput, Fields};
+use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Fields, ItemStruct};
+
+#[proc_macro_attribute]
+pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
+    let mut item_struct = parse_macro_input!(input as ItemStruct);
+
+    if let Fields::Named(ref mut fields) = item_struct.fields {
+        let new_fields: Vec<syn::Field> = vec![
+            parse_quote! {
+                pub creator: Option<String>
+            },
+            parse_quote! {
+                #[serde(with = "daoyi_common_support::serde::datetime_format")]
+                pub create_time: DateTime
+            },
+            parse_quote! {
+                pub updater: Option<String>
+            },
+            parse_quote! {
+                #[serde(with = "daoyi_common_support::serde::datetime_format")]
+                pub update_time: DateTime
+            },
+            parse_quote! {
+                pub deleted: bool
+            },
+            parse_quote! {
+                pub tenant_id: String
+            },
+        ];
+
+        for field in new_fields {
+            fields.named.push(field);
+        }
+    }
+
+    TokenStream::from(quote! { #item_struct })
+}
 
 /// 自动实现 ActiveModelBehavior 的 before_save 方法（通用版本）
 /// 
