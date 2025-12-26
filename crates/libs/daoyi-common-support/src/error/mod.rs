@@ -28,6 +28,14 @@ pub enum ApiError {
     Biz(String),
     #[error("系统错误: {0}")]
     Internal(#[from] anyhow::Error),
+    #[error("glob错误: {0}")]
+    Glob(#[from] wax::BuildError),
+    #[error("serde_json错误：{0}")]
+    SerdeJson(#[from] serde_json::Error),
+    #[error("Redis错误：{0}")]
+    Redis(#[from] deadpool_redis::redis::RedisError),
+    #[error("RedisPool错误：{0}")]
+    RedisPool(#[from] deadpool_redis::PoolError),
 }
 
 impl From<ValidRejection<ApiError>> for ApiError {
@@ -89,12 +97,16 @@ fn format_validation_errors(
 }
 
 impl ApiError {
+    pub fn biz<M: AsRef<str>>(msg: M) -> Self {
+        Self::Biz(String::from(msg.as_ref()))
+    }
     pub fn status_code(&self) -> StatusCode {
         use ApiError::*;
         match self {
             NotFound => StatusCode::NOT_FOUND,
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
-            Internal(_) | Database(_) | Bcrypt(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Internal(_) | Database(_) | Bcrypt(_) | Glob(_) | SerdeJson(_) | Redis(_)
+            | RedisPool(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Query(_) | Path(_) | Json(_) | Validation(_) => StatusCode::BAD_REQUEST,
             Unauthenticated(_) => StatusCode::UNAUTHORIZED,
             Biz(_) => StatusCode::OK,

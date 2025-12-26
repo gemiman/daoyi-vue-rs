@@ -3,6 +3,7 @@ use merge::Merge;
 use serde::Deserialize;
 use std::time::Duration;
 use wax::{Glob, Pattern};
+use crate::error::ApiResult;
 
 #[derive(Debug, Deserialize, Default, Merge)]
 pub struct AuthConfig {
@@ -54,14 +55,14 @@ impl AuthConfig {
     }
 }
 
-fn path_matches(pattern: &str, target: &str) -> anyhow::Result<bool> {
+fn path_matches(pattern: &str, target: &str) -> ApiResult<bool> {
     // 将通配符模式编译为 Glob 表达式
     let glob = Glob::new(pattern)?;
     // 判断目标路径是否匹配该模式
     Ok(glob.is_match(target))
 }
 
-fn path_any_matches<A: AsRef<str>>(patterns: &[A], target: &str) -> anyhow::Result<bool> {
+fn path_any_matches<A: AsRef<str>>(patterns: &[A], target: &str) -> ApiResult<bool> {
     for pattern in patterns {
         if path_matches(pattern.as_ref(), target)? {
             return Ok(true);

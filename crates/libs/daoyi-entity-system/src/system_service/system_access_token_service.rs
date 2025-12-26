@@ -3,25 +3,26 @@ use crate::system_entity::system_access_token;
 use daoyi_common_support::configs::AppConfig;
 use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::database;
+use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::AuthLoginRespVO;
-use sea_orm::Set;
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
+use sea_orm::Set;
 
-pub async fn get_access_token(token: &str) -> anyhow::Result<system_access_token::Model> {
+pub async fn get_access_token(token: &str) -> ApiResult<system_access_token::Model> {
     let db = database::get().await;
     let option = SystemAccessToken::find()
         .filter(system_access_token::Column::AccessToken.eq(token))
         .one(db)
         .await?
-        .ok_or_else(|| anyhow::anyhow!("Token不存在"))?;
+        .ok_or_else(|| ApiError::biz("Token不存在"))?;
     Ok(option)
 }
 
 pub async fn create_token_after_login_success(
     tenant_id: &str,
     login_id: &str,
-) -> anyhow::Result<AuthLoginRespVO> {
+) -> ApiResult<AuthLoginRespVO> {
     let access_token = loop {
         let token = xid::new().to_string();
         if let Err(_) = get_access_token(&token).await {
