@@ -1,7 +1,7 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_tenant;
-use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::enumeration::CommonStatusEnum;
+use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::TenantRespVO;
 use daoyi_common_support::{database, redis_utils};
@@ -13,6 +13,17 @@ pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model
     let option = SystemTenant::find_perm()
         .await
         .filter(system_tenant::Column::Id.eq(tenant_id))
+        .one(db)
+        .await?
+        .ok_or_else(|| ApiError::biz("租户不存在"))?;
+    Ok(option)
+}
+
+pub async fn get_tenant_by_name(name: &str) -> ApiResult<system_tenant::Model> {
+    let db = database::get().await;
+    let option = SystemTenant::find_perm()
+        .await
+        .filter(system_tenant::Column::Name.eq(name))
         .one(db)
         .await?
         .ok_or_else(|| ApiError::biz("租户不存在"))?;
