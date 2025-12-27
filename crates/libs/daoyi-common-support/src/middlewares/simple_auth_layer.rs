@@ -34,7 +34,7 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             let url = request.uri().path();
             let headers = request.headers();
             let is_ignored_tenant = auth_config.is_ignored_tenant(url);
-            context.ignore_tenant = is_ignored_tenant;
+            context.ignore_tenant = Some(is_ignored_tenant);
             let token = headers
                 .get(auth_config.header_key_token())
                 .map(|value| -> Result<_, ApiError> {

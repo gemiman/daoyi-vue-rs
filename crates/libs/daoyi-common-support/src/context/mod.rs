@@ -30,9 +30,9 @@ pub struct HttpRequestContext {
 
     /// 登录 ID | Login ID
     pub login_id: Option<String>,
-    
+
     /// 是否忽略租户
-    pub ignore_tenant: bool,
+    pub ignore_tenant: Option<bool>,
 }
 
 impl HttpRequestContext {
@@ -41,7 +41,7 @@ impl HttpRequestContext {
             token: None,
             tenant_id: None,
             login_id: None,
-            ignore_tenant: false,
+            ignore_tenant: None,
         }
     }
 
@@ -86,6 +86,13 @@ impl HttpRequestContext {
         Self::get_current()
             .and_then(|ctx| ctx.tenant_id)
             .ok_or_else(|| anyhow::anyhow!("tenant_id is None"))
+    }
+
+    pub fn get_ignore_tenant() -> bool {
+        Self::get_current()
+            .and_then(|ctx| ctx.ignore_tenant)
+            .ok_or_else(|| anyhow::anyhow!("ignore_tenant is None"))
+            .unwrap_or(false)
     }
 
     /// 清除当前上下文 | Clear Current Context

@@ -27,6 +27,7 @@ pub struct Model {
     pub visible: bool,
     pub keep_alive: bool,
     pub always_show: bool,
+    pub api: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

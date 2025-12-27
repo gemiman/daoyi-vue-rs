@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, parse_quote, Data, DeriveInput, Fields, ItemStruct};
+use syn::{Data, DeriveInput, Fields, ItemStruct, parse_macro_input, parse_quote};
 
 #[proc_macro_attribute]
 pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
@@ -45,7 +45,9 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
                     .filter(Column::Deleted.eq(false));
 
                 if let Some(tenant_id) = daoyi_common_support::context::HttpRequestContext::get_tenant_id().await {
-                     query = query.filter(Column::TenantId.eq(tenant_id));
+                     if !daoyi_common_support::context::HttpRequestContext::get_ignore_tenant() {
+                        query = query.filter(Column::TenantId.eq(tenant_id));
+                    }
                 }
                 query
             }
@@ -54,7 +56,7 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
 }
 
 /// 自动实现 ActiveModelBehavior 的 before_save 方法（通用版本）
-/// 
+///
 /// 该宏会自动处理以下字段：
 /// - 如果存在 `id` 字段：自动生成ID
 /// - 如果存在 `password` 字段：自动哈希密码
@@ -111,6 +113,9 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                         self.creator = Set(Some(login_id.clone()));
                         self.updater = Set(Some(login_id));
                     }
+                    if let Ok(tenant_id) = HttpRequestContext::get_tenant_id_as_string().await {
+                        self.tenant_id = Set(tenant_id);
+                    }
                 } else {
                     self.update_time = Set(Local::now().naive_local());
                     if let Ok(login_id) = HttpRequestContext::get_login_id_as_string().await {
@@ -126,13 +131,13 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
 }
 
 /// 支持自定义属性的 ActiveModelBehavior 实现
-/// 
+///
 /// 支持的字段属性：
 /// - `#[auto_id]`: 在插入时自动生成ID
 /// - `#[hash_password]`: 在插入时自动哈希密码
-/// 
+///
 /// # 示例
-/// 
+///
 /// ```rust
 /// #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 /// #[sea_orm(schema_name = "demo", table_name = "sys_user")]
@@ -149,7 +154,7 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
 #[proc_macro_derive(BeforeInsert, attributes(auto_id, hash_password))]
 pub fn derive_before_insert(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
-    
+
     // 解析结构体字段
     let fields = match &input.data {
         Data::Struct(data) => match &data.fields {
@@ -158,15 +163,15 @@ pub fn derive_before_insert(input: TokenStream) -> TokenStream {
         },
         _ => panic!("BeforeInsert only supports structs"),
     };
-    
+
     // 收集需要自动生成ID的字段
     let mut auto_id_fields = Vec::new();
     // 收集需要哈希密码的字段
     let mut hash_password_fields = Vec::new();
-    
+
     for field in fields {
         let field_name = field.ident.as_ref().unwrap();
-        
+
         // 检查是否有 auto_id 或 hash_password 属性
         for attr in &field.attrs {
             if attr.path().is_ident("auto_id") {
@@ -177,17 +182,17 @@ pub fn derive_before_insert(input: TokenStream) -> TokenStream {
             }
         }
     }
-    
+
     // 生成 before_save 方法体
     let mut insert_statements = Vec::new();
-    
+
     // 生成 ID 自动生成代码
     for field in &auto_id_fields {
         insert_statements.push(quote! {
             self.#field = sea_orm::Set(daoyi_common_support::id::next_string());
         });
     }
-    
+
     // 生成密码哈希代码
     for field in &hash_password_fields {
         insert_statements.push(quote! {
@@ -198,7 +203,7 @@ pub fn derive_before_insert(input: TokenStream) -> TokenStream {
             );
         });
     }
-    
+
     // 如果没有任何自动处理的字段，则生成空实现
     let before_save_impl = if insert_statements.is_empty() {
         quote! {
@@ -221,16 +226,16 @@ pub fn derive_before_insert(input: TokenStream) -> TokenStream {
             }
         }
     };
-    
+
     TokenStream::from(before_save_impl)
 }
 
 /// 自动实现 IntoActiveValue trait
-/// 
+///
 /// 该宏为枚举自动实现 `IntoActiveValue<T>`，将枚举值包装为 `ActiveValue::Set(self)`。
-/// 
+///
 /// # 示例
-/// 
+///
 /// ```rust
 /// #[derive(DaoyiIntoActiveValue)]
 /// pub enum Gender {
