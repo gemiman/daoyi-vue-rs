@@ -1,13 +1,27 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_tenant;
-use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
+use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::TenantRespVO;
 use daoyi_common_support::{database, redis_utils};
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
+use sea_orm::QueryTrait;
 
+pub async fn get_tenant_list_by_status(
+    status: Option<CommonStatusEnum>,
+) -> ApiResult<Vec<system_tenant::Model>> {
+    let db = database::get().await;
+    let list = SystemTenant::find_perm()
+        .await
+        .apply_if(status, |query, status| {
+            query.filter(system_tenant::Column::Status.eq(status))
+        })
+        .all(db)
+        .await?;
+    Ok(list)
+}
 pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get().await;
     let option = SystemTenant::find_perm()

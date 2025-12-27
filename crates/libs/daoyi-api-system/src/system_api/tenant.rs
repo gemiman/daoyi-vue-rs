@@ -1,18 +1,28 @@
 use axum::{debug_handler, routing, Router};
 use daoyi_common_support::app::AppState;
+use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::request::valid::ValidQuery;
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::TenantRespVO;
 use daoyi_entity_system::system_service::system_tenant_service;
 use serde::Deserialize;
 use validator::Validate;
-use daoyi_common_support::enumeration::CommonStatusEnum;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
         .route("/check-tenant-id", routing::post(check_tenant_id))
         .route("/get-by-website", routing::get(get_tenant_by_website))
         .route("/get-id-by-name", routing::get(get_tenant_id_by_name))
+        .route("/simple-list", routing::get(get_tenant_simple_list))
+}
+#[debug_handler]
+async fn get_tenant_simple_list() -> RestApiResult<Vec<TenantRespVO>> {
+    let list = system_tenant_service::get_tenant_list_by_status(Some(CommonStatusEnum::Enable))
+        .await?
+        .into_iter()
+        .map(|model| model.into())
+        .collect();
+    ApiResponse::success(list)
 }
 
 #[derive(Debug, Deserialize, Validate)]
