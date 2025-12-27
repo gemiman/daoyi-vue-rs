@@ -11,10 +11,7 @@ use daoyi_common_support::vo::system_vo::{
     AuthLoginReqVO, AuthLoginRespVO, AuthPermissionInfoRespVO,
 };
 use daoyi_entity_system::system_entity::system_role;
-use daoyi_entity_system::system_service::{
-    system_access_token_service, system_role_service, system_user_role_service,
-    system_users_service,
-};
+use daoyi_entity_system::system_service::{system_access_token_service, system_role_menu_service, system_role_service, system_user_role_service, system_users_service};
 use std::collections::HashSet;
 use std::net::SocketAddr;
 
@@ -57,13 +54,14 @@ async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
         .into_iter()
         .collect();
     vo.roles = role_codes;
-    let _role_ids = roles
+    let role_ids = roles
         .iter()
         .map(|r| r.id.to_owned())
         .collect::<HashSet<_>>()
         .into_iter()
         .collect::<Vec<_>>();
     // 1.3 获得菜单列表
+    let meun_ids = system_role_menu_service::get_role_menu_list_by_role_id(&role_ids).await?;
     // 2. 拼接结果返回
     ApiResponse::success(vo)
 }

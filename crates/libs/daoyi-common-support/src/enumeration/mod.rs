@@ -118,12 +118,35 @@ pub enum DataScopeEnum {
     rename_all = "snake_case"
 )]
 pub enum RoleCodeEnum {
-    SuperAdmin, // 超级管理员
+    SuperAdmin,  // 超级管理员
     TenantAdmin, // 租户管理员
-    CrmAdmin, // CRM 管理员
+    CrmAdmin,    // CRM 管理员
 }
 impl RoleCodeEnum {
-    pub fn is_super_admin(&self) -> bool {
-        self == &RoleCodeEnum::SuperAdmin
+    pub fn is_super_admin(role_code: &str) -> bool {
+        role_code == "super_admin"
     }
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+)]
+#[serde(rename_all = "snake_case")]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum MenuTypeEnum {
+    #[sea_orm(string_value = "1")]
+    DIR, // 目录
+    #[sea_orm(string_value = "2")]
+    MENU, // 菜单
+    #[sea_orm(string_value = "3")]
+    BUTTON, // 按钮
 }

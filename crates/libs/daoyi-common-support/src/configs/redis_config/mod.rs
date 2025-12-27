@@ -32,12 +32,10 @@ impl RedisConfig {
     }
 
     pub fn cache_key_prefix(&self) -> &str {
-        self.cache_key_prefix
-            .as_deref()
-            .unwrap_or("app:daoyivuers")
+        self.cache_key_prefix.as_deref().unwrap_or("app:daoyivuers")
     }
 
     pub fn expire_seconds(&self) -> u64 {
-        self.expire_seconds.unwrap_or(60)
+        self.expire_seconds.unwrap_or(60 * 60 * 24 * 30) // 30 days
     }
 }

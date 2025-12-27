@@ -73,8 +73,7 @@ pub async fn cache_get_json<V>(key: &str) -> ApiResult<Option<V>>
 where
     V: DeserializeOwned,
 {
-    let key1 = key_generator(key).await;
-    let json_str = get::<Option<String>>(key1.as_str()).await?;
+    let json_str = get::<Option<String>>(key_generator(key).await.as_str()).await?;
     if json_str.is_none() {
         return Ok(None);
     }

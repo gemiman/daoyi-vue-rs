@@ -292,3 +292,83 @@ COMMENT ON COLUMN system.system_role.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_role.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_role.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_role IS '角色信息表';
+
+
+-- ----------------------------
+-- Table structure for system.system_role_menu
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_role_menu;
+CREATE TABLE system.system_role_menu
+(
+    id          varchar(32) NOT NULL primary key,
+    role_id     varchar(32) NOT NULL,
+    menu_id     varchar(32) NOT NULL,
+    creator     varchar(64) NULL     DEFAULT '',
+    create_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(64) NULL     DEFAULT '',
+    update_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean     NOT NULL DEFAULT false,
+    tenant_id   varchar(32) NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_role_menu.id IS '自增编号';
+COMMENT ON COLUMN system.system_role_menu.role_id IS '角色ID';
+COMMENT ON COLUMN system.system_role_menu.menu_id IS '菜单ID';
+COMMENT ON COLUMN system.system_role_menu.creator IS '创建者';
+COMMENT ON COLUMN system.system_role_menu.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_role_menu.updater IS '更新者';
+COMMENT ON COLUMN system.system_role_menu.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_role_menu.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_role_menu.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_role_menu IS '角色和菜单关联表';
+
+
+-- ----------------------------
+-- Table structure for system.system_menu
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_menu;
+CREATE TABLE system.system_menu
+(
+    id             varchar(32)  NOT NULL primary key,
+    name           varchar(50)  NOT NULL,
+    permission     varchar(100) NOT NULL DEFAULT '',
+    type           varchar(1)   NOT NULL,
+    sort           int4         NOT NULL DEFAULT 0,
+    parent_id      varchar(32)  NOT NULL DEFAULT '0',
+    path           varchar(200) NULL     DEFAULT '',
+    icon           varchar(100) NULL     DEFAULT '#',
+    component      varchar(255) NULL     DEFAULT NULL,
+    component_name varchar(255) NULL     DEFAULT NULL,
+    status         varchar(1)   NOT NULL DEFAULT '0',
+    visible        bool         NOT NULL DEFAULT true,
+    keep_alive     bool         NOT NULL DEFAULT true,
+    always_show    bool         NOT NULL DEFAULT true,
+    creator        varchar(64)  NULL     DEFAULT '',
+    create_time    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater        varchar(64)  NULL     DEFAULT '',
+    update_time    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted        boolean  NOT NULL DEFAULT false,
+    tenant_id   varchar(32) NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_menu.id IS '菜单ID';
+COMMENT ON COLUMN system.system_menu.name IS '菜单名称';
+COMMENT ON COLUMN system.system_menu.permission IS '权限标识';
+COMMENT ON COLUMN system.system_menu.type IS '菜单类型';
+COMMENT ON COLUMN system.system_menu.sort IS '显示顺序';
+COMMENT ON COLUMN system.system_menu.parent_id IS '父菜单ID';
+COMMENT ON COLUMN system.system_menu.path IS '路由地址';
+COMMENT ON COLUMN system.system_menu.icon IS '菜单图标';
+COMMENT ON COLUMN system.system_menu.component IS '组件路径';
+COMMENT ON COLUMN system.system_menu.component_name IS '组件名';
+COMMENT ON COLUMN system.system_menu.status IS '菜单状态';
+COMMENT ON COLUMN system.system_menu.visible IS '是否可见';
+COMMENT ON COLUMN system.system_menu.keep_alive IS '是否缓存';
+COMMENT ON COLUMN system.system_menu.always_show IS '是否总是显示';
+COMMENT ON COLUMN system.system_menu.creator IS '创建者';
+COMMENT ON COLUMN system.system_menu.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_menu.updater IS '更新者';
+COMMENT ON COLUMN system.system_menu.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_menu.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_menu.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_menu IS '菜单权限表';

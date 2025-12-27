@@ -4,6 +4,8 @@ pub use super::system_access_token::Entity as SystemAccessToken;
 pub use super::system_dict_data::Entity as SystemDictData;
 pub use super::system_dict_type::Entity as SystemDictType;
 pub use super::system_role::Entity as SystemRole;
+pub use super::system_menu::Entity as SystemMenu;
+pub use super::system_role_menu::Entity as SystemRoleMenu;
 pub use super::system_tenant::Entity as SystemTenant;
 pub use super::system_user_role::Entity as SystemUserRole;
 pub use super::system_users::Entity as SystemUsers;
