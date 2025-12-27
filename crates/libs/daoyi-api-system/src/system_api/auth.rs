@@ -70,7 +70,13 @@ async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
         .into_iter()
         .filter(|m| m.status == CommonStatusEnum::Enable)
         .collect::<Vec<_>>();
-    vo.permissions = menu_list.iter().map(|m| m.to_owned().permission).collect();
+    vo.permissions = menu_list
+        .iter()
+        .map(|m| m.to_owned().permission)
+        .filter(|p| !p.is_empty())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
     vo.menus = system_menu_service::build_menu_tree(menu_list).await?;
     // 2. 拼接结果返回
     ApiResponse::success(vo)

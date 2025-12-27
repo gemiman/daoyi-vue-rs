@@ -343,12 +343,13 @@ CREATE TABLE system.system_menu
     visible        bool         NOT NULL DEFAULT true,
     keep_alive     bool         NOT NULL DEFAULT true,
     always_show    bool         NOT NULL DEFAULT true,
+    api            varchar(128) NULL     DEFAULT NULL,
     creator        varchar(64)  NULL     DEFAULT '',
     create_time    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updater        varchar(64)  NULL     DEFAULT '',
     update_time    timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted        boolean  NOT NULL DEFAULT false,
-    tenant_id   varchar(32) NOT NULL DEFAULT '0'
+    deleted        boolean      NOT NULL DEFAULT false,
+    tenant_id      varchar(32)  NOT NULL DEFAULT '0'
 );
 
 COMMENT ON COLUMN system.system_menu.id IS '菜单ID';
@@ -365,6 +366,7 @@ COMMENT ON COLUMN system.system_menu.status IS '菜单状态';
 COMMENT ON COLUMN system.system_menu.visible IS '是否可见';
 COMMENT ON COLUMN system.system_menu.keep_alive IS '是否缓存';
 COMMENT ON COLUMN system.system_menu.always_show IS '是否总是显示';
+comment on column system.system_menu.api is '接口';
 COMMENT ON COLUMN system.system_menu.creator IS '创建者';
 COMMENT ON COLUMN system.system_menu.create_time IS '创建时间';
 COMMENT ON COLUMN system.system_menu.updater IS '更新者';
