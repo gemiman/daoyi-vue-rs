@@ -30,6 +30,9 @@ pub struct HttpRequestContext {
 
     /// 登录 ID | Login ID
     pub login_id: Option<String>,
+    
+    /// 是否忽略租户
+    pub ignore_tenant: bool,
 }
 
 impl HttpRequestContext {
@@ -38,6 +41,7 @@ impl HttpRequestContext {
             token: None,
             tenant_id: None,
             login_id: None,
+            ignore_tenant: false,
         }
     }
 

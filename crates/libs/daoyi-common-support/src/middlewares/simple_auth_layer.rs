@@ -33,6 +33,8 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             let auth_config = AppConfig::get().await.auth();
             let url = request.uri().path();
             let headers = request.headers();
+            let is_ignored_tenant = auth_config.is_ignored_tenant(url);
+            context.ignore_tenant = is_ignored_tenant;
             let token = headers
                 .get(auth_config.header_key_token())
                 .map(|value| -> Result<_, ApiError> {
@@ -70,7 +72,7 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                     Ok(tenant_id)
                 })
                 .transpose()?;
-            if tenant_id.is_none() && !auth_config.is_ignored_tenant(url) {
+            if tenant_id.is_none() && !is_ignored_tenant {
                 // Tenant 为空，返回错误信息
                 return Err(ApiError::unauthenticated("No Tenant header").into_response());
             }
