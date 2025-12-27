@@ -59,6 +59,7 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                 let token_info = auth::check_token(token).await?;
                 token_tenant_id = Some(token_info.tenant_id);
                 context.token = Some(String::from(token));
+                context.login_id = Some(String::from(token_info.user_id));
             };
             let tenant_id = headers
                 .get(auth_config.header_key_tenant())
