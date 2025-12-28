@@ -43,12 +43,13 @@ pub enum Gender {
     DeriveActiveEnum,
     DaoyiIntoActiveValue,
 )]
-#[serde(rename_all = "snake_case")]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum CommonStatusEnum {
     #[sea_orm(string_value = "0")]
+    #[serde(rename = "0")]
     Enable,
     #[sea_orm(string_value = "1")]
+    #[serde(rename = "1")]
     Disable,
 }
 #[derive(

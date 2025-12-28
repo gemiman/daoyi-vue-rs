@@ -48,7 +48,7 @@ impl<T> Page<T> {
             },
         }
     }
-    pub fn from_pagination(pagination: PaginationParams, total: u64, list: Vec<T>) -> Self {
+    pub fn from_pagination(pagination: &PaginationParams, total: u64, list: Vec<T>) -> Self {
         Page::new(pagination.page_no, pagination.page_size, total, list)
     }
 }

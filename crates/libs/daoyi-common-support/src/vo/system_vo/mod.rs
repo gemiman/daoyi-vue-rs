@@ -30,7 +30,7 @@ pub struct TenantRespVO {
     pub contact_name: String,
     pub contact_mobile: Option<String>,
     pub status: CommonStatusEnum,
-    pub websites: Option<String>,
+    pub websites: Option<Vec<String>>,
     pub package_id: String,
     pub expire_time: DateTime,
     pub account_count: i32,

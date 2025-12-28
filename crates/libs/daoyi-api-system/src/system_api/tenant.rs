@@ -1,9 +1,12 @@
 use axum::{debug_handler, routing, Router};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
+use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::system::TenantPageReqVo;
 use daoyi_common_support::request::valid::ValidQuery;
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::TenantRespVO;
+use daoyi_entity_system::system_entity::system_tenant;
 use daoyi_entity_system::system_service::system_tenant_service;
 use serde::Deserialize;
 use validator::Validate;
@@ -14,7 +17,15 @@ pub fn create_router() -> Router<AppState> {
         .route("/get-by-website", routing::get(get_tenant_by_website))
         .route("/get-id-by-name", routing::get(get_tenant_id_by_name))
         .route("/simple-list", routing::get(get_tenant_simple_list))
+        .route("/page", routing::get(get_tenant_page))
 }
+#[debug_handler]
+async fn get_tenant_page(
+    ValidQuery(params): ValidQuery<TenantPageReqVo>,
+) -> RestApiResult<Page<system_tenant::Model>> {
+    ApiResponse::success(system_tenant_service::get_tenant_page(&params).await?)
+}
+
 #[debug_handler]
 async fn get_tenant_simple_list() -> RestApiResult<Vec<TenantRespVO>> {
     let list = system_tenant_service::get_tenant_list_by_status(Some(CommonStatusEnum::Enable))

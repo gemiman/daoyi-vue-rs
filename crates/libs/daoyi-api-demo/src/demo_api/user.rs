@@ -114,7 +114,7 @@ async fn find_page(
         .paginate(database::get().await, pagination.page_size);
     let total = paginator.num_items().await?;
     let users = paginator.fetch_page(pagination.page_no - 1).await?;
-    let page = Page::from_pagination(pagination, total, users);
+    let page = Page::from_pagination(&pagination, total, users);
     Ok(ApiResponse::ok(Some(page)))
 }
 
