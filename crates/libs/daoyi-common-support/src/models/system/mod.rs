@@ -1,6 +1,6 @@
 use crate::enumeration::CommonStatusEnum;
 use crate::models::pagination::PaginationParams;
-use crate::serde::datetime_format;
+use crate::serde::{datetime_format, option_vec_datetime_format};
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -13,6 +13,8 @@ pub struct TenantPageReqVo {
     /// 联系人
     pub contact_name: Option<String>,
     /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
     pub create_time: Option<Vec<DateTime>>,
     /// 租户名
     pub name: Option<String>,

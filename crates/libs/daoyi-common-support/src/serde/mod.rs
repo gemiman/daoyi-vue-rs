@@ -42,3 +42,29 @@ pub mod datetime_format {
         DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
     }
 }
+
+pub mod option_vec_datetime_format {
+    use sea_orm::prelude::DateTime;
+    use serde::{Deserialize, Deserializer};
+
+    const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<Vec<DateTime>>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let v: Option<Vec<String>> = Option::deserialize(deserializer)?;
+        match v {
+            Some(vec) => {
+                let mut dates = Vec::new();
+                for s in vec {
+                    let date = DateTime::parse_from_str(&s, FORMAT)
+                        .map_err(serde::de::Error::custom)?;
+                    dates.push(date);
+                }
+                Ok(Some(dates))
+            }
+            None => Ok(None),
+        }
+    }
+}
