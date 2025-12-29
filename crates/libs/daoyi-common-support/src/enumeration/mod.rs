@@ -1,6 +1,6 @@
 pub mod redis_keys;
 
-use daoyi_macros::DaoyiIntoActiveValue;
+use daoyi_macros::{DaoyiIntoActiveValue, DaoyiStringOrNumberSerde};
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 
@@ -37,19 +37,16 @@ pub enum Gender {
     Copy,
     PartialEq,
     Eq,
-    Serialize,
-    Deserialize,
     EnumIter,
     DeriveActiveEnum,
     DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum CommonStatusEnum {
     #[sea_orm(string_value = "0")]
-    #[serde(rename = "0")]
     Enable,
     #[sea_orm(string_value = "1")]
-    #[serde(rename = "1")]
     Disable,
 }
 #[derive(

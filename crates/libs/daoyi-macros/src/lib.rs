@@ -258,3 +258,109 @@ pub fn derive_daoyi_into_active_value(input: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
+
+
+#[proc_macro_derive(DaoyiStringOrNumberSerde)]
+pub fn derive_string_or_number_serde(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = &input.ident;
+
+    let variants = match &input.data {
+        Data::Enum(data) => &data.variants,
+        _ => panic!("DaoyiStringOrNumberSerde only supports enums"),
+    };
+
+    let mut serialize_arms = Vec::new();
+    let mut deserialize_string_arms = Vec::new();
+    let mut deserialize_number_arms = Vec::new();
+    let mut valid_string_values = Vec::new();
+
+    for variant in variants {
+        let variant_name = &variant.ident;
+
+        // 从 #[sea_orm(string_value = "...")] 中提取值
+        let mut string_value = None;
+        for attr in &variant.attrs {
+            if attr.path().is_ident("sea_orm") {
+                let _ = attr.parse_nested_meta(|meta| {
+                    if meta.path.is_ident("string_value") {
+                        let value: syn::LitStr = meta.value()?.parse()?;
+                        string_value = Some(value.value());
+                    }
+                    Ok(())
+                });
+            }
+        }
+
+        let value = string_value.expect(&format!(
+            "Variant {} must have #[sea_orm(string_value = \"...\")] attribute",
+            variant_name
+        ));
+
+        valid_string_values.push(value.clone());
+
+        serialize_arms.push(quote! {
+            #name::#variant_name => serializer.serialize_str(#value),
+        });
+
+        deserialize_string_arms.push(quote! {
+            #value => Ok(#name::#variant_name),
+        });
+
+        // 尝试解析为数字用于数字匹配
+        if let Ok(num) = value.parse::<i32>() {
+            deserialize_number_arms.push(quote! {
+                #num => Ok(#name::#variant_name),
+            });
+        }
+    }
+
+    let valid_values_str = valid_string_values.join(", ");
+    let valid_values_array: Vec<_> = valid_string_values.iter().map(|s| s.as_str()).collect();
+
+    let expanded = quote! {
+        impl serde::Serialize for #name {
+            fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
+            where
+                S: serde::Serializer,
+            {
+                match self {
+                    #(#serialize_arms)*
+                }
+            }
+        }
+
+        impl<'de> serde::Deserialize<'de> for #name {
+            fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+            where
+                D: serde::Deserializer<'de>,
+            {
+                #[derive(serde::Deserialize)]
+                #[serde(untagged)]
+                enum StringOrNumber {
+                    String(String),
+                    Number(i32),
+                }
+
+                match StringOrNumber::deserialize(deserializer)? {
+                    StringOrNumber::String(s) => match s.as_str() {
+                        #(#deserialize_string_arms)*
+                        _ => Err(serde::de::Error::unknown_variant(
+                            &s,
+                            &[#(#valid_values_array),*],
+                        )),
+                    },
+                    StringOrNumber::Number(n) => match n {
+                        #(#deserialize_number_arms)*
+                        _ => Err(serde::de::Error::invalid_value(
+                            serde::de::Unexpected::Signed(n as i64),
+                            &#valid_values_str,
+                        )),
+                    },
+                }
+            }
+        }
+    };
+
+    TokenStream::from(expanded)
+}
