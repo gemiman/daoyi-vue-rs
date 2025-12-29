@@ -38,8 +38,22 @@ pub mod datetime_format {
     where
         D: Deserializer<'de>,
     {
-        let s = String::deserialize(deserializer)?;
-        DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum StringOrTimestamp {
+            String(String),
+            Timestamp(i64),
+        }
+
+        match StringOrTimestamp::deserialize(deserializer)? {
+            StringOrTimestamp::String(s) => {
+                DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
+            }
+            StringOrTimestamp::Timestamp(ts) => DateTime::from_timestamp_millis(ts)
+                .ok_or_else(|| serde::de::Error::custom("Invalid timestamp")),
+        }
+        // let s = String::deserialize(deserializer)?;
+        // DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
     }
 }
 
@@ -58,8 +72,8 @@ pub mod option_vec_datetime_format {
             Some(vec) => {
                 let mut dates = Vec::new();
                 for s in vec {
-                    let date = DateTime::parse_from_str(&s, FORMAT)
-                        .map_err(serde::de::Error::custom)?;
+                    let date =
+                        DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)?;
                     dates.push(date);
                 }
                 Ok(Some(dates))
