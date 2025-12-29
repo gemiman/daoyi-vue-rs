@@ -18,6 +18,7 @@ mod sms;
 mod social;
 mod tenant;
 mod user;
+mod tenant_package;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -37,5 +38,6 @@ pub fn create_router() -> Router<AppState> {
         .nest("/sms", sms::create_router())
         .nest("/social", social::create_router())
         .nest("/tenant", tenant::create_router())
+        .nest("/tenant-package", tenant_package::create_router())
         .nest("/user", user::create_router())
 }

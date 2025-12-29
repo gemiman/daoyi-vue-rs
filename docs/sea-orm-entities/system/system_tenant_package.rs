@@ -4,20 +4,15 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(schema_name = "system", table_name = "system_tenant")]
+#[sea_orm(schema_name = "system", table_name = "system_tenant_package")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub name: String,
-    pub contact_user_id: Option<String>,
-    pub contact_name: String,
-    pub contact_mobile: Option<String>,
     pub status: String,
-    pub websites: Option<Vec<String>>,
-    pub package_id: String,
-    pub expire_time: DateTime,
-    pub account_count: i32,
+    pub remark: Option<String>,
+    pub menu_ids: Vec<String>,
     pub creator: Option<String>,
     pub create_time: DateTime,
     pub updater: Option<String>,

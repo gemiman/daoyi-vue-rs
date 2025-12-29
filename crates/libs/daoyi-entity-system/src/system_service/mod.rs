@@ -7,3 +7,4 @@ pub mod system_role_service;
 pub mod system_tenant_service;
 pub mod system_user_role_service;
 pub mod system_users_service;
+pub mod system_tenant_package_service;

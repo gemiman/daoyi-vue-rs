@@ -104,22 +104,22 @@ COMMENT ON TABLE system.system_access_token IS '访问令牌';
 DROP TABLE IF EXISTS system.system_tenant;
 CREATE TABLE system.system_tenant
 (
-    id              varchar(32)  NOT NULL primary key,
-    name            varchar(128) NOT NULL,
-    contact_user_id varchar(32)  NULL     DEFAULT NULL,
-    contact_name    varchar(128) NOT NULL,
-    contact_mobile  varchar(128) NULL     DEFAULT NULL,
-    status          varchar(1)   NOT NULL DEFAULT '0',
+    id              varchar(32)    NOT NULL primary key,
+    name            varchar(128)   NOT NULL,
+    contact_user_id varchar(32)    NULL     DEFAULT NULL,
+    contact_name    varchar(128)   NOT NULL,
+    contact_mobile  varchar(128)   NULL     DEFAULT NULL,
+    status          varchar(1)     NOT NULL DEFAULT '0',
     websites        varchar(256)[] NULL     DEFAULT '{}',
-    package_id      varchar(32)  NOT NULL,
-    expire_time     timestamp    NOT NULL,
-    account_count   int4         NOT NULL,
-    creator         varchar(32)  NULL     DEFAULT '',
-    create_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updater         varchar(32)  NULL     DEFAULT '',
-    update_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         boolean      NOT NULL DEFAULT false,
-    tenant_id       varchar(32)  NOT NULL DEFAULT '0'
+    package_id      varchar(32)    NOT NULL,
+    expire_time     timestamp      NOT NULL,
+    account_count   int4           NOT NULL,
+    creator         varchar(32)    NULL     DEFAULT '',
+    create_time     timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater         varchar(32)    NULL     DEFAULT '',
+    update_time     timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         boolean        NOT NULL DEFAULT false,
+    tenant_id       varchar(32)    NOT NULL DEFAULT '0'
 );
 
 COMMENT ON COLUMN system.system_tenant.id IS '租户编号';
@@ -374,3 +374,36 @@ COMMENT ON COLUMN system.system_menu.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_menu.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_menu.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_menu IS '菜单权限表';
+
+
+-- ----------------------------
+-- Table structure for system.system_tenant_package
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_tenant_package;
+CREATE TABLE system.system_tenant_package
+(
+    id          varchar(32)   NOT NULL primary key,
+    name        varchar(30)   NOT NULL,
+    status      varchar(1)    NOT NULL DEFAULT '0',
+    remark      varchar(256)  NULL     DEFAULT '',
+    menu_ids    varchar(32)[] NOT NULL DEFAULT '{}',
+    creator     varchar(64)   NULL     DEFAULT '',
+    create_time timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(64)   NULL     DEFAULT '',
+    update_time timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean       NOT NULL DEFAULT false,
+    tenant_id   varchar(32)   NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_tenant_package.id IS '套餐编号';
+COMMENT ON COLUMN system.system_tenant_package.name IS '套餐名';
+COMMENT ON COLUMN system.system_tenant_package.status IS '租户状态（0正常 1停用）';
+COMMENT ON COLUMN system.system_tenant_package.remark IS '备注';
+COMMENT ON COLUMN system.system_tenant_package.menu_ids IS '关联的菜单编号';
+COMMENT ON COLUMN system.system_tenant_package.creator IS '创建者';
+COMMENT ON COLUMN system.system_tenant_package.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_tenant_package.updater IS '更新者';
+COMMENT ON COLUMN system.system_tenant_package.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_tenant_package.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_tenant_package.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_tenant_package IS '租户套餐表';

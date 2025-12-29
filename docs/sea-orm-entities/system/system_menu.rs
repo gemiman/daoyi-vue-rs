@@ -28,6 +28,7 @@ pub struct Model {
     pub update_time: DateTime,
     pub deleted: bool,
     pub tenant_id: String,
+    pub api: Option<String>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

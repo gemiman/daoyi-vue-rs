@@ -9,5 +9,6 @@ pub mod system_menu;
 pub mod system_role;
 pub mod system_role_menu;
 pub mod system_tenant;
+pub mod system_tenant_package;
 pub mod system_user_role;
 pub mod system_users;

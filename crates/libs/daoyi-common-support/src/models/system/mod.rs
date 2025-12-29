@@ -1,6 +1,8 @@
 use crate::enumeration::CommonStatusEnum;
 use crate::models::pagination::PaginationParams;
-use serde::Deserialize;
+use crate::serde::datetime_format;
+use sea_orm::prelude::DateTime;
+use serde::{Deserialize, Serialize};
 use validator::Validate;
 
 #[derive(Debug, Deserialize, Validate)]
@@ -19,4 +21,23 @@ pub struct TenantPageReqVo {
     #[serde(flatten)]
     #[validate(nested)]
     pub pagination: PaginationParams,
+}
+
+/// TenantPackageRespVO，管理后台 - 租户套餐 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantPackageRespVo {
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 套餐编号
+    pub id: String,
+    /// 关联的菜单编号
+    pub menu_ids: Vec<String>,
+    /// 套餐名
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
 }
