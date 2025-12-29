@@ -5,11 +5,18 @@ use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::models::system::TenantPageReqVo;
-use daoyi_common_support::vo::system_vo::TenantRespVO;
+use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo};
 use daoyi_common_support::{database, redis_utils};
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{QueryOrder, QueryTrait};
+
+pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Model> {
+    let db = database::get().await;
+    let active_model: system_tenant::ActiveModel = vo.into();
+    let model = active_model.insert(db).await?;
+    Ok(model)
+}
 
 pub async fn get_tenant_list_by_status(
     status: Option<CommonStatusEnum>,
@@ -88,8 +95,7 @@ pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_
             query.filter(system_tenant::Column::ContactName.contains(contact_name))
         })
         .apply_if(params.create_time.as_ref(), |query, create_time| {
-            query
-                .filter(system_tenant::Column::CreateTime.between(create_time[0], create_time[1]))
+            query.filter(system_tenant::Column::CreateTime.between(create_time[0], create_time[1]))
         })
         .apply_if(params.name.as_ref(), |query, name| {
             query.filter(system_tenant::Column::Name.contains(name))

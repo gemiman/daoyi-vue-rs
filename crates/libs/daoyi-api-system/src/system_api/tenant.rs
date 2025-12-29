@@ -3,9 +3,9 @@ use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::models::system::TenantPageReqVo;
-use daoyi_common_support::request::valid::ValidQuery;
+use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
-use daoyi_common_support::vo::system_vo::TenantRespVO;
+use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo};
 use daoyi_entity_system::system_entity::system_tenant;
 use daoyi_entity_system::system_service::system_tenant_service;
 use serde::Deserialize;
@@ -18,6 +18,12 @@ pub fn create_router() -> Router<AppState> {
         .route("/get-id-by-name", routing::get(get_tenant_id_by_name))
         .route("/simple-list", routing::get(get_tenant_simple_list))
         .route("/page", routing::get(get_tenant_page))
+        .route("/create", routing::post(create_tenant))
+}
+
+#[debug_handler]
+async fn create_tenant(ValidJson(vo): ValidJson<TenantSaveReqVo>) -> RestApiResult<String> {
+    ApiResponse::success(system_tenant_service::create_tenant(vo).await?.id)
 }
 #[debug_handler]
 async fn get_tenant_page(
