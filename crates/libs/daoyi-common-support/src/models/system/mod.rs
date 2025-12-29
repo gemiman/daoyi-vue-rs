@@ -13,7 +13,7 @@ pub struct TenantPageReqVo {
     /// 联系人
     pub contact_name: Option<String>,
     /// 创建时间
-    pub create_time: Option<Vec<String>>,
+    pub create_time: Option<Vec<DateTime>>,
     /// 租户名
     pub name: Option<String>,
     /// 租户状态（0正常 1停用）

@@ -49,6 +49,7 @@ deadpool-redis = { version = "0.22.0" }
 reqwest = { version = "0.12.28", features = ["json"] }
 strum = { version = "0.27.2" }
 strum_macros = { version = "0.27.2" }
+serde_qs = "0.13.0"
 
 [package]
 name = "daoyi-vue-rs"

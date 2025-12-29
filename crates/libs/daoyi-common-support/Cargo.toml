@@ -39,3 +39,4 @@ deadpool-redis.workspace = true
 reqwest.workspace = true
 strum.workspace = true
 strum_macros.workspace = true
+serde_qs.workspace = true

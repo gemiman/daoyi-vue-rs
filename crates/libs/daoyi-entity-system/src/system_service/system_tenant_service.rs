@@ -89,7 +89,7 @@ pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_
         })
         .apply_if(params.create_time.as_ref(), |query, create_time| {
             query
-                .filter(system_tenant::Column::CreateTime.between(&create_time[0], &create_time[1]))
+                .filter(system_tenant::Column::CreateTime.between(create_time[0], create_time[1]))
         })
         .apply_if(params.name.as_ref(), |query, name| {
             query.filter(system_tenant::Column::Name.contains(name))
