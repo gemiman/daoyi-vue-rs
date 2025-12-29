@@ -13,5 +13,6 @@ daoyi-common-support.workspace = true
 daoyi-macros.workspace = true
 sea-orm.workspace = true
 serde.workspace = true
+serde_json.workspace = true
 anyhow.workspace = true
 xid.workspace = true

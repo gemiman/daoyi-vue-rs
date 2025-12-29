@@ -45,7 +45,7 @@ pub async fn check_token(token: &str) -> ApiResult<AuthLoginRespVO> {
         .map_err(|e| ApiError::unauthenticated(format!("Token校验失败: {}", e)))?;
 
     if !api_response.success {
-        return Err(ApiError::unauthenticated(api_response.message));
+        return Err(ApiError::unauthenticated(api_response.msg));
     }
 
     let vo = api_response
@@ -98,7 +98,7 @@ pub async fn check_tenant_id(tenant_id: &str) -> ApiResult<TenantRespVO> {
         .map_err(|e| ApiError::unauthenticated(format!("租户校验失败: {}", e)))?;
 
     if !api_response.success {
-        return Err(ApiError::unauthenticated(api_response.message));
+        return Err(ApiError::unauthenticated(api_response.msg));
     }
 
     let vo = api_response

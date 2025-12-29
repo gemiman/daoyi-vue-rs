@@ -7,7 +7,7 @@ pub type RestApiResult<T> = Result<ApiResponse<T>, ApiError>;
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct ApiResponse<T> {
     pub code: i32,
-    pub message: String,
+    pub msg: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub data: Option<T>,
     pub success: bool,
@@ -24,10 +24,10 @@ where
 }
 
 impl<T> ApiResponse<T> {
-    pub fn new<M: AsRef<str>>(code: i32, message: M, data: Option<T>) -> Self {
+    pub fn new<M: AsRef<str>>(code: i32, msg: M, data: Option<T>) -> Self {
         ApiResponse {
             code,
-            message: String::from(message.as_ref()),
+            msg: String::from(msg.as_ref()),
             data,
             success: code == 0,
         }
@@ -41,7 +41,7 @@ impl<T> ApiResponse<T> {
         ApiResponse::new(0, "ok", data)
     }
 
-    pub fn err<M: AsRef<str>>(message: M) -> Self {
-        ApiResponse::new(1, message, None)
+    pub fn err<M: AsRef<str>>(msg: M) -> Self {
+        ApiResponse::new(1, msg, None)
     }
 }

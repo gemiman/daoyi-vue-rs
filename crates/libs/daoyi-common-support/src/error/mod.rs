@@ -110,9 +110,9 @@ impl ApiError {
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Internal(_) | Database(_) | Bcrypt(_) | Glob(_) | SerdeJson(_) | Redis(_)
             | RedisPool(_) => StatusCode::INTERNAL_SERVER_ERROR,
-            Query(_) | Path(_) | Json(_) | Validation(_) => StatusCode::BAD_REQUEST,
+            Query(_) | Path(_) | Json(_) => StatusCode::BAD_REQUEST,
             Unauthenticated(_) => StatusCode::UNAUTHORIZED,
-            Biz(_) => StatusCode::OK,
+            Biz(_) | Validation(_) => StatusCode::OK,
         }
     }
 }

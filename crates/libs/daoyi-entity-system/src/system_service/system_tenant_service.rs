@@ -12,6 +12,8 @@ use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{QueryOrder, QueryTrait};
 
 pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Model> {
+    // 校验租户名称是否重复
+    // 校验租户域名是否重复
     let db = database::get().await;
     let active_model: system_tenant::ActiveModel = vo.into();
     let model = active_model.insert(db).await?;
@@ -54,13 +56,22 @@ pub async fn get_tenant_by_name(name: &str) -> ApiResult<system_tenant::Model> {
 
 pub async fn get_tenant_by_website(website: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get().await;
-    let option = SystemTenant::find()
-        .filter(system_tenant::Column::Websites.eq(website))
+    // let option = SystemTenant::find()
+    //     .filter(system_tenant::Column::Websites.eq(website))
+    //     .filter(system_tenant::Column::Deleted.eq(false))
+    //     .one(db)
+    //     .await?
+    //     .ok_or_else(|| ApiError::biz("租户不存在"))?;
+    // Ok(option)
+    let tenant = SystemTenant::find()
         .filter(system_tenant::Column::Deleted.eq(false))
+        .filter(system_tenant::Column::Status.eq(CommonStatusEnum::Enable))
+        .filter(Expr::cust_with_values("$1 = ANY(websites)", [website]))
         .one(db)
         .await?
         .ok_or_else(|| ApiError::biz("租户不存在"))?;
-    Ok(option)
+
+    Ok(tenant)
 }
 
 pub async fn check_tenant_id(tenant_id: &str) -> ApiResult<TenantRespVO> {
