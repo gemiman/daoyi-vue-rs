@@ -23,7 +23,8 @@ where
 
     async fn from_request_parts(parts: &mut Parts, _state: &S) -> Result<Self, Self::Rejection> {
         let query = parts.uri.query().unwrap_or_default();
-        match serde_qs::from_str(query) {
+        let query = query.replace("%5B", "[").replace("%5D", "]");
+        match serde_qs::from_str(&query) {
             Ok(value) => Ok(Query(value)),
             Err(e) => {
                 tracing::warn!("Query string parse error: {}", e);
