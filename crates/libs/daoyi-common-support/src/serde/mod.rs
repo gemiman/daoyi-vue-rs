@@ -22,6 +22,7 @@ where
 
 pub mod datetime_format {
     use sea_orm::prelude::DateTime;
+    use sea_orm::sqlx::types::chrono;
     use serde::{Deserialize, Deserializer, Serializer};
 
     const FORMAT: &str = "%Y-%m-%d %H:%M:%S";
@@ -49,8 +50,9 @@ pub mod datetime_format {
             StringOrTimestamp::String(s) => {
                 DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)
             }
-            StringOrTimestamp::Timestamp(ts) => DateTime::from_timestamp_millis(ts)
-                .ok_or_else(|| serde::de::Error::custom("Invalid timestamp")),
+            StringOrTimestamp::Timestamp(ts) => Ok(chrono::DateTime::from_timestamp_millis(ts)
+                .ok_or_else(|| serde::de::Error::custom("Invalid timestamp"))?
+                .naive_local()),
         }
         // let s = String::deserialize(deserializer)?;
         // DateTime::parse_from_str(&s, FORMAT).map_err(serde::de::Error::custom)

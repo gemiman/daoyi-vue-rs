@@ -55,13 +55,11 @@ pub enum CommonStatusEnum {
     Copy,
     PartialEq,
     Eq,
-    Serialize,
-    Deserialize,
     EnumIter,
     DeriveActiveEnum,
     DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
 )]
-#[serde(rename_all = "snake_case")]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum RoleTypeEnum {
     #[sea_orm(string_value = "1")]
@@ -76,13 +74,11 @@ pub enum RoleTypeEnum {
     Copy,
     PartialEq,
     Eq,
-    Serialize,
-    Deserialize,
     EnumIter,
     DeriveActiveEnum,
     DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
 )]
-#[serde(rename_all = "snake_case")]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum DataScopeEnum {
     #[sea_orm(string_value = "1")]
@@ -132,13 +128,11 @@ impl RoleCodeEnum {
     Copy,
     PartialEq,
     Eq,
-    Serialize,
-    Deserialize,
     EnumIter,
     DeriveActiveEnum,
     DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
 )]
-#[serde(rename_all = "snake_case")]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum MenuTypeEnum {
     #[sea_orm(string_value = "1")]
