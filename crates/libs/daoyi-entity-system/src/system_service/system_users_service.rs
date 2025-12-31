@@ -1,12 +1,14 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_users;
-use crate::system_service::{system_dept_service, system_tenant_service, system_user_post_service};
+use crate::system_service::{
+    system_dept_service, system_post_service, system_tenant_service, system_user_post_service,
+};
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::UserSaveReqVo;
-use sea_orm::Set;
 use sea_orm::entity::prelude::*;
+use sea_orm::Set;
 
 pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
     // 1.1 校验账户配合
@@ -66,6 +68,9 @@ async fn validate_user_for_create_or_update(
         system_dept_service::validate_dept_list(&vec![String::from(dept_id)]).await?;
     }
     // 校验岗位处于开启状态
+    if let Some(post_ids) = post_ids {
+        system_post_service::validate_post_list(post_ids).await?;
+    }
     Ok(option)
 }
 

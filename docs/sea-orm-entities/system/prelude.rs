@@ -5,6 +5,7 @@ pub use super::system_dept::Entity as SystemDept;
 pub use super::system_dict_data::Entity as SystemDictData;
 pub use super::system_dict_type::Entity as SystemDictType;
 pub use super::system_menu::Entity as SystemMenu;
+pub use super::system_post::Entity as SystemPost;
 pub use super::system_role::Entity as SystemRole;
 pub use super::system_role_menu::Entity as SystemRoleMenu;
 pub use super::system_tenant::Entity as SystemTenant;

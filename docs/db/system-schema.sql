@@ -446,9 +446,9 @@ CREATE TABLE system.system_dept
 (
     id             varchar(32) NOT NULL primary key,
     name           varchar(30) NOT NULL DEFAULT '',
-    parent_id      varchar(32)        NOT NULL DEFAULT 0,
+    parent_id      varchar(32) NOT NULL DEFAULT 0,
     sort           int4        NOT NULL DEFAULT 0,
-    leader_user_id varchar(32)        NULL     DEFAULT NULL,
+    leader_user_id varchar(32) NULL     DEFAULT NULL,
     phone          varchar(32) NULL     DEFAULT NULL,
     email          varchar(50) NULL     DEFAULT NULL,
     status         varchar(1)  NOT NULL,
@@ -475,3 +475,38 @@ COMMENT ON COLUMN system.system_dept.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_dept.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_dept.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_dept IS '部门表';
+
+
+-- ----------------------------
+-- Table structure for system.system_post
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_post;
+CREATE TABLE system.system_post
+(
+    id          varchar(32)  NOT NULL primary key,
+    code        varchar(64)  NOT NULL,
+    name        varchar(50)  NOT NULL,
+    sort        int4         NOT NULL,
+    status      varchar(1)   NOT NULL,
+    remark      varchar(500) NULL     DEFAULT NULL,
+    creator     varchar(64)  NULL     DEFAULT '',
+    create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(64)  NULL     DEFAULT '',
+    update_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean      NOT NULL DEFAULT false,
+    tenant_id   varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_post.id IS '岗位ID';
+COMMENT ON COLUMN system.system_post.code IS '岗位编码';
+COMMENT ON COLUMN system.system_post.name IS '岗位名称';
+COMMENT ON COLUMN system.system_post.sort IS '显示顺序';
+COMMENT ON COLUMN system.system_post.status IS '状态（0正常 1停用）';
+COMMENT ON COLUMN system.system_post.remark IS '备注';
+COMMENT ON COLUMN system.system_post.creator IS '创建者';
+COMMENT ON COLUMN system.system_post.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_post.updater IS '更新者';
+COMMENT ON COLUMN system.system_post.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_post.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_post.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_post IS '岗位信息表';
