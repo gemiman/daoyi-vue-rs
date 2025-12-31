@@ -407,3 +407,32 @@ COMMENT ON COLUMN system.system_tenant_package.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_tenant_package.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_tenant_package.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_tenant_package IS '租户套餐表';
+
+
+-- ----------------------------
+-- Table structure for system.system_user_post
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_user_post;
+CREATE TABLE system.system_user_post
+(
+    id          varchar(32) NOT NULL primary key,
+    user_id     varchar(32) NOT NULL DEFAULT '0',
+    post_id     varchar(32) NOT NULL DEFAULT '0',
+    creator     varchar(64) NULL     DEFAULT '',
+    create_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(64) NULL     DEFAULT '',
+    update_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean     NOT NULL DEFAULT false,
+    tenant_id   varchar(32) NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_user_post.id IS 'id';
+COMMENT ON COLUMN system.system_user_post.user_id IS '用户ID';
+COMMENT ON COLUMN system.system_user_post.post_id IS '岗位ID';
+COMMENT ON COLUMN system.system_user_post.creator IS '创建者';
+COMMENT ON COLUMN system.system_user_post.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_user_post.updater IS '更新者';
+COMMENT ON COLUMN system.system_user_post.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_user_post.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_user_post.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_user_post IS '用户岗位表';

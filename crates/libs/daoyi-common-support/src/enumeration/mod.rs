@@ -43,6 +43,27 @@ pub enum Gender {
     DaoyiStringOrNumberSerde,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum SexEnum {
+    #[sea_orm(string_value = "1")]
+    MALE,
+    #[sea_orm(string_value = "2")]
+    FEMALE,
+    #[sea_orm(string_value = "0")]
+    UNKNOWN,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum CommonStatusEnum {
     #[sea_orm(string_value = "0")]
     Enable,
@@ -93,32 +114,49 @@ pub enum DataScopeEnum {
     SELF, // 仅本人数据权限
 }
 
-#[derive(
-    Debug,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Serialize,
-    Deserialize,
-    EnumIter,
-    DeriveActiveEnum,
-    DaoyiIntoActiveValue,
-)]
-#[serde(rename_all = "snake_case")]
-#[sea_orm(
-    rs_type = "String",
-    db_type = "String(StringLen::None)",
-    rename_all = "snake_case"
-)]
+/// 角色标识枚举
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum RoleCodeEnum {
-    SuperAdmin,  // 超级管理员
-    TenantAdmin, // 租户管理员
-    CrmAdmin,    // CRM 管理员
+    /// 超级管理员
+    SuperAdmin,
+    /// 租户管理员
+    TenantAdmin,
+    /// CRM 管理员 (CRM 系统专用)
+    CrmAdmin,
 }
+
 impl RoleCodeEnum {
-    pub fn is_super_admin(role_code: &str) -> bool {
-        role_code == "super_admin"
+    /// 获取角色编码
+    pub fn code(&self) -> &'static str {
+        match self {
+            RoleCodeEnum::SuperAdmin => "super_admin",
+            RoleCodeEnum::TenantAdmin => "tenant_admin",
+            RoleCodeEnum::CrmAdmin => "crm_admin",
+        }
+    }
+
+    /// 获取角色名称
+    pub fn name(&self) -> &'static str {
+        match self {
+            RoleCodeEnum::SuperAdmin => "超级管理员",
+            RoleCodeEnum::TenantAdmin => "租户管理员",
+            RoleCodeEnum::CrmAdmin => "CRM 管理员",
+        }
+    }
+
+    /// 根据code字符串获取枚举
+    pub fn from_code(code: &str) -> Option<Self> {
+        match code {
+            "super_admin" => Some(RoleCodeEnum::SuperAdmin),
+            "tenant_admin" => Some(RoleCodeEnum::TenantAdmin),
+            "crm_admin" => Some(RoleCodeEnum::CrmAdmin),
+            _ => None,
+        }
+    }
+
+    /// 判断是否为超级管理员
+    pub fn is_super_admin(code: &str) -> bool {
+        code == Self::SuperAdmin.code()
     }
 }
 

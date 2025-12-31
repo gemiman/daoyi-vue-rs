@@ -35,7 +35,59 @@ pub struct HttpRequestContext {
     pub ignore_tenant: Option<bool>,
 }
 
+/// HttpRequestContext 构建器
+#[derive(Debug, Clone, Default)]
+pub struct HttpRequestContextBuilder {
+    token: Option<String>,
+    tenant_id: Option<String>,
+    login_id: Option<String>,
+    ignore_tenant: Option<bool>,
+}
+
+impl HttpRequestContextBuilder {
+    /// 创建新的构建器
+    pub fn new() -> Self {
+        Self::default()
+    }
+
+    /// 设置 token
+    pub fn token(mut self, token: impl Into<String>) -> Self {
+        self.token = Some(token.into());
+        self
+    }
+
+    /// 设置租户 ID
+    pub fn tenant_id(mut self, tenant_id: impl Into<String>) -> Self {
+        self.tenant_id = Some(tenant_id.into());
+        self
+    }
+
+    /// 设置登录 ID
+    pub fn login_id(mut self, login_id: impl Into<String>) -> Self {
+        self.login_id = Some(login_id.into());
+        self
+    }
+
+    /// 设置是否忽略租户
+    pub fn ignore_tenant(mut self, ignore_tenant: bool) -> Self {
+        self.ignore_tenant = Some(ignore_tenant);
+        self
+    }
+
+    /// 构建 HttpRequestContext
+    pub fn build(self) -> HttpRequestContext {
+        HttpRequestContext {
+            token: self.token,
+            tenant_id: self.tenant_id,
+            login_id: self.login_id,
+            ignore_tenant: self.ignore_tenant,
+        }
+    }
+}
 impl HttpRequestContext {
+    pub fn builder() -> HttpRequestContextBuilder {
+        HttpRequestContextBuilder::new()
+    }
     pub fn new() -> Self {
         Self {
             token: None,
@@ -43,6 +95,72 @@ impl HttpRequestContext {
             login_id: None,
             ignore_tenant: None,
         }
+    }
+
+    /// let result = HttpRequestContext::execute_with_other_context(
+    /// ctx,
+    /// || {
+    /// // 这里的代码会在指定的上下文中执行
+    /// do_something()
+    /// }
+    /// );
+    ///
+    pub fn execute_with_other_context<F, T>(ctx: HttpRequestContext, f: F) -> T
+    where
+        F: FnOnce() -> T,
+    {
+        // 保存当前上下文
+        let old_ctx = Self::get_current();
+
+        // 设置新上下文
+        Self::set_current(ctx);
+
+        // 执行函数
+        let result = f();
+
+        // 恢复原来的上下文
+        if let Some(old) = old_ctx {
+            Self::set_current(old);
+        } else {
+            Self::clear();
+        }
+
+        result
+    }
+
+    /// 在指定的上下文中执行异步函数
+    ///
+    /// # 参数
+    /// - `ctx`: 要临时设置的上下文
+    /// - `f`: 要执行的异步闭包或函数
+    ///
+    /// # 返回
+    /// 返回异步闭包的执行结果
+    ///
+    /// # 示例
+    ///
+    pub async fn execute_with_other_context_async<F, Fut, T>(ctx: HttpRequestContext, f: F) -> T
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = T>,
+    {
+        // 保存当前上下文
+        let old_ctx = Self::get_current();
+
+        // 设置新上下文
+        Self::set_current(ctx);
+
+        // 执行异步函数
+        let result = f().await;
+
+        // 恢复原来的上下文
+        if let Some(old) = old_ctx {
+            Self::set_current(old);
+        } else {
+            Self::clear();
+        }
+
+        result
     }
 
     /// 设置当前上下文 | Set Current Context

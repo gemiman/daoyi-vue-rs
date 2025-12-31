@@ -1,11 +1,67 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_role;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
-use daoyi_common_support::enumeration::RoleCodeEnum;
+use daoyi_common_support::enumeration::{DataScopeEnum, RoleCodeEnum, RoleTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
+use daoyi_common_support::vo::system_vo::RoleSaveReqVo;
 use daoyi_common_support::{database, redis_utils};
+use sea_orm::Set;
 use sea_orm::prelude::*;
 
+pub async fn create_role(
+    req_vo: RoleSaveReqVo,
+    role_type: Option<RoleTypeEnum>,
+) -> ApiResult<String> {
+    // 1. 校验角色
+    validate_role_duplicate(&req_vo.name, &req_vo.code, req_vo.id.as_deref()).await?;
+    // 2. 插入到数据库
+    let db = database::get().await;
+    let mut active_model: system_role::ActiveModel = req_vo.into();
+    active_model.r#type = Set(role_type.unwrap_or(RoleTypeEnum::CUSTOM));
+    active_model.data_scope = Set(DataScopeEnum::ALL); // 默认可查看所有数据。原因是，可能一些项目不需要项目权限
+    Ok(active_model.insert(db).await?.id)
+}
+
+async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> ApiResult<()> {
+    // 0. 超级管理员，不允许创建
+    if RoleCodeEnum::is_super_admin(code) {
+        return Err(ApiError::biz(format!("标识【{}】不能使用", code)));
+    }
+    let db = database::get().await;
+    // 1. 该 name 名字被其它角色所使用
+    let role = SystemRole::find_perm()
+        .await
+        .filter(system_role::Column::Name.eq(name))
+        .one(db)
+        .await?;
+    if let Some(role) = role {
+        if let Some(id) = id
+            && role.id != id
+        {
+            return Err(ApiError::biz(format!("已经存在名为【{}】的角色", name)));
+        }
+        if id.is_none() {
+            return Err(ApiError::biz(format!("已经存在名为【{}】的角色", name)));
+        }
+    }
+    // 2. 是否存在相同编码的角色
+    let role = SystemRole::find_perm()
+        .await
+        .filter(system_role::Column::Code.eq(code))
+        .one(db)
+        .await?;
+    if let Some(role) = role {
+        if let Some(id) = id
+            && role.id != id
+        {
+            return Err(ApiError::biz(format!("已经存在标识为【{}】的角色", code)));
+        }
+        if id.is_none() {
+            return Err(ApiError::biz(format!("已经存在标识为【{}】的角色", code)));
+        }
+    }
+    Ok(())
+}
 pub async fn get_role_list_by_ids(ids: &Vec<String>) -> ApiResult<Vec<system_role::Model>> {
     let db = database::get().await;
     let list = SystemRole::find_perm()

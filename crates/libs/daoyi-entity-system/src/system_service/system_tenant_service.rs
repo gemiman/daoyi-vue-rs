@@ -1,23 +1,133 @@
 use crate::system_entity::prelude::*;
-use crate::system_entity::system_tenant;
-use daoyi_common_support::enumeration::CommonStatusEnum;
+use crate::system_entity::{system_tenant, system_tenant_package};
+use crate::system_service::{
+    system_role_menu_service, system_role_service, system_tenant_package_service,
+    system_user_role_service, system_users_service,
+};
+use daoyi_common_support::configs::AppConfig;
+use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
+use daoyi_common_support::enumeration::{CommonStatusEnum, RoleCodeEnum, RoleTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::models::system::TenantPageReqVo;
-use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo};
+use daoyi_common_support::vo::system_vo::{RoleSaveReqVo, TenantRespVO, TenantSaveReqVo};
 use daoyi_common_support::{database, redis_utils};
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
-use sea_orm::{QueryOrder, QueryTrait};
+use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
 
 pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Model> {
     // 校验租户名称是否重复
+    valid_tenant_name_duplicate(&vo.name, None).await?;
     // 校验租户域名是否重复
+    valid_tenant_website_duplicate(&vo.websites, None).await?;
+    // 校验套餐被禁用
+    let package = system_tenant_package_service::valid_tenant_package(&vo.package_id).await?;
+    // 创建租户
     let db = database::get().await;
-    let active_model: system_tenant::ActiveModel = vo.into();
+    let active_model: system_tenant::ActiveModel = vo.clone().into();
     let model = active_model.insert(db).await?;
+    // 创建租户的管理员
+    HttpRequestContext::execute_with_other_context_async(
+        HttpRequestContext::builder()
+            .tenant_id(&model.id)
+            .ignore_tenant(false)
+            .build(),
+        async || -> ApiResult<()> {
+            // 创建角色
+            let role_id = create_role(&package).await?;
+            // 创建用户，并分配角色
+            let user_id = create_user(&role_id, &vo).await?;
+            // 修改租户的管理员
+            let mut active_model = model.clone().into_active_model();
+            active_model.contact_user_id = Set(Some(user_id));
+            active_model.update(db).await?;
+            Ok(())
+        },
+    )
+    .await?;
     Ok(model)
+}
+
+async fn create_user(role_id: &str, req_vo: &TenantSaveReqVo) -> ApiResult<String> {
+    // 创建用户
+    let user_id = system_users_service::create_user(req_vo.into()).await?;
+    // 分配角色
+    system_user_role_service::assign_user_role(&user_id, &vec![String::from(role_id)]).await?;
+    Ok(user_id)
+}
+
+pub async fn handle_tenant_info_async<F, Fut>(handler: F) -> ApiResult<()>
+where
+    F: FnOnce(system_tenant::Model) -> Fut,
+    Fut: Future<Output = ApiResult<()>>,
+{
+    // 如果禁用租户功能，则不执行逻辑
+    if is_tenant_disable().await {
+        return Ok(());
+    }
+    // 获得租户 ID
+    let tenant_id = HttpRequestContext::get_tenant_id_as_string().await?;
+    // 获得租户
+    let tenant = get_tenant_by_id(&tenant_id).await?;
+    // 执行处理器
+    handler(tenant).await?;
+
+    Ok(())
+}
+
+async fn is_tenant_disable() -> bool {
+    !AppConfig::get().await.auth().tenant_enable()
+}
+
+async fn create_role(tenant_package: &system_tenant_package::Model) -> ApiResult<String> {
+    // 创建角色
+    let req_vo = RoleSaveReqVo {
+        code: String::from(RoleCodeEnum::TenantAdmin.code()),
+        id: None,
+        name: String::from(RoleCodeEnum::TenantAdmin.name()),
+        remark: Some(String::from("系统自动生成")),
+        sort: 0,
+        status: CommonStatusEnum::Enable,
+    };
+    let role_id = system_role_service::create_role(req_vo, Some(RoleTypeEnum::SYSTEM)).await?;
+    // 分配权限
+    system_role_menu_service::assign_role_menu(&role_id, &tenant_package.menu_ids).await?;
+    Ok(role_id)
+}
+
+async fn valid_tenant_website_duplicate(
+    websites: &Option<Vec<String>>,
+    id: Option<&str>,
+) -> ApiResult<()> {
+    if websites.is_none() || websites.as_ref().unwrap().is_empty() {
+        return Ok(());
+    }
+    let websites = websites.as_ref().unwrap();
+    for website in websites {
+        if let Ok(tenant) = get_tenant_by_website(website).await {
+            if id.is_none() {
+                return Err(ApiError::biz(format!("域名为【{}】的租户已存在", website)));
+            }
+            if id.is_some() && id != Some(tenant.id.as_str()) {
+                return Err(ApiError::biz(format!("域名为【{}】的租户已存在", website)));
+            }
+        }
+    }
+    Ok(())
+}
+
+async fn valid_tenant_name_duplicate(name: &str, id: Option<&str>) -> ApiResult<()> {
+    if let Ok(tenant) = get_tenant_by_name(name).await {
+        if id.is_none() {
+            return Err(ApiError::biz(format!("名字为【{}】的租户已存在", name)));
+        }
+        if id.is_some() && id != Some(tenant.id.as_str()) {
+            return Err(ApiError::biz(format!("名字为【{}】的租户已存在", name)));
+        }
+    }
+    Ok(())
 }
 
 pub async fn get_tenant_list_by_status(

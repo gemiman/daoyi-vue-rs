@@ -1,9 +1,9 @@
+use crate::error::ApiResult;
 use axum::http::header;
 use merge::Merge;
 use serde::Deserialize;
 use std::time::Duration;
 use wax::{Glob, Pattern};
-use crate::error::ApiResult;
 
 #[derive(Debug, Deserialize, Default, Merge)]
 pub struct AuthConfig {
@@ -21,6 +21,8 @@ pub struct AuthConfig {
     token_check_url: Option<String>,
     #[merge(strategy = merge::option::overwrite_none)]
     tenant_check_url: Option<String>,
+    #[merge(strategy = merge::option::overwrite_none)]
+    tenant_enable: Option<bool>,
 }
 impl AuthConfig {
     pub fn header_key_token(&self) -> &str {
@@ -48,10 +50,15 @@ impl AuthConfig {
         Duration::from_secs(3600 * 12)
     }
     pub fn token_check_url(&self) -> &str {
-        self.token_check_url.as_deref().unwrap_or("http://127.0.0.1:48001/admin-api/system/auth/login")
+        self.token_check_url
+            .as_deref()
+            .unwrap_or("http://127.0.0.1:48001/admin-api/system/auth/login")
     }
     pub fn tenant_check_url(&self) -> &str {
         self.tenant_check_url.as_deref().unwrap_or("")
+    }
+    pub fn tenant_enable(&self) -> bool {
+        self.tenant_enable.unwrap_or(true)
     }
 }
 

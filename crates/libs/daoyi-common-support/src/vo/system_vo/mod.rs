@@ -1,12 +1,77 @@
-use crate::enumeration::CommonStatusEnum;
+use crate::enumeration::{CommonStatusEnum, SexEnum};
 use crate::request::validation;
 use crate::serde::datetime_format;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
-/// TenantSaveReqVO，管理后台 - 租户创建/修改 Request VO
+/// UserSaveReqVO，管理后台 - 用户创建/修改 Request VO
+#[derive(Debug, Deserialize, Validate, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct UserSaveReqVo {
+    /// 用户编号
+    pub id: Option<String>,
+    /// 用户账号
+    #[validate(
+        length(min = 4, max = 16, message = "账号长度为4-16"),
+        custom(function = "validation::is_valid_username")
+    )]
+    pub username: String,
+    /// 用户昵称
+    #[validate(length(max = 30, message = "用户昵称长度不能超过30个字符"))]
+    pub nickname: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 部门编号
+    pub dept_id: Option<String>,
+    /// 岗位编号数组
+    pub post_ids: Option<Vec<String>>,
+    /// 用户邮箱
+    #[validate(email(message = "邮箱格式不正确"))]
+    pub email: Option<String>,
+    /// 手机号码
+    #[validate(custom(function = "validation::is_mobile_phone"))]
+    pub mobile: Option<String>,
+    /// 用户性别，参见 SexEnum 枚举类
+    pub sex: Option<SexEnum>,
+    /// 用户头像
+    pub avatar: Option<String>,
+    /// 密码
+    #[validate(length(min = 4, max = 16, message = "密码长度为4-16"))]
+    pub password: Option<String>,
+}
+
+impl From<&TenantSaveReqVo> for UserSaveReqVo {
+    fn from(value: &TenantSaveReqVo) -> Self {
+        Self {
+            username: value.username.clone(),
+            password: value.password.clone(),
+            nickname: value.contact_name.clone(),
+            mobile: value.contact_mobile.clone(),
+            ..Default::default()
+        }
+    }
+}
+
+/// RoleSaveReqVO，管理后台 - 角色创建/更新 Request VO
 #[derive(Debug, Deserialize, Validate)]
+pub struct RoleSaveReqVo {
+    /// 角色标志
+    pub code: String,
+    /// 角色编号
+    pub id: Option<String>,
+    /// 角色名称
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态
+    pub status: CommonStatusEnum,
+}
+
+/// TenantSaveReqVO，管理后台 - 租户创建/修改 Request VO
+#[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TenantSaveReqVo {
     /// 账号数量
@@ -32,7 +97,7 @@ pub struct TenantSaveReqVo {
     pub package_id: String,
     /// 密码
     // #[validate(required(message = "密码不能为空"))]
-    pub password: String,
+    pub password: Option<String>,
     /// 租户状态
     // #[validate(required(message = "租户状态不能为空"))]
     pub status: CommonStatusEnum,
@@ -45,7 +110,10 @@ pub struct TenantSaveReqVo {
 
 #[derive(Debug, Deserialize, Validate)]
 pub struct AuthLoginReqVO {
-    #[validate(length(min = 4, max = 16, message = "账号长度为4-16"))]
+    #[validate(
+        length(min = 4, max = 16, message = "账号长度为4-16"),
+        custom(function = "validation::is_valid_username")
+    )]
     pub username: String,
     #[validate(length(min = 4, max = 16, message = "密码长度为4-16"))]
     pub password: String,
