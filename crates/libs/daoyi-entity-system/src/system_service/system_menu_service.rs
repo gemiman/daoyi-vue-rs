@@ -13,8 +13,7 @@ pub async fn get_menu_list(ids: Option<&Vec<String>>) -> ApiResult<Vec<system_me
         return Ok(vec![]);
     }
     let db = database::get_db_async().await;
-    Ok(SystemMenu::find_perm()
-        .await
+    Ok(SystemMenu::find()
         .apply_if(ids, |query, ids| {
             query.filter(system_menu::Column::Id.is_in(ids))
         })
