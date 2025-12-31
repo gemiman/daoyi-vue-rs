@@ -53,13 +53,16 @@ pub async fn create_token_after_login_success(
     context.token = Some(access_token.clone());
     context.login_id = Some(String::from(login_id));
     context.tenant_id = Some(String::from(tenant_id));
-    HttpRequestContext::set_current(context);
-    let token_expiration = AppConfig::get().await.auth().token_expiration();
-    let db = database::get().await;
-    let mut active_model = system_access_token::ActiveModel::new();
-    active_model.user_id = Set(String::from(login_id));
-    active_model.access_token = Set(access_token);
-    active_model.expires_time = Set(Local::now().naive_local() + token_expiration);
-    let model = active_model.insert(db).await?;
-    Ok(model.into())
+
+    HttpRequestContext::scope(context, || async move {
+        let token_expiration = AppConfig::get().await.auth().token_expiration();
+        let db = database::get().await;
+        let mut active_model = system_access_token::ActiveModel::new();
+        active_model.user_id = Set(String::from(login_id));
+        active_model.access_token = Set(access_token);
+        active_model.expires_time = Set(Local::now().naive_local() + token_expiration);
+        let model = active_model.insert(db).await?;
+        Ok(model.into())
+    })
+    .await
 }

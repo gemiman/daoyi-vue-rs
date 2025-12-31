@@ -5,10 +5,10 @@
 //! 注意：在实际应用中，建议通过框架的请求扩展（如 Axum 的 Extension）
 //! 来传递上下文，而不是使用 thread_local。这里提供的是一个简单的实现。
 
-use std::cell::RefCell;
+use std::future::Future;
 
-thread_local! {
-    static CONTEXT: RefCell<Option<HttpRequestContext >> = RefCell::new(None);
+tokio::task_local! {
+    static CONTEXT: HttpRequestContext;
 }
 
 /// http request 上下文 | http request Context
@@ -97,37 +97,6 @@ impl HttpRequestContext {
         }
     }
 
-    /// let result = HttpRequestContext::execute_with_other_context(
-    /// ctx,
-    /// || {
-    /// // 这里的代码会在指定的上下文中执行
-    /// do_something()
-    /// }
-    /// );
-    ///
-    pub fn execute_with_other_context<F, T>(ctx: HttpRequestContext, f: F) -> T
-    where
-        F: FnOnce() -> T,
-    {
-        // 保存当前上下文
-        let old_ctx = Self::get_current();
-
-        // 设置新上下文
-        Self::set_current(ctx);
-
-        // 执行函数
-        let result = f();
-
-        // 恢复原来的上下文
-        if let Some(old) = old_ctx {
-            Self::set_current(old);
-        } else {
-            Self::clear();
-        }
-
-        result
-    }
-
     /// 在指定的上下文中执行异步函数
     ///
     /// # 参数
@@ -136,51 +105,31 @@ impl HttpRequestContext {
     ///
     /// # 返回
     /// 返回异步闭包的执行结果
-    ///
-    /// # 示例
-    ///
+    pub async fn scope<F, Fut, T>(ctx: HttpRequestContext, f: F) -> T
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = T>,
+    {
+        CONTEXT.scope(ctx, f()).await
+    }
+
+    /// 兼容旧方法名，但在 task_local 模式下等同于 scope
     pub async fn execute_with_other_context_async<F, Fut, T>(ctx: HttpRequestContext, f: F) -> T
     where
         F: FnOnce() -> Fut,
         Fut: Future<Output = T>,
     {
-        // 保存当前上下文
-        let old_ctx = Self::get_current();
-
-        // 设置新上下文
-        Self::set_current(ctx);
-
-        // 执行异步函数
-        let result = f().await;
-
-        // 恢复原来的上下文
-        if let Some(old) = old_ctx {
-            Self::set_current(old);
-        } else {
-            Self::clear();
-        }
-
-        result
-    }
-
-    /// 设置当前上下文 | Set Current Context
-    ///
-    /// # 参数 | Parameters
-    /// - `ctx`: 要设置的上下文 | Context to set
-    pub fn set_current(ctx: HttpRequestContext) {
-        CONTEXT.with(|c| {
-            *c.borrow_mut() = Some(ctx);
-        });
+        Self::scope(ctx, f).await
     }
 
     /// 获取当前上下文 | Get Current Context
     ///
     /// # 返回 | Returns
-    /// 当前线程的上下文，如果不存在则返回 None
-    /// Current thread's context, or None if not exists
+    /// 当前任务的上下文，如果不存在则返回 None
     pub fn get_current() -> Option<HttpRequestContext> {
-        CONTEXT.with(|c| c.borrow().clone())
+        CONTEXT.try_with(|c| c.clone()).ok()
     }
+
     pub async fn get_login_id() -> Option<String> {
         if let Ok(login_id) = Self::get_login_id_as_string().await {
             return Some(login_id);
@@ -211,16 +160,6 @@ impl HttpRequestContext {
             .and_then(|ctx| ctx.ignore_tenant)
             .ok_or_else(|| anyhow::anyhow!("ignore_tenant is None"))
             .unwrap_or(false)
-    }
-
-    /// 清除当前上下文 | Clear Current Context
-    ///
-    /// 清除当前线程的上下文信息
-    /// Clear current thread's context information
-    pub fn clear() {
-        CONTEXT.with(|c| {
-            *c.borrow_mut() = None;
-        });
     }
 }
 

@@ -101,12 +101,11 @@ pub async fn get_auth_layer() -> &'static AsyncRequireAuthorizationLayer<ThreadL
 }
 
 pub async fn thread_local_middleware(request: Request<Body>, next: Next) -> Response<Body> {
-    if let Some(context) = request.extensions().get::<HttpRequestContext>() {
-        HttpRequestContext::set_current(context.clone());
-    } else {
-        HttpRequestContext::set_current(HttpRequestContext::new());
-    }
-    let response = next.run(request).await;
-    HttpRequestContext::clear();
-    response
+    let context = request
+        .extensions()
+        .get::<HttpRequestContext>()
+        .cloned()
+        .unwrap_or_else(HttpRequestContext::new);
+
+    HttpRequestContext::scope(context, || next.run(request)).await
 }

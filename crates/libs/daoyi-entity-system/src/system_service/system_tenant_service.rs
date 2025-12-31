@@ -16,7 +16,9 @@ use daoyi_common_support::{database, redis_utils};
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
+use daoyi_macros::transactional;
 
+#[transactional]
 pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Model> {
     // 校验租户名称是否重复
     valid_tenant_name_duplicate(&vo.name, None).await?;
@@ -27,7 +29,7 @@ pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Mode
     // 创建租户
     let db = database::get().await;
     let active_model: system_tenant::ActiveModel = vo.clone().into();
-    let model = active_model.insert(db).await?;
+    let model = active_model.insert(&db).await?;
     // 创建租户的管理员
     HttpRequestContext::execute_with_other_context_async(
         HttpRequestContext::builder()
@@ -42,7 +44,7 @@ pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Mode
             // 修改租户的管理员
             let mut active_model = model.clone().into_active_model();
             active_model.contact_user_id = Set(Some(user_id));
-            active_model.update(db).await?;
+            active_model.update(&db).await?;
             Ok(())
         },
     )
@@ -50,6 +52,7 @@ pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Mode
     Ok(model)
 }
 
+#[transactional]
 async fn create_user(role_id: &str, req_vo: &TenantSaveReqVo) -> ApiResult<String> {
     // 创建用户
     let user_id = system_users_service::create_user(req_vo.into()).await?;
@@ -81,6 +84,7 @@ async fn is_tenant_disable() -> bool {
     !AppConfig::get().await.auth().tenant_enable()
 }
 
+#[transactional]
 async fn create_role(tenant_package: &system_tenant_package::Model) -> ApiResult<String> {
     // 创建角色
     let req_vo = RoleSaveReqVo {
@@ -143,34 +147,37 @@ pub async fn get_tenant_list_by_status(
         .await?;
     Ok(list)
 }
+#[transactional]
 pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get().await;
     let option = SystemTenant::find_by_id(tenant_id)
         .filter(system_tenant::Column::Deleted.eq(false))
-        .one(db)
+        .one(&db)
         .await?
         .ok_or_else(|| ApiError::biz("租户不存在"))?;
     Ok(option)
 }
 
+#[transactional]
 pub async fn get_tenant_by_name(name: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get().await;
     let option = SystemTenant::find()
         .filter(system_tenant::Column::Deleted.eq(false))
         .filter(system_tenant::Column::Name.eq(name))
-        .one(db)
+        .one(&db)
         .await?
         .ok_or_else(|| ApiError::biz("租户不存在"))?;
     Ok(option)
 }
 
+#[transactional]
 pub async fn get_tenant_by_website(website: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get().await;
     let tenant = SystemTenant::find()
         .filter(system_tenant::Column::Deleted.eq(false))
         .filter(system_tenant::Column::Status.eq(CommonStatusEnum::Enable))
         .filter(Expr::cust_with_values("$1 = ANY(websites)", [website]))
-        .one(db)
+        .one(&db)
         .await?
         .ok_or_else(|| ApiError::biz("租户不存在"))?;
     Ok(tenant)

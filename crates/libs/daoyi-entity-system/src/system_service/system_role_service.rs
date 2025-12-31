@@ -7,7 +7,9 @@ use daoyi_common_support::vo::system_vo::RoleSaveReqVo;
 use daoyi_common_support::{database, redis_utils};
 use sea_orm::Set;
 use sea_orm::prelude::*;
+use daoyi_macros::transactional;
 
+#[transactional]
 pub async fn create_role(
     req_vo: RoleSaveReqVo,
     role_type: Option<RoleTypeEnum>,
@@ -19,7 +21,7 @@ pub async fn create_role(
     let mut active_model: system_role::ActiveModel = req_vo.into();
     active_model.r#type = Set(role_type.unwrap_or(RoleTypeEnum::CUSTOM));
     active_model.data_scope = Set(DataScopeEnum::ALL); // 默认可查看所有数据。原因是，可能一些项目不需要项目权限
-    Ok(active_model.insert(db).await?.id)
+    Ok(active_model.insert(&db).await?.id)
 }
 
 async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> ApiResult<()> {

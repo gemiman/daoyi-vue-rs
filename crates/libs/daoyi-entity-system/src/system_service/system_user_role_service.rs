@@ -5,7 +5,9 @@ use daoyi_common_support::error::ApiResult;
 use sea_orm::Set;
 use sea_orm::prelude::*;
 use std::collections::HashSet;
+use daoyi_macros::transactional;
 
+#[transactional]
 pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResult<()> {
     let db = database::get().await;
 
@@ -13,7 +15,7 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
     let db_role_ids: HashSet<String> = SystemUserRole::find_perm()
         .await
         .filter(system_user_role::Column::UserId.eq(user_id))
-        .all(db)
+        .all(&db)
         .await?
         .into_iter()
         .map(|x| x.role_id)
@@ -39,7 +41,7 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
             })
             .collect();
 
-        SystemUserRole::insert_many_auto(db, active_models).await?;
+        SystemUserRole::insert_many_auto(&db, active_models).await?;
     }
 
     // 6. 执行删除操作
@@ -47,7 +49,7 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
         SystemUserRole::delete_many()
             .filter(system_user_role::Column::UserId.eq(user_id))
             .filter(system_user_role::Column::RoleId.is_in(delete_role_ids))
-            .exec(db)
+            .exec(&db)
             .await?;
     }
 
