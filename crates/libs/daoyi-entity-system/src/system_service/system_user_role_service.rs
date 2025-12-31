@@ -39,7 +39,7 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
             })
             .collect();
 
-        SystemUserRole::insert_many(active_models).exec(db).await?;
+        SystemUserRole::insert_many_auto(db, active_models).await?;
     }
 
     // 6. 执行删除操作

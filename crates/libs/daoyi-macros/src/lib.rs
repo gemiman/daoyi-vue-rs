@@ -85,19 +85,15 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
         quote! {
             self.password = Set(hash_password(self.password.as_ref())
                 .await
-                .map_err(|e| DbErr::Custom(e.to_string()))?);
+                .map_err(|e| sea_orm::DbErr::Custom(e.to_string()))?);
         }
     } else {
         quote! {}
     };
 
     let expanded = quote! {
-        #[sea_orm::prelude::async_trait::async_trait]
-        impl ActiveModelBehavior for ActiveModel {
-            async fn before_save<C>(mut self, _db: &C, insert: bool) -> Result<Self, DbErr>
-            where
-                C: ConnectionTrait,
-            {
+        impl ActiveModel {
+             pub async fn set_default_values(&mut self, insert: bool) -> Result<(), sea_orm::DbErr> {
                 use sea_orm::Set;
                 use daoyi_common_support::id;
                 use daoyi_common_support::password::hash_password;
@@ -122,7 +118,32 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                         self.updater = Set(Some(login_id));
                     }
                 }
+                Ok(())
+             }
+        }
+
+        #[sea_orm::prelude::async_trait::async_trait]
+        impl ActiveModelBehavior for ActiveModel {
+            async fn before_save<C>(mut self, _db: &C, insert: bool) -> Result<Self, DbErr>
+            where
+                C: ConnectionTrait,
+            {
+                self.set_default_values(insert).await?;
                 Ok(self)
+            }
+        }
+
+        impl Entity {
+            pub async fn insert_many_auto<C, I>(db: &C, models: I) -> Result<sea_orm::InsertResult<ActiveModel>, sea_orm::DbErr>
+            where
+                C: sea_orm::ConnectionTrait,
+                I: IntoIterator<Item = ActiveModel>,
+            {
+                let mut models_vec: Vec<ActiveModel> = models.into_iter().collect();
+                for model in &mut models_vec {
+                    model.set_default_values(true).await?;
+                }
+                <Self as sea_orm::EntityTrait>::insert_many(models_vec).exec(db).await
             }
         }
     };

@@ -39,7 +39,7 @@ pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResul
             })
             .collect();
 
-        SystemRoleMenu::insert_many(active_models).exec(db).await?;
+        SystemRoleMenu::insert_many_auto(db, active_models).await?;
     }
 
     // 6. 执行删除操作

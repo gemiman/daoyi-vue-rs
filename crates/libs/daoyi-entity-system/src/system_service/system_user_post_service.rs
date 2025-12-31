@@ -39,7 +39,7 @@ pub async fn save_batch(user_id: &str, post_ids: &Vec<String>) -> ApiResult<()> 
             })
             .collect();
 
-        SystemUserPost::insert_many(active_models).exec(db).await?;
+        SystemUserPost::insert_many_auto(db, active_models).await?;
     }
 
     // 6. 执行删除操作
