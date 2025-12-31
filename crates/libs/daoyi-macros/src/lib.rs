@@ -1,6 +1,61 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput, Fields, ItemStruct, parse_macro_input, parse_quote};
+use syn::{Data, DeriveInput, Fields, ItemStruct, parse_macro_input, parse_quote, ItemFn, ExprPath, visit_mut::{self, VisitMut}};
+
+struct DatabaseGetReplacer;
+
+impl VisitMut for DatabaseGetReplacer {
+    fn visit_expr_path_mut(&mut self, i: &mut ExprPath) {
+        visit_mut::visit_expr_path_mut(self, i);
+        if is_database_get(i) {
+             *i = parse_quote! { daoyi_common_support::database::get_db_async };
+        }
+    }
+}
+
+fn is_database_get(path: &ExprPath) -> bool {
+    let segments = &path.path.segments;
+    if segments.is_empty() {
+        return false;
+    }
+    let last = segments.last().unwrap();
+    if last.ident != "get" {
+        return false;
+    }
+    
+    // Check for `database::get`
+    if segments.len() >= 2 {
+        let second_last = &segments[segments.len() - 2];
+        if second_last.ident == "database" {
+            return true;
+        }
+    }
+    
+    false
+}
+
+#[proc_macro_attribute]
+pub fn transactional(_args: TokenStream, input: TokenStream) -> TokenStream {
+    let mut item_fn = parse_macro_input!(input as ItemFn);
+    
+    // 1. Visit body and replace calls
+    let mut replacer = DatabaseGetReplacer;
+    replacer.visit_block_mut(&mut item_fn.block);
+
+    // 2. Wrap body
+    let original_block = item_fn.block;
+    let new_block = parse_quote! {
+        {
+            daoyi_common_support::database::call_in_transaction(async move {
+                #original_block
+            }).await
+        }
+    };
+
+    item_fn.block = Box::new(new_block);
+
+    TokenStream::from(quote! { #item_fn })
+}
 
 #[proc_macro_attribute]
 pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
