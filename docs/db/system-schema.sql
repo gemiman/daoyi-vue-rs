@@ -436,3 +436,42 @@ COMMENT ON COLUMN system.system_user_post.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_user_post.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_user_post.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_user_post IS '用户岗位表';
+
+
+-- ----------------------------
+-- Table structure for system.system_dept
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_dept;
+CREATE TABLE system.system_dept
+(
+    id             varchar(32) NOT NULL primary key,
+    name           varchar(30) NOT NULL DEFAULT '',
+    parent_id      varchar(32)        NOT NULL DEFAULT 0,
+    sort           int4        NOT NULL DEFAULT 0,
+    leader_user_id varchar(32)        NULL     DEFAULT NULL,
+    phone          varchar(32) NULL     DEFAULT NULL,
+    email          varchar(50) NULL     DEFAULT NULL,
+    status         varchar(1)  NOT NULL,
+    creator        varchar(64) NULL     DEFAULT '',
+    create_time    timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater        varchar(64) NULL     DEFAULT '',
+    update_time    timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted        boolean     NOT NULL DEFAULT false,
+    tenant_id      varchar(32) NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_dept.id IS '部门id';
+COMMENT ON COLUMN system.system_dept.name IS '部门名称';
+COMMENT ON COLUMN system.system_dept.parent_id IS '父部门id';
+COMMENT ON COLUMN system.system_dept.sort IS '显示顺序';
+COMMENT ON COLUMN system.system_dept.leader_user_id IS '负责人';
+COMMENT ON COLUMN system.system_dept.phone IS '联系电话';
+COMMENT ON COLUMN system.system_dept.email IS '邮箱';
+COMMENT ON COLUMN system.system_dept.status IS '部门状态（0正常 1停用）';
+COMMENT ON COLUMN system.system_dept.creator IS '创建者';
+COMMENT ON COLUMN system.system_dept.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_dept.updater IS '更新者';
+COMMENT ON COLUMN system.system_dept.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_dept.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_dept.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_dept IS '部门表';

@@ -3,6 +3,7 @@
 pub mod prelude;
 
 pub mod system_access_token;
+pub mod system_dept;
 pub mod system_dict_data;
 pub mod system_dict_type;
 pub mod system_menu;
