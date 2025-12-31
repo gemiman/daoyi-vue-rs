@@ -103,6 +103,7 @@ pub struct TenantSaveReqVo {
     pub status: CommonStatusEnum,
     /// 用户账号
     // #[validate(required(message = "用户账号不能为空"))]
+    #[validate(custom(function = "validation::is_valid_username"))]
     pub username: String,
     /// 绑定域名数组
     pub websites: Option<Vec<String>>,
