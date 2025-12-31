@@ -175,7 +175,7 @@ pub async fn init() -> anyhow::Result<()> {
         .with_context(|| anyhow!("Failed to set database config"))?;
     Ok(())
 }
-pub async fn get() -> &'static DatabaseConnection {
+async fn get() -> &'static DatabaseConnection {
     DB_CONN
         .get()
         .unwrap_or_else(|| panic!("Failed to load database config"))

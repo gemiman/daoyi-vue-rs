@@ -11,11 +11,11 @@ use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::Set;
 
 pub async fn get_access_token(token: &str) -> ApiResult<system_access_token::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let option = SystemAccessToken::find_perm()
         .await
         .filter(system_access_token::Column::AccessToken.eq(token))
-        .one(db)
+        .one(&db)
         .await?
         .ok_or_else(|| ApiError::biz("Token不存在"))?;
     Ok(option)
@@ -56,12 +56,12 @@ pub async fn create_token_after_login_success(
 
     HttpRequestContext::scope(context, || async move {
         let token_expiration = AppConfig::get().await.auth().token_expiration();
-        let db = database::get().await;
+        let db = database::get_db_async().await;
         let mut active_model = system_access_token::ActiveModel::new();
         active_model.user_id = Set(String::from(login_id));
         active_model.access_token = Set(access_token);
         active_model.expires_time = Set(Local::now().naive_local() + token_expiration);
-        let model = active_model.insert(db).await?;
+        let model = active_model.insert(&db).await?;
         Ok(model.into())
     })
     .await

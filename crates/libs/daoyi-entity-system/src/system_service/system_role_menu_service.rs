@@ -7,13 +7,13 @@ use sea_orm::prelude::*;
 use std::collections::HashSet;
 
 pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResult<()> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
 
     // 1. 获得角色拥有的菜单编号
     let db_menu_ids: HashSet<String> = SystemRoleMenu::find_perm()
         .await
         .filter(system_role_menu::Column::RoleId.eq(role_id))
-        .all(db)
+        .all(&db)
         .await?
         .into_iter()
         .map(|x| x.menu_id)
@@ -39,7 +39,7 @@ pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResul
             })
             .collect();
 
-        SystemRoleMenu::insert_many_auto(db, active_models).await?;
+        SystemRoleMenu::insert_many_auto(&db, active_models).await?;
     }
 
     // 6. 执行删除操作
@@ -47,7 +47,7 @@ pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResul
         SystemRoleMenu::delete_many()
             .filter(system_role_menu::Column::RoleId.eq(role_id))
             .filter(system_role_menu::Column::MenuId.is_in(delete_menu_ids))
-            .exec(db)
+            .exec(&db)
             .await?;
     }
 
@@ -65,11 +65,11 @@ pub async fn get_role_menu_list_by_role_id(role_ids: &Vec<String>) -> ApiResult<
             .map(|x| x.id)
             .collect());
     }
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     Ok(SystemRoleMenu::find_perm()
         .await
         .filter(system_role_menu::Column::RoleId.is_in(role_ids))
-        .all(db)
+        .all(&db)
         .await?
         .into_iter()
         .map(|x| x.menu_id)

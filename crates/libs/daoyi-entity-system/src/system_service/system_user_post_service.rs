@@ -7,13 +7,13 @@ use sea_orm::entity::prelude::*;
 use std::collections::HashSet;
 
 pub async fn save_batch(user_id: &str, post_ids: &Vec<String>) -> ApiResult<()> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
 
     // 1. 获得用户拥有的岗位编号
     let db_post_ids: HashSet<String> = SystemUserPost::find_perm()
         .await
         .filter(system_user_post::Column::UserId.eq(user_id))
-        .all(db)
+        .all(&db)
         .await?
         .into_iter()
         .map(|x| x.post_id)
@@ -39,7 +39,7 @@ pub async fn save_batch(user_id: &str, post_ids: &Vec<String>) -> ApiResult<()> 
             })
             .collect();
 
-        SystemUserPost::insert_many_auto(db, active_models).await?;
+        SystemUserPost::insert_many_auto(&db, active_models).await?;
     }
 
     // 6. 执行删除操作
@@ -47,7 +47,7 @@ pub async fn save_batch(user_id: &str, post_ids: &Vec<String>) -> ApiResult<()> 
         SystemUserPost::delete_many()
             .filter(system_user_post::Column::UserId.eq(user_id))
             .filter(system_user_post::Column::PostId.is_in(delete_post_ids))
-            .exec(db)
+            .exec(&db)
             .await?;
     }
 

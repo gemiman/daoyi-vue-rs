@@ -12,13 +12,13 @@ pub async fn get_menu_list(ids: Option<&Vec<String>>) -> ApiResult<Vec<system_me
     if ids.is_some() && ids.unwrap().is_empty() {
         return Ok(vec![]);
     }
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     Ok(SystemMenu::find_perm()
         .await
         .apply_if(ids, |query, ids| {
             query.filter(system_menu::Column::Id.is_in(ids))
         })
-        .all(db)
+        .all(&db)
         .await?)
 }
 

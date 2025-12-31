@@ -10,7 +10,7 @@ pub async fn get_dict_data_list(
     status: CommonStatusEnum,
     dict_type: Option<&str>,
 ) -> ApiResult<Vec<system_dict_data::Model>> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let list = SystemDictData::find_perm()
         .await
         .filter(system_dict_data::Column::Status.eq(status))
@@ -19,7 +19,7 @@ pub async fn get_dict_data_list(
         })
         .order_by_asc(system_dict_data::Column::DictType)
         .order_by_asc(system_dict_data::Column::Sort)
-        .all(db)
+        .all(&db)
         .await?;
     Ok(list)
 }

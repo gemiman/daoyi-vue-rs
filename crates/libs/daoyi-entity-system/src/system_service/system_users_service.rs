@@ -13,8 +13,8 @@ use sea_orm::Set;
 pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
     // 1.1 校验账户配合
     system_tenant_service::handle_tenant_info_async(async |tenant| {
-        let db = database::get().await;
-        let count = SystemUsers::find_perm().await.count(db).await? as i32;
+        let db = database::get_db_async().await;
+        let count = SystemUsers::find_perm().await.count(&db).await? as i32;
         if count > tenant.account_count {
             return Err(ApiError::biz(format!(
                 "创建用户失败，原因：超过租户最大租户配额({})！",
@@ -35,10 +35,10 @@ pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
     )
     .await?;
     // 2.1 插入用户
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let mut active_model: system_users::ActiveModel = req_vo.into();
     active_model.status = Set(CommonStatusEnum::Enable);
-    let model = active_model.insert(db).await?;
+    let model = active_model.insert(&db).await?;
     // 2.2 插入关联岗位
     if let Some(post_ids) = model.post_ids
         && !post_ids.is_empty()
@@ -79,11 +79,11 @@ async fn validate_email_unique(id: Option<&str>, email: Option<&str>) -> ApiResu
         return Ok(());
     }
     let mobile = email.unwrap();
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let option = SystemUsers::find_perm()
         .await
         .filter(system_users::Column::Email.eq(mobile))
-        .one(db)
+        .one(&db)
         .await?;
     if option.is_none() {
         return Ok(());
@@ -102,11 +102,11 @@ async fn validate_mobile_unique(id: Option<&str>, mobile: Option<&str>) -> ApiRe
         return Ok(());
     }
     let mobile = mobile.unwrap();
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let option = SystemUsers::find_perm()
         .await
         .filter(system_users::Column::Mobile.eq(mobile))
-        .one(db)
+        .one(&db)
         .await?;
     if option.is_none() {
         return Ok(());
@@ -121,11 +121,11 @@ async fn validate_mobile_unique(id: Option<&str>, mobile: Option<&str>) -> ApiRe
 }
 
 async fn validate_username_unique(id: Option<&str>, username: &str) -> ApiResult<()> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let option = SystemUsers::find_perm()
         .await
         .filter(system_users::Column::Username.eq(username))
-        .one(db)
+        .one(&db)
         .await?;
     if option.is_none() {
         return Ok(());
@@ -147,21 +147,21 @@ async fn validate_user_exists(id: Option<&str>) -> ApiResult<Option<system_users
     Ok(Some(model))
 }
 pub async fn get_by_username(username: &str) -> ApiResult<Option<system_users::Model>> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let option = SystemUsers::find_perm()
         .await
         .filter(system_users::Column::Username.eq(username))
-        .one(db)
+        .one(&db)
         .await?;
     Ok(option)
 }
 
 pub async fn get_by_id(id: &str) -> ApiResult<system_users::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     SystemUsers::find_perm()
         .await
         .filter(system_users::Column::Id.eq(id))
-        .one(db)
+        .one(&db)
         .await?
         .ok_or(ApiError::biz("用户不存在"))
 }

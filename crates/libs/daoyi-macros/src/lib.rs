@@ -1,6 +1,10 @@
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{Data, DeriveInput, Fields, ItemStruct, parse_macro_input, parse_quote, ItemFn, ExprPath, visit_mut::{self, VisitMut}};
+use syn::{
+    Block, Data, DeriveInput, ExprPath, Fields, ImplItem, Item, ItemStruct, parse_macro_input,
+    parse_quote,
+    visit_mut::{self, VisitMut},
+};
 
 struct DatabaseGetReplacer;
 
@@ -8,7 +12,7 @@ impl VisitMut for DatabaseGetReplacer {
     fn visit_expr_path_mut(&mut self, i: &mut ExprPath) {
         visit_mut::visit_expr_path_mut(self, i);
         if is_database_get(i) {
-             *i = parse_quote! { daoyi_common_support::database::get_db_async };
+            *i = parse_quote! { daoyi_common_support::database::get_db_async };
         }
     }
 }
@@ -22,7 +26,7 @@ fn is_database_get(path: &ExprPath) -> bool {
     if last.ident != "get" {
         return false;
     }
-    
+
     // Check for `database::get`
     if segments.len() >= 2 {
         let second_last = &segments[segments.len() - 2];
@@ -30,31 +34,49 @@ fn is_database_get(path: &ExprPath) -> bool {
             return true;
         }
     }
-    
+
     false
 }
 
-#[proc_macro_attribute]
-pub fn transactional(_args: TokenStream, input: TokenStream) -> TokenStream {
-    let mut item_fn = parse_macro_input!(input as ItemFn);
-    
+fn process_block(block: &mut Block) {
     // 1. Visit body and replace calls
     let mut replacer = DatabaseGetReplacer;
-    replacer.visit_block_mut(&mut item_fn.block);
+    replacer.visit_block_mut(block);
 
     // 2. Wrap body
-    let original_block = item_fn.block;
-    let new_block = parse_quote! {
+    let original_stmts = &block.stmts;
+    let new_block: Block = parse_quote! {
         {
             daoyi_common_support::database::call_in_transaction(async move {
-                #original_block
+                #(#original_stmts)*
             }).await
         }
     };
 
-    item_fn.block = Box::new(new_block);
+    *block = new_block;
+}
 
-    TokenStream::from(quote! { #item_fn })
+#[proc_macro_attribute]
+pub fn transactional(_args: TokenStream, input: TokenStream) -> TokenStream {
+    let item = parse_macro_input!(input as Item);
+
+    match item {
+        Item::Fn(mut item_fn) => {
+            process_block(&mut item_fn.block);
+            TokenStream::from(quote! { #item_fn })
+        }
+        Item::Impl(mut item_impl) => {
+            for item in &mut item_impl.items {
+                if let ImplItem::Fn(method) = item {
+                    if method.sig.asyncness.is_some() {
+                        process_block(&mut method.block);
+                    }
+                }
+            }
+            TokenStream::from(quote! { #item_impl })
+        }
+        _ => TokenStream::from(quote! { #item }),
+    }
 }
 
 #[proc_macro_attribute]
@@ -334,7 +356,6 @@ pub fn derive_daoyi_into_active_value(input: TokenStream) -> TokenStream {
 
     TokenStream::from(expanded)
 }
-
 
 #[proc_macro_derive(DaoyiStringOrNumberSerde)]
 pub fn derive_string_or_number_serde(input: TokenStream) -> TokenStream {

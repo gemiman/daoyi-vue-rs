@@ -6,10 +6,10 @@ use daoyi_common_support::error::{ApiError, ApiResult};
 use sea_orm::entity::prelude::*;
 
 pub async fn valid_tenant_package(id: &str) -> ApiResult<system_tenant_package::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let model = SystemTenantPackage::find_by_id(id)
         .filter(system_tenant_package::Column::Deleted.eq(false))
-        .one(db)
+        .one(&db)
         .await?;
     let model = match model {
         Some(model) => {
@@ -28,11 +28,11 @@ pub async fn valid_tenant_package(id: &str) -> ApiResult<system_tenant_package::
 pub async fn get_tenant_package_list_by_status(
     status: CommonStatusEnum,
 ) -> ApiResult<Vec<system_tenant_package::Model>> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let list = SystemTenantPackage::find()
         .filter(system_tenant_package::Column::Deleted.eq(false))
         .filter(system_tenant_package::Column::Status.eq(status))
-        .all(db)
+        .all(&db)
         .await?;
     Ok(list)
 }

@@ -38,11 +38,11 @@ pub async fn get_post_list(ids: &Vec<String>) -> ApiResult<Vec<system_post::Mode
     if ids.is_empty() {
         return Ok(vec![]);
     }
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let list = SystemPost::find_perm()
         .await
         .filter(system_post::Column::Id.is_in(ids))
-        .all(db)
+        .all(&db)
         .await?;
     Ok(list)
 }

@@ -41,10 +41,10 @@ async fn login(
     ValidJson(params): ValidJson<LoginParams>,
 ) -> RestApiResult<LoginResult> {
     tracing::info!("开始处理登录逻辑。。。");
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let user = SysUser::find()
         .filter(sys_user::Column::Account.eq(params.account))
-        .one(db)
+        .one(&db)
         .await?
         .ok_or_else(|| ApiError::Biz(String::from("账号或密码不正确")))?;
     if !verify_password(&params.password, &user.password).await? {
@@ -62,6 +62,7 @@ async fn logout() -> RestApiResult<()> {
 
 #[debug_handler]
 async fn get_user_info() -> RestApiResult<sys_user::Model> {
-    let user = SysUser::find_by_id("1").one(database::get().await).await?;
+    let db = database::get_db_async().await;
+    let user = SysUser::find_by_id("1").one(&db).await?;
     Ok(ApiResponse::ok(user))
 }

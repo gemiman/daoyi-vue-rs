@@ -27,7 +27,7 @@ pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Mode
     // 校验套餐被禁用
     let package = system_tenant_package_service::valid_tenant_package(&vo.package_id).await?;
     // 创建租户
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let active_model: system_tenant::ActiveModel = vo.clone().into();
     let model = active_model.insert(&db).await?;
     // 创建租户的管理员
@@ -137,19 +137,19 @@ async fn valid_tenant_name_duplicate(name: &str, id: Option<&str>) -> ApiResult<
 pub async fn get_tenant_list_by_status(
     status: Option<CommonStatusEnum>,
 ) -> ApiResult<Vec<system_tenant::Model>> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let list = SystemTenant::find()
         .filter(system_tenant::Column::Deleted.eq(false))
         .apply_if(status, |query, status| {
             query.filter(system_tenant::Column::Status.eq(status))
         })
-        .all(db)
+        .all(&db)
         .await?;
     Ok(list)
 }
 #[transactional]
 pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let option = SystemTenant::find_by_id(tenant_id)
         .filter(system_tenant::Column::Deleted.eq(false))
         .one(&db)
@@ -160,7 +160,7 @@ pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model
 
 #[transactional]
 pub async fn get_tenant_by_name(name: &str) -> ApiResult<system_tenant::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let option = SystemTenant::find()
         .filter(system_tenant::Column::Deleted.eq(false))
         .filter(system_tenant::Column::Name.eq(name))
@@ -172,7 +172,7 @@ pub async fn get_tenant_by_name(name: &str) -> ApiResult<system_tenant::Model> {
 
 #[transactional]
 pub async fn get_tenant_by_website(website: &str) -> ApiResult<system_tenant::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let tenant = SystemTenant::find()
         .filter(system_tenant::Column::Deleted.eq(false))
         .filter(system_tenant::Column::Status.eq(CommonStatusEnum::Enable))
@@ -206,6 +206,7 @@ pub async fn check_tenant_id(tenant_id: &str) -> ApiResult<TenantRespVO> {
 }
 
 pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_tenant::Model>> {
+    let db = database::get_db_async().await;
     let paginator = SystemTenant::find()
         .filter(system_tenant::Column::Deleted.eq(false))
         .apply_if(params.contact_mobile.as_ref(), |query, contact_mobile| {
@@ -224,7 +225,7 @@ pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_
             query.filter(system_tenant::Column::Status.eq(status))
         })
         .order_by_desc(system_tenant::Column::CreateTime)
-        .paginate(database::get().await, params.pagination.page_size);
+        .paginate(&db, params.pagination.page_size);
     let total = paginator.num_items().await?;
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
     let page = Page::from_pagination(&params.pagination, total, list);

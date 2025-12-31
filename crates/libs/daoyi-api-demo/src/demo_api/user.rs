@@ -47,7 +47,8 @@ pub struct UserParams {
 #[debug_handler]
 async fn create(ValidJson(params): ValidJson<UserParams>) -> RestApiResult<sys_user::Model> {
     let active_model = params.into_active_model();
-    let model = active_model.insert(database::get().await).await?;
+    let db = database::get_db_async().await;
+    let model = active_model.insert(&db).await?;
     Ok(ApiResponse::ok(Some(model)))
 }
 
@@ -56,9 +57,9 @@ async fn update(
     Path(id): Path<String>,
     ValidJson(params): ValidJson<UserParams>,
 ) -> RestApiResult<sys_user::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let mut existed_active_model = SysUser::find_by_id(&id)
-        .one(db)
+        .one(&db)
         .await?
         .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?
         .into_active_model();
@@ -72,18 +73,18 @@ async fn update(
     } else {
         existed_active_model.password = ActiveValue::Set(hash_password(password.as_ref()).await?);
     }
-    let model = existed_active_model.update(db).await?;
+    let model = existed_active_model.update(&db).await?;
     Ok(ApiResponse::ok(Some(model)))
 }
 
 #[debug_handler]
 async fn delete(Path(id): Path<String>) -> RestApiResult<u64> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let existed_user = SysUser::find_by_id(id)
-        .one(db)
+        .one(&db)
         .await?
         .ok_or_else(|| ApiError::Biz(String::from("待删除的用户不存在")))?;
-    let result = existed_user.delete(db).await?.rows_affected;
+    let result = existed_user.delete(&db).await?.rows_affected;
     Ok(ApiResponse::ok(Some(result)))
 }
 
@@ -102,6 +103,7 @@ async fn find_page(
         pagination,
     }): ValidQuery<UserQueryParams>,
 ) -> RestApiResult<Page<sys_user::Model>> {
+    let db = database::get_db_async().await;
     let paginator = SysUser::find()
         .apply_if(keyword.as_ref(), |query, keyword| {
             query.filter(
@@ -111,7 +113,7 @@ async fn find_page(
             )
         })
         .order_by_desc(sys_user::Column::CreatedAt)
-        .paginate(database::get().await, pagination.page_size);
+        .paginate(&db, pagination.page_size);
     let total = paginator.num_items().await?;
     let users = paginator.fetch_page(pagination.page_no - 1).await?;
     let page = Page::from_pagination(&pagination, total, users);
@@ -121,7 +123,7 @@ async fn find_page(
 #[debug_handler]
 #[tracing::instrument(name = "Query users", skip_all, fields(pay_method = "alipay"))]
 async fn query_users() -> RestApiResult<Vec<sys_user::Model>> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     tracing::warn!("出错了吗？");
     let users = SysUser::find()
         .filter(
@@ -134,7 +136,7 @@ async fn query_users() -> RestApiResult<Vec<sys_user::Model>> {
                         .add(sys_user::Column::Name.contains("王")),
                 ),
         )
-        .all(db)
+        .all(&db)
         .await
         .context("Fail to query users")?;
     Ok(ApiResponse::ok(Some(users)))

@@ -17,7 +17,7 @@ pub async fn create_role(
     // 1. 校验角色
     validate_role_duplicate(&req_vo.name, &req_vo.code, req_vo.id.as_deref()).await?;
     // 2. 插入到数据库
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let mut active_model: system_role::ActiveModel = req_vo.into();
     active_model.r#type = Set(role_type.unwrap_or(RoleTypeEnum::CUSTOM));
     active_model.data_scope = Set(DataScopeEnum::ALL); // 默认可查看所有数据。原因是，可能一些项目不需要项目权限
@@ -29,12 +29,12 @@ async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> Ap
     if RoleCodeEnum::is_super_admin(code) {
         return Err(ApiError::biz(format!("标识【{}】不能使用", code)));
     }
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     // 1. 该 name 名字被其它角色所使用
     let role = SystemRole::find_perm()
         .await
         .filter(system_role::Column::Name.eq(name))
-        .one(db)
+        .one(&db)
         .await?;
     if let Some(role) = role {
         if let Some(id) = id
@@ -50,7 +50,7 @@ async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> Ap
     let role = SystemRole::find_perm()
         .await
         .filter(system_role::Column::Code.eq(code))
-        .one(db)
+        .one(&db)
         .await?;
     if let Some(role) = role {
         if let Some(id) = id
@@ -65,11 +65,11 @@ async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> Ap
     Ok(())
 }
 pub async fn get_role_list_by_ids(ids: &Vec<String>) -> ApiResult<Vec<system_role::Model>> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let list = SystemRole::find_perm()
         .await
         .filter(system_role::Column::Id.is_in(ids))
-        .all(db)
+        .all(&db)
         .await?;
     Ok(list)
 }
@@ -89,11 +89,11 @@ pub async fn has_any_super_admin(ids: &Vec<String>) -> ApiResult<bool> {
 }
 
 pub async fn get_role_by_id(id: &str) -> ApiResult<system_role::Model> {
-    let db = database::get().await;
+    let db = database::get_db_async().await;
     let role = SystemRole::find_perm()
         .await
         .filter(system_role::Column::Id.eq(id))
-        .one(db)
+        .one(&db)
         .await?
         .ok_or(ApiError::biz("角色不存在"))?;
     Ok(role)
