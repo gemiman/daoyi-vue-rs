@@ -1,5 +1,5 @@
 [package]
-name = "daoyi-server"
+name = "daoyi-entity-infra"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -10,8 +10,6 @@ readme.workspace = true
 
 [dependencies]
 daoyi-common-support.workspace = true
-daoyi-api-system.workspace = true
-daoyi-api-infra.workspace = true
-tokio.workspace = true
-anyhow.workspace = true
-axum.workspace = true
+daoyi-macros.workspace = true
+sea-orm.workspace = true
+serde.workspace = true

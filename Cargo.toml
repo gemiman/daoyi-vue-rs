@@ -17,9 +17,11 @@ readme = "README.md"
 daoyi-common-support = { version = "0.1.0", path = "./crates/libs/daoyi-common-support" }
 daoyi-entity-demo = { version = "0.1.0", path = "./crates/libs/daoyi-entity-demo" }
 daoyi-api-demo = { version = "0.1.0", path = "./crates/libs/daoyi-api-demo" }
+daoyi-macros = { version = "0.1.0", path = "./crates/libs/daoyi-macros" }
 daoyi-entity-system = { version = "0.1.0", path = "./crates/libs/daoyi-entity-system" }
 daoyi-api-system = { version = "0.1.0", path = "./crates/libs/daoyi-api-system" }
-daoyi-macros = { version = "0.1.0", path = "./crates/libs/daoyi-macros" }
+daoyi-entity-infra = { version = "0.1.0", path = "./crates/libs/daoyi-entity-infra" }
+daoyi-api-infra = { version = "0.1.0", path = "./crates/libs/daoyi-api-infra" }
 axum = { version = "0.8.8", features = ["macros"] }
 tokio = { version = "1.48.0", features = ["full"] }
 tracing = { version = "0.1.44", features = ["async-await"] }
