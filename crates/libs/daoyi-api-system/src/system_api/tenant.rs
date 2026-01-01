@@ -23,6 +23,15 @@ pub fn create_router() -> Router<AppState> {
         .route("/get", routing::get(get_tenant))
         .route("/delete", routing::delete(delete_tenant))
         .route("/delete-list", routing::delete(delete_tenant_list))
+        .route("/export-excel", routing::get(export_tenant_excel))
+}
+
+#[debug_handler]
+async fn export_tenant_excel(
+    ValidQuery(params): ValidQuery<TenantPageReqVo>,
+) -> RestApiResult<Page<system_tenant::Model>> {
+    // 待实现 Excel 导出功能，暂时返回分页数据
+    ApiResponse::success(system_tenant_service::get_tenant_page(&params).await?)
 }
 
 #[debug_handler]
@@ -34,9 +43,7 @@ async fn delete_tenant_list(
 }
 
 #[debug_handler]
-async fn delete_tenant(
-    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
-) -> RestApiResult<bool> {
+async fn delete_tenant(ValidQuery(IdParams { id }): ValidQuery<IdParams>) -> RestApiResult<bool> {
     system_tenant_service::delete_tenant(&id).await?;
     ApiResponse::success(true)
 }
@@ -51,6 +58,7 @@ async fn update_tenant(ValidJson(vo): ValidJson<TenantUpdateReqVo>) -> RestApiRe
 async fn create_tenant(ValidJson(vo): ValidJson<TenantSaveReqVo>) -> RestApiResult<String> {
     ApiResponse::success(system_tenant_service::create_tenant(vo).await?.id)
 }
+
 #[debug_handler]
 async fn get_tenant_page(
     ValidQuery(params): ValidQuery<TenantPageReqVo>,
