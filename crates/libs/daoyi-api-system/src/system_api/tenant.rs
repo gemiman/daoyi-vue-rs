@@ -5,7 +5,7 @@ use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::models::system::{IdParams, TenantPageReqVo};
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
-use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo};
+use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo};
 use daoyi_entity_system::system_entity::system_tenant;
 use daoyi_entity_system::system_service::system_tenant_service;
 use serde::Deserialize;
@@ -24,7 +24,7 @@ pub fn create_router() -> Router<AppState> {
 }
 
 #[debug_handler]
-async fn update_tenant(ValidJson(vo): ValidJson<TenantSaveReqVo>) -> RestApiResult<bool> {
+async fn update_tenant(ValidJson(vo): ValidJson<TenantUpdateReqVo>) -> RestApiResult<bool> {
     system_tenant_service::update_tenant(vo).await?;
     ApiResponse::success(true)
 }

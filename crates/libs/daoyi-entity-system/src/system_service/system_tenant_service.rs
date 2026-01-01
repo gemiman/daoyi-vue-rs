@@ -13,7 +13,8 @@ use daoyi_common_support::enumeration::{
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::models::system::TenantPageReqVo;
-use daoyi_common_support::vo::system_vo::{RoleSaveReqVo, TenantRespVO, TenantSaveReqVo};
+use daoyi_common_support::utils::collectors;
+use daoyi_common_support::vo::system_vo::{RoleSaveReqVo, TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo};
 use daoyi_common_support::{database, redis_utils};
 use daoyi_macros::transactional;
 use sea_orm::entity::prelude::*;
@@ -21,17 +22,13 @@ use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
 
 #[transactional]
-pub async fn update_tenant(vo: TenantSaveReqVo) -> ApiResult<()> {
-    if vo.id.is_none() {
-        return Err(ApiError::valid("租户 ID 不能为空"));
-    }
+pub async fn update_tenant(vo: TenantUpdateReqVo) -> ApiResult<()> {
     // 校验存在
-    let id = vo.id.as_deref().unwrap();
-    let model = validate_update_tenant(id).await?;
+    let model = validate_update_tenant(&vo.id).await?;
     // 校验租户名称是否重复
-    valid_tenant_name_duplicate(&vo.name, Some(id)).await?;
+    valid_tenant_name_duplicate(&vo.name, Some(&vo.id)).await?;
     // 校验租户域名是否重复
-    valid_tenant_website_duplicate(&vo.websites, Some(id)).await?;
+    valid_tenant_website_duplicate(&vo.websites, Some(&vo.id)).await?;
     // 校验套餐被禁用
     let package = system_tenant_package_service::valid_tenant_package(&vo.package_id).await?;
     // 更新租户
@@ -45,6 +42,7 @@ pub async fn update_tenant(vo: TenantSaveReqVo) -> ApiResult<()> {
     Ok(())
 }
 
+#[transactional]
 pub async fn update_tenant_role_menu(tenant_id: &str, menu_ids: &Vec<String>) -> ApiResult<()> {
     HttpRequestContext::execute_with_other_context_async(
         HttpRequestContext::builder()
@@ -65,18 +63,33 @@ pub async fn update_tenant_role_menu(tenant_id: &str, menu_ids: &Vec<String>) ->
             } // 兜底校验
             // 重新分配每个角色的权限
             for role in roles {
+                let role_id = role.id.as_str();
                 // 如果是租户管理员，重新分配其权限为租户套餐的权限
                 if role.code == RoleCodeEnum::TenantAdmin.code() {
-                    system_role_menu_service::assign_role_menu(&role.id, menu_ids).await?;
+                    system_role_menu_service::assign_role_menu(role_id, menu_ids).await?;
                     tracing::info!(
                         "[update_tenant_role_menu][租户管理员({}/{}) 的权限修改为({:?})]",
-                        role.id,
+                        role_id,
                         role.tenant_id,
                         menu_ids
                     );
-                    continue;
+                } else {
+                    // 如果是其他角色，则去掉超过套餐的权限
+                    let role_menu_ids =
+                        system_role_menu_service::get_role_menu_list_by_role_id(&vec![
+                            String::from(role_id),
+                        ])
+                        .await?;
+                    let role_menu_ids =
+                        collectors::intersection_distinct(&role_menu_ids, &menu_ids);
+                    system_role_menu_service::assign_role_menu(role_id, &role_menu_ids).await?;
+                    tracing::info!(
+                        "[update_tenant_role_menu][角色({}/{}) 的权限修改为({:?})]",
+                        role_id,
+                        role.tenant_id,
+                        role_menu_ids
+                    );
                 }
-                // 如果是其他角色，则去掉超过套餐的权限
             }
             Ok(())
         },

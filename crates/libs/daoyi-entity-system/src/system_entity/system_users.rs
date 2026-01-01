@@ -49,9 +49,7 @@ impl From<UserSaveReqVo> for ActiveModel {
         active_model.mobile = Set(value.mobile);
         active_model.sex = Set(value.sex);
         active_model.avatar = Set(value.avatar);
-        if value.password.is_some() {
-            active_model.password = Set(value.password.unwrap());
-        }
+        active_model.password = Set(value.password);
         active_model
     }
 }

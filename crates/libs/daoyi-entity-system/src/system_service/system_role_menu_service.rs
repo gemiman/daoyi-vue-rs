@@ -5,7 +5,9 @@ use daoyi_common_support::database;
 use daoyi_common_support::error::ApiResult;
 use sea_orm::prelude::*;
 use std::collections::HashSet;
+use daoyi_macros::transactional;
 
+#[transactional]
 pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResult<()> {
     let db = database::get_db_async().await;
 

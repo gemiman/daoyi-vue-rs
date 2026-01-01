@@ -38,7 +38,7 @@ pub struct UserSaveReqVo {
     pub avatar: Option<String>,
     /// 密码
     #[validate(length(min = 4, max = 16, message = "密码长度为4-16"))]
-    pub password: Option<String>,
+    pub password: String,
 }
 
 impl From<&TenantSaveReqVo> for UserSaveReqVo {
@@ -70,7 +70,7 @@ pub struct RoleSaveReqVo {
     pub status: CommonStatusEnum,
 }
 
-/// TenantSaveReqVO，管理后台 - 租户创建/修改 Request VO
+/// TenantSaveReqVO，管理后台 - 租户创建 Request VO
 #[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TenantSaveReqVo {
@@ -81,30 +81,48 @@ pub struct TenantSaveReqVo {
     #[validate(custom(function = "validation::is_mobile_phone"))]
     pub contact_mobile: Option<String>,
     /// 联系人
-    // #[validate(required(message = "联系人不能为空"))]
     pub contact_name: String,
     /// 过期时间
-    // #[validate(required(message = "过期时间不能为空"))]
+    #[serde(with = "datetime_format")]
+    pub expire_time: DateTime,
+    /// 租户名
+    pub name: String,
+    /// 租户套餐编号
+    pub package_id: String,
+    /// 密码
+    pub password: String,
+    /// 租户状态
+    pub status: CommonStatusEnum,
+    /// 用户账号
+    #[validate(custom(function = "validation::is_valid_username"))]
+    pub username: String,
+    /// 绑定域名数组
+    pub websites: Option<Vec<String>>,
+}
+
+/// TenantUpdateReqVo，管理后台 - 租户修改 Request VO
+#[derive(Debug, Deserialize, Validate, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantUpdateReqVo {
+    /// 账号数量
+    #[validate(range(min = 0, message = "账号数量不能小于0"))]
+    pub account_count: i32,
+    /// 联系手机
+    #[validate(custom(function = "validation::is_mobile_phone"))]
+    pub contact_mobile: Option<String>,
+    /// 联系人
+    pub contact_name: String,
+    /// 过期时间
     #[serde(with = "datetime_format")]
     pub expire_time: DateTime,
     /// 租户编号
-    pub id: Option<String>,
+    pub id: String,
     /// 租户名
-    // #[validate(required(message = "租户名不能为空"))]
     pub name: String,
     /// 租户套餐编号
-    // #[validate(required(message = "租户套餐编号不能为空"))]
     pub package_id: String,
-    /// 密码
-    // #[validate(required(message = "密码不能为空"))]
-    pub password: Option<String>,
     /// 租户状态
-    // #[validate(required(message = "租户状态不能为空"))]
     pub status: CommonStatusEnum,
-    /// 用户账号
-    // #[validate(required(message = "用户账号不能为空"))]
-    #[validate(custom(function = "validation::is_valid_username"))]
-    pub username: String,
     /// 绑定域名数组
     pub websites: Option<Vec<String>>,
 }
@@ -140,6 +158,7 @@ pub struct TenantRespVO {
     pub status: CommonStatusEnum,
     pub websites: Option<Vec<String>>,
     pub package_id: String,
+    #[serde(with = "datetime_format")]
     pub expire_time: DateTime,
     pub account_count: i32,
 }
