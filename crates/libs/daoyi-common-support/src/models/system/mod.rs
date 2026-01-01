@@ -1,6 +1,6 @@
 use crate::enumeration::CommonStatusEnum;
 use crate::models::pagination::PaginationParams;
-use crate::serde::{datetime_format, option_vec_datetime_format};
+use crate::serde::{datetime_format, de_comma_separated, option_vec_datetime_format};
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
@@ -48,4 +48,11 @@ pub struct TenantPackageRespVo {
 #[serde(rename_all = "camelCase")]
 pub struct IdParams {
     pub id: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct IdsParams {
+    #[serde(deserialize_with = "de_comma_separated")]
+    pub ids: Vec<String>,
 }

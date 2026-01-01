@@ -14,9 +14,12 @@ use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::models::system::TenantPageReqVo;
 use daoyi_common_support::utils::collectors;
-use daoyi_common_support::vo::system_vo::{RoleSaveReqVo, TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo};
+use daoyi_common_support::vo::system_vo::{
+    RoleSaveReqVo, TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo,
+};
 use daoyi_common_support::{database, redis_utils};
 use daoyi_macros::transactional;
+use futures::future::try_join_all;
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
@@ -322,4 +325,28 @@ pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
     let page = Page::from_pagination(&params.pagination, total, list);
     Ok(page)
+}
+
+pub async fn delete_tenant_list(ids: &Vec<String>) -> ApiResult<()> {
+    if ids.is_empty() {
+        return Ok(());
+    }
+    // 校验存在
+    try_join_all(ids.iter().map(|id| validate_update_tenant(id))).await?;
+    // 删除
+    let db = database::get_db_async().await;
+    SystemTenant::delete_many()
+        .filter(system_tenant::Column::Id.is_in(ids))
+        .exec(&db)
+        .await?;
+    Ok(())
+}
+
+pub async fn delete_tenant(id: &str) -> ApiResult<()> {
+    // 校验存在
+    validate_update_tenant(id).await?;
+    // 删除
+    let db = database::get_db_async().await;
+    SystemTenant::delete_by_id(id).exec(&db).await?;
+    Ok(())
 }

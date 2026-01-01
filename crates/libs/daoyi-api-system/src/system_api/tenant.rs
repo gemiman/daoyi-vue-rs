@@ -2,7 +2,7 @@ use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::models::system::{IdParams, TenantPageReqVo};
+use daoyi_common_support::models::system::{IdParams, IdsParams, TenantPageReqVo};
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo};
@@ -21,6 +21,24 @@ pub fn create_router() -> Router<AppState> {
         .route("/create", routing::post(create_tenant))
         .route("/update", routing::put(update_tenant))
         .route("/get", routing::get(get_tenant))
+        .route("/delete", routing::delete(delete_tenant))
+        .route("/delete-list", routing::delete(delete_tenant_list))
+}
+
+#[debug_handler]
+async fn delete_tenant_list(
+    ValidQuery(IdsParams { ids }): ValidQuery<IdsParams>,
+) -> RestApiResult<bool> {
+    system_tenant_service::delete_tenant_list(&ids).await?;
+    ApiResponse::success(true)
+}
+
+#[debug_handler]
+async fn delete_tenant(
+    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
+) -> RestApiResult<bool> {
+    system_tenant_service::delete_tenant(&id).await?;
+    ApiResponse::success(true)
 }
 
 #[debug_handler]

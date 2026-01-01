@@ -2,6 +2,17 @@ use serde::{Deserialize, Deserializer};
 use std::fmt::Display;
 use std::str::FromStr;
 
+pub fn de_comma_separated<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
+where
+    D: Deserializer<'de>,
+    T: FromStr,
+    T::Err: Display,
+{
+    let s = String::deserialize(deserializer)?;
+    s.split(',')
+        .map(|v| v.trim().parse().map_err(serde::de::Error::custom))
+        .collect()
+}
 #[derive(Deserialize)]
 #[serde(untagged)]
 enum StringOrNumber<T> {
