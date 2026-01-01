@@ -150,12 +150,12 @@ pub async fn get_tenant_list_by_status(
 #[transactional]
 pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get_db_async().await;
-    let option = SystemTenant::find_by_id(tenant_id)
+    let model = SystemTenant::find_by_id(tenant_id)
         .filter(system_tenant::Column::Deleted.eq(false))
         .one(&db)
         .await?
         .ok_or_else(|| ApiError::biz("租户不存在"))?;
-    Ok(option)
+    Ok(model)
 }
 
 #[transactional]

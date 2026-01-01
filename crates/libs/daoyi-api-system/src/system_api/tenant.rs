@@ -1,8 +1,8 @@
-use axum::{debug_handler, routing, Router};
+use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::models::system::TenantPageReqVo;
+use daoyi_common_support::models::system::{IdParams, TenantPageReqVo};
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo};
@@ -19,6 +19,7 @@ pub fn create_router() -> Router<AppState> {
         .route("/simple-list", routing::get(get_tenant_simple_list))
         .route("/page", routing::get(get_tenant_page))
         .route("/create", routing::post(create_tenant))
+        .route("/get", routing::get(get_tenant))
 }
 
 #[debug_handler]
@@ -85,4 +86,10 @@ async fn check_tenant_id(
     ValidQuery(CheckTenantParams { tenant_id }): ValidQuery<CheckTenantParams>,
 ) -> RestApiResult<TenantRespVO> {
     ApiResponse::success(system_tenant_service::check_tenant_id(&tenant_id).await?)
+}
+#[debug_handler]
+async fn get_tenant(
+    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
+) -> RestApiResult<TenantRespVO> {
+    ApiResponse::success(system_tenant_service::get_tenant_by_id(&id).await?.into())
 }

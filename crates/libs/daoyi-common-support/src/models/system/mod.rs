@@ -43,3 +43,9 @@ pub struct TenantPackageRespVo {
     /// 状态，参见 CommonStatusEnum 枚举
     pub status: CommonStatusEnum,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct IdParams {
+    pub id: String,
+}
