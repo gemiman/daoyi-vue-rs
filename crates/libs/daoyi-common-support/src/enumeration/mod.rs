@@ -183,3 +183,28 @@ pub enum MenuTypeEnum {
     #[sea_orm(string_value = "3")]
     BUTTON, // 按钮
 }
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum FileStorageEnum {
+    #[sea_orm(string_value = "1")]
+    DB,
+    #[sea_orm(string_value = "10")]
+    LOCAL,
+    #[sea_orm(string_value = "11")]
+    FTP,
+    #[sea_orm(string_value = "12")]
+    SFTP,
+    #[sea_orm(string_value = "20")]
+    S3,
+}

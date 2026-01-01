@@ -13,3 +13,6 @@ daoyi-common-support.workspace = true
 daoyi-macros.workspace = true
 sea-orm.workspace = true
 serde.workspace = true
+xid.workspace = true
+tracing.workspace = true
+futures.workspace = true

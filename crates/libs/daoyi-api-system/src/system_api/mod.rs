@@ -10,15 +10,13 @@ mod ip;
 mod logger;
 mod mail;
 mod notice;
-mod notify_message;
-mod notify_template;
+mod notify;
 mod oauth2;
 mod permission;
 mod sms;
 mod social;
 mod tenant;
 mod user;
-mod tenant_package;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -31,13 +29,13 @@ pub fn create_router() -> Router<AppState> {
         .nest("/logger", logger::create_router())
         .nest("/mail", mail::create_router())
         .nest("/notice", notice::create_router())
-        .nest("/notify-message", notify_message::create_router())
-        .nest("/notify-template", notify_template::create_router())
+        .nest("/notify-message", notify::notify_message::create_router())
+        .nest("/notify-template", notify::notify_template::create_router())
         .nest("/oauth2", oauth2::create_router())
         .nest("/permission", permission::create_router())
         .nest("/sms", sms::create_router())
         .nest("/social", social::create_router())
-        .nest("/tenant", tenant::create_router())
-        .nest("/tenant-package", tenant_package::create_router())
+        .nest("/tenant", tenant::tenant::create_router())
+        .nest("/tenant-package", tenant::tenant_package::create_router())
         .nest("/user", user::create_router())
 }
