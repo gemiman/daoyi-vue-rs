@@ -2,14 +2,14 @@ use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::models::system::{IdParams, IdsParams, TenantPageReqVo};
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
-use daoyi_common_support::vo::system_vo::{TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo};
+use daoyi_common_support::vo::system_vo::{IdParams, IdsParams, TenantPageReqVo};
+use daoyi_common_support::vo::system_vo::{
+    NameParams, TenantIdParams, TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo, WebsiteParams,
+};
 use daoyi_entity_system::system_entity::system_tenant;
 use daoyi_entity_system::system_service::system_tenant_service;
-use serde::Deserialize;
-use validator::Validate;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -76,14 +76,9 @@ async fn get_tenant_simple_list() -> RestApiResult<Vec<TenantRespVO>> {
     ApiResponse::success(list)
 }
 
-#[derive(Debug, Deserialize, Validate)]
-#[serde(rename_all = "camelCase")]
-pub struct GetTenantIdByNameParams {
-    name: String,
-}
 #[debug_handler]
 async fn get_tenant_id_by_name(
-    ValidQuery(GetTenantIdByNameParams { name }): ValidQuery<GetTenantIdByNameParams>,
+    ValidQuery(NameParams { name }): ValidQuery<NameParams>,
 ) -> RestApiResult<Option<String>> {
     if let Ok(model) = system_tenant_service::get_tenant_by_name(&name).await {
         return ApiResponse::success(Some(model.id));
@@ -91,14 +86,9 @@ async fn get_tenant_id_by_name(
     ApiResponse::success(None)
 }
 
-#[derive(Debug, Deserialize, Validate)]
-#[serde(rename_all = "camelCase")]
-pub struct GetTenantByWebsiteParams {
-    website: String,
-}
 #[debug_handler]
 async fn get_tenant_by_website(
-    ValidQuery(GetTenantByWebsiteParams { website }): ValidQuery<GetTenantByWebsiteParams>,
+    ValidQuery(WebsiteParams { website }): ValidQuery<WebsiteParams>,
 ) -> RestApiResult<Option<TenantRespVO>> {
     if let Ok(model) = system_tenant_service::get_tenant_by_website(&website).await {
         if model.status == CommonStatusEnum::Disable {
@@ -109,14 +99,9 @@ async fn get_tenant_by_website(
     ApiResponse::success(None)
 }
 
-#[derive(Debug, Deserialize, Validate)]
-#[serde(rename_all = "camelCase")]
-pub struct CheckTenantParams {
-    tenant_id: String,
-}
 #[debug_handler]
 async fn check_tenant_id(
-    ValidQuery(CheckTenantParams { tenant_id }): ValidQuery<CheckTenantParams>,
+    ValidQuery(TenantIdParams { tenant_id }): ValidQuery<TenantIdParams>,
 ) -> RestApiResult<TenantRespVO> {
     ApiResponse::success(system_tenant_service::check_tenant_id(&tenant_id).await?)
 }

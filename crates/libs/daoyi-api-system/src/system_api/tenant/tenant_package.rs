@@ -1,7 +1,7 @@
 use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
-use daoyi_common_support::models::system::TenantPackageRespVo;
+use daoyi_common_support::vo::system_vo::TenantPackageRespVo;
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_entity_system::system_service::system_tenant_package_service;
 

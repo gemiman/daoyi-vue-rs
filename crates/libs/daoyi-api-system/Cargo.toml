@@ -12,6 +12,4 @@ readme.workspace = true
 daoyi-common-support.workspace = true
 axum.workspace = true
 daoyi-entity-system.workspace = true
-serde.workspace = true
-validator.workspace = true
 tracing.workspace = true

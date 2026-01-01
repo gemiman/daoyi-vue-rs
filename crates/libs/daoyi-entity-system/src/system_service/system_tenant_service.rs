@@ -12,8 +12,8 @@ use daoyi_common_support::enumeration::{
 };
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::models::system::TenantPageReqVo;
 use daoyi_common_support::utils::collectors;
+use daoyi_common_support::vo::system_vo::TenantPageReqVo;
 use daoyi_common_support::vo::system_vo::{
     RoleSaveReqVo, TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo,
 };
