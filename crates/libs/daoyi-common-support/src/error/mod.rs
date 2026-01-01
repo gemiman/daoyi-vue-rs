@@ -100,6 +100,10 @@ impl ApiError {
     pub fn biz<M: AsRef<str>>(msg: M) -> Self {
         Self::Biz(String::from(msg.as_ref()))
     }
+
+    pub fn valid<M: AsRef<str>>(msg: M) -> Self {
+        Self::Validation(String::from(msg.as_ref()))
+    }
     pub fn unauthenticated<M: AsRef<str>>(msg: M) -> Self {
         Self::Unauthenticated(String::from(msg.as_ref()))
     }

@@ -4,6 +4,9 @@ use daoyi_macros::{DaoyiIntoActiveValue, DaoyiStringOrNumberSerde};
 use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 
+/// 套餐编号 - 系统
+pub const PACKAGE_ID_SYSTEM: &str = "0";
+
 #[derive(
     Debug,
     Clone,

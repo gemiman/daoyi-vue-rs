@@ -5,9 +5,9 @@ use daoyi_common_support::enumeration::{DataScopeEnum, RoleCodeEnum, RoleTypeEnu
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::RoleSaveReqVo;
 use daoyi_common_support::{database, redis_utils};
+use daoyi_macros::transactional;
 use sea_orm::Set;
 use sea_orm::prelude::*;
-use daoyi_macros::transactional;
 
 #[transactional]
 pub async fn create_role(
@@ -108,4 +108,11 @@ pub async fn get_role_from_cache(id: &str) -> ApiResult<system_role::Model> {
     let role = get_role_by_id(id).await?;
     redis_utils::cache_set_json(&redis_key, &role).await?;
     Ok(role)
+}
+
+/// 获得所有角色列表
+pub async fn get_role_list() -> ApiResult<Vec<system_role::Model>> {
+    let db = database::get_db_async().await;
+    let list = SystemRole::find_perm().await.all(&db).await?;
+    Ok(list)
 }

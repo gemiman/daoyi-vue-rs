@@ -19,7 +19,14 @@ pub fn create_router() -> Router<AppState> {
         .route("/simple-list", routing::get(get_tenant_simple_list))
         .route("/page", routing::get(get_tenant_page))
         .route("/create", routing::post(create_tenant))
+        .route("/update", routing::put(update_tenant))
         .route("/get", routing::get(get_tenant))
+}
+
+#[debug_handler]
+async fn update_tenant(ValidJson(vo): ValidJson<TenantSaveReqVo>) -> RestApiResult<bool> {
+    system_tenant_service::update_tenant(vo).await?;
+    ApiResponse::success(true)
 }
 
 #[debug_handler]
