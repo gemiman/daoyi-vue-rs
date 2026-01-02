@@ -1,4 +1,4 @@
-use crate::enumeration::{CommonStatusEnum, FileStorageEnum};
+use crate::enumeration::FileStorageEnum;
 use crate::models::pagination::PaginationParams;
 use crate::serde::datetime_format;
 use crate::serde::option_vec_datetime_format;
@@ -38,9 +38,19 @@ pub struct FileConfigPageReqVO {
     pub create_time: Option<Vec<DateTime>>,
     /// 配置名
     pub name: Option<String>,
-    /// 租户状态（0正常 1停用）
-    pub status: Option<CommonStatusEnum>,
     #[serde(flatten)]
     #[validate(nested)]
     pub pagination: PaginationParams,
+}
+/// FileConfigSaveReqVO，管理后台 - 文件配置创建/修改 Request VO
+#[derive(Debug, Deserialize, Validate)]
+pub struct FileConfigSaveReqVo {
+    /// 存储配置,配置是动态参数，所以使用 Json 接收
+    pub config: Json,
+    /// 配置名
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 存储器，参见 FileStorageEnum 枚举类
+    pub storage: FileStorageEnum,
 }

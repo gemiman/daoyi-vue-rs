@@ -3,7 +3,7 @@ use crate::infra_entity::prelude::InfraFileConfig;
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiResult;
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::vo::infra_vo::FileConfigPageReqVO;
+use daoyi_common_support::vo::infra_vo::{FileConfigPageReqVO, FileConfigSaveReqVo};
 use sea_orm::*;
 
 pub async fn get_file_config_page(
@@ -29,4 +29,11 @@ pub async fn get_file_config_page(
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
     let page = Page::from_pagination(&params.pagination, total, list);
     Ok(page)
+}
+
+pub async fn create_file_config(vo: FileConfigSaveReqVo) -> ApiResult<infra_file_config::Model> {
+    let db = database::get_db_async().await;
+    let active_model: infra_file_config::ActiveModel = vo.into();
+    let model = active_model.insert(&db).await?;
+    Ok(model)
 }
