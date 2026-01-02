@@ -168,3 +168,7 @@ pub async fn delete_file_config(id: &str) -> ApiResult<()> {
     active_model.update(&db).await?;
     Ok(())
 }
+
+pub async fn test_file_config(id: &str) -> ApiResult<String> {
+    todo!()
+}

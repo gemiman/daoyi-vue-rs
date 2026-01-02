@@ -1,4 +1,4 @@
-use axum::{Router, debug_handler, routing};
+use axum::{debug_handler, routing, Router};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
@@ -19,6 +19,14 @@ pub fn create_router() -> Router<AppState> {
         .route("/update-master", routing::put(update_file_config_master))
         .route("/delete", routing::delete(delete_file_config))
         .route("/delete-list", routing::delete(delete_file_config_list))
+        .route("/test", routing::get(test_file_config))
+}
+
+#[debug_handler]
+async fn test_file_config(
+    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
+) -> RestApiResult<String> {
+    ApiResponse::success(infra_file_config_service::test_file_config(&id).await?)
 }
 
 #[debug_handler]
