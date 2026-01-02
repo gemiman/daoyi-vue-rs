@@ -54,6 +54,18 @@ pub struct FileConfigSaveReqVo {
     /// 存储器，参见 FileStorageEnum 枚举类
     pub storage: FileStorageEnum,
 }
+#[derive(Debug, Deserialize, Validate)]
+pub struct FileConfigUpdateReqVo {
+    pub id: String,
+    /// 存储配置,配置是动态参数，所以使用 Json 接收
+    pub config: Json,
+    /// 配置名
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 存储器，参见 FileStorageEnum 枚举类
+    pub storage: FileStorageEnum,
+}
 
 
 #[derive(Debug, Deserialize, Validate)]

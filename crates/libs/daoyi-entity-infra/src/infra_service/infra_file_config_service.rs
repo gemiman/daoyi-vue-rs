@@ -6,8 +6,8 @@ use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::serde::validate_and_parse;
 use daoyi_common_support::vo::infra_vo::{
-    DbFileClientConfig, FileConfigPageReqVO, FileConfigSaveReqVo, FtpFileClientConfig,
-    LocalFileClientConfig, S3FileClientConfig, SftpFileClientConfig,
+    DbFileClientConfig, FileConfigPageReqVO, FileConfigSaveReqVo, FileConfigUpdateReqVo,
+    FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig, SftpFileClientConfig,
 };
 use sea_orm::prelude::Json;
 use sea_orm::*;
@@ -43,6 +43,19 @@ pub async fn create_file_config(vo: FileConfigSaveReqVo) -> ApiResult<infra_file
     let active_model: infra_file_config::ActiveModel = vo.into();
     let model = active_model.insert(&db).await?;
     Ok(model)
+}
+
+pub async fn update_file_config(vo: FileConfigUpdateReqVo) -> ApiResult<()> {
+    validate_file_config_storage(&vo.storage, &vo.config).await?;
+    // 校验存在
+    let mut active_model = get_file_config(&vo.id).await?.into_active_model();
+    active_model.config = Set(vo.config);
+    active_model.name = Set(vo.name);
+    active_model.remark = Set(vo.remark);
+    active_model.storage = Set(vo.storage);
+    let db = database::get_db_async().await;
+    active_model.update(&db).await?;
+    Ok(())
 }
 
 async fn validate_file_config_storage(storage: &FileStorageEnum, config: &Json) -> ApiResult<()> {
