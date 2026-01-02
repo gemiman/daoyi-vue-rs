@@ -54,3 +54,75 @@ pub struct FileConfigSaveReqVo {
     /// 存储器，参见 FileStorageEnum 枚举类
     pub storage: FileStorageEnum,
 }
+
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct DbFileClientConfig {
+    #[validate(url(message = "domain 必须是 URL 格式"), length(min = 1, message = "domain 不能为空"))]
+    pub domain: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalFileClientConfig {
+    #[validate(length(min = 1, message = "基础路径不能为空"))]
+    pub base_path: String,
+    #[validate(url(message = "domain 必须是 URL 格式"), length(min = 1, message = "domain 不能为空"))]
+    pub domain: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct FtpFileClientConfig {
+    #[validate(length(min = 1, message = "基础路径不能为空"))]
+    pub base_path: String,
+    #[validate(url(message = "domain 必须是 URL 格式"), length(min = 1, message = "domain 不能为空"))]
+    pub domain: String,
+    #[validate(length(min = 1, message = "host 不能为空"))]
+    pub host: String,
+    pub port: u16,
+    #[validate(length(min = 1, message = "用户名不能为空"))]
+    pub username: String,
+    #[validate(length(min = 1, message = "密码不能为空"))]
+    pub password: String,
+    #[validate(length(min = 1, message = "连接模式不能为空"))]
+    pub mode: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SftpFileClientConfig {
+    #[validate(length(min = 1, message = "基础路径不能为空"))]
+    pub base_path: String,
+    #[validate(url(message = "domain 必须是 URL 格式"), length(min = 1, message = "domain 不能为空"))]
+    pub domain: String,
+    #[validate(length(min = 1, message = "host 不能为空"))]
+    pub host: String,
+    pub port: u16,
+    #[validate(length(min = 1, message = "用户名不能为空"))]
+    pub username: String,
+    #[validate(length(min = 1, message = "密码不能为空"))]
+    pub password: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct S3FileClientConfig {
+    #[validate(length(min = 1, message = "endpoint 不能为空"))]
+    pub endpoint: String,
+    #[validate(url(message = "domain 必须是 URL 格式"))]
+    pub domain: Option<String>,
+    #[validate(length(min = 1, message = "bucket 不能为空"))]
+    pub bucket: String,
+    #[validate(length(min = 1, message = "accessKey 不能为空"))]
+    pub access_key: String,
+    #[validate(length(min = 1, message = "accessSecret 不能为空"))]
+    pub access_secret: String,
+    #[allow(dead_code)]
+    pub enable_path_style_access: bool,
+    #[allow(dead_code)]
+    pub enable_public_access: bool,
+    #[allow(dead_code)]
+    pub region: Option<String>,
+}

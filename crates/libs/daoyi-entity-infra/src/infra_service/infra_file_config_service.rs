@@ -1,9 +1,15 @@
 use crate::infra_entity::infra_file_config;
 use crate::infra_entity::prelude::InfraFileConfig;
 use daoyi_common_support::database;
-use daoyi_common_support::error::ApiResult;
+use daoyi_common_support::enumeration::FileStorageEnum;
+use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::vo::infra_vo::{FileConfigPageReqVO, FileConfigSaveReqVo};
+use daoyi_common_support::serde::validate_and_parse;
+use daoyi_common_support::vo::infra_vo::{
+    DbFileClientConfig, FileConfigPageReqVO, FileConfigSaveReqVo, FtpFileClientConfig,
+    LocalFileClientConfig, S3FileClientConfig, SftpFileClientConfig,
+};
+use sea_orm::prelude::Json;
 use sea_orm::*;
 
 pub async fn get_file_config_page(
@@ -32,8 +38,35 @@ pub async fn get_file_config_page(
 }
 
 pub async fn create_file_config(vo: FileConfigSaveReqVo) -> ApiResult<infra_file_config::Model> {
+    validate_file_config_storage(&vo.storage, &vo.config).await?;
     let db = database::get_db_async().await;
     let active_model: infra_file_config::ActiveModel = vo.into();
     let model = active_model.insert(&db).await?;
     Ok(model)
+}
+
+async fn validate_file_config_storage(storage: &FileStorageEnum, config: &Json) -> ApiResult<()> {
+    match storage {
+        FileStorageEnum::DB => {
+            validate_and_parse::<DbFileClientConfig>(config)?;
+        }
+        FileStorageEnum::LOCAL => {
+            validate_and_parse::<LocalFileClientConfig>(config)?;
+        }
+        FileStorageEnum::FTP => {
+            validate_and_parse::<FtpFileClientConfig>(config)?;
+        }
+        FileStorageEnum::SFTP => {
+            validate_and_parse::<SftpFileClientConfig>(config)?;
+        }
+        FileStorageEnum::S3 => {
+            let config = validate_and_parse::<S3FileClientConfig>(config)?;
+            if config.endpoint.contains("qiniucs.com")
+                && config.domain.as_deref().unwrap_or("").is_empty()
+            {
+                return Err(ApiError::valid("domain 不能为空"));
+            }
+        }
+    }
+    Ok(())
 }

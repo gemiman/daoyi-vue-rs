@@ -1,6 +1,9 @@
 use serde::{Deserialize, Deserializer};
 use std::fmt::Display;
 use std::str::FromStr;
+use sea_orm::prelude::Json;
+use validator::Validate;
+use crate::error::{ApiError, ApiResult};
 
 pub fn de_comma_separated<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
@@ -94,4 +97,16 @@ pub mod option_vec_datetime_format {
             None => Ok(None),
         }
     }
+}
+
+
+pub fn validate_and_parse<T>(config: &Json) -> ApiResult<T>
+where
+    T: serde::de::DeserializeOwned + Validate,
+{
+    let parsed: T = T::deserialize(config).map_err(serde_json::Error::from)?;
+    parsed
+        .validate()
+        .map_err(|e| ApiError::valid(e.to_string()))?;
+    Ok(parsed)
 }
