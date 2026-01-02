@@ -70,3 +70,14 @@ async fn validate_file_config_storage(storage: &FileStorageEnum, config: &Json) 
     }
     Ok(())
 }
+
+pub async fn get_file_config(id: &str) -> ApiResult<infra_file_config::Model> {
+    let db = database::get_db_async().await;
+    let model = InfraFileConfig::find_perm()
+        .await
+        .filter(infra_file_config::Column::Id.eq(id))
+        .one(&db)
+        .await?
+        .ok_or_else(|| ApiError::biz("文件配置不存在"))?;
+    Ok(model)
+}
