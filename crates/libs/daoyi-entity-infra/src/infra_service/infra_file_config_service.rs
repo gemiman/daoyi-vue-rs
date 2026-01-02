@@ -127,3 +127,44 @@ pub async fn update_file_config_master(id: &str) -> ApiResult<()> {
         .await?;
     Ok(())
 }
+
+#[transactional]
+pub async fn delete_file_config_list(ids: &Vec<String>) -> ApiResult<()> {
+    let db = database::get_db_async().await;
+    // 校验是否有主配置
+    let configs = InfraFileConfig::find_perm()
+        .await
+        .filter(infra_file_config::Column::Id.is_in(ids))
+        .all(&db)
+        .await?;
+    for model in &configs {
+        if model.master {
+            return Err(ApiError::biz(
+                "该文件配置不允许删除，原因：它是主配置，删除会导致无法上传文件",
+            ));
+        }
+    }
+    // 批量删除
+    let ids = configs.iter().map(|m| m.id.as_str()).collect::<Vec<_>>();
+    InfraFileConfig::update_many()
+        .col_expr(infra_file_config::Column::Deleted, Expr::value(true))
+        .filter(infra_file_config::Column::Id.is_in(ids))
+        .exec(&db)
+        .await?;
+    Ok(())
+}
+
+pub async fn delete_file_config(id: &str) -> ApiResult<()> {
+    // 校验存在
+    let model = get_file_config(id).await?;
+    if model.master {
+        return Err(ApiError::biz(
+            "该文件配置不允许删除，原因：它是主配置，删除会导致无法上传文件",
+        ));
+    }
+    let db = database::get_db_async().await;
+    let mut active_model = model.into_active_model();
+    active_model.deleted = Set(true);
+    active_model.update(&db).await?;
+    Ok(())
+}

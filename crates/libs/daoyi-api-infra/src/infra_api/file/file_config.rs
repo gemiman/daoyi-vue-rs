@@ -6,7 +6,7 @@ use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::infra_vo::{
     FileConfigPageReqVO, FileConfigSaveReqVo, FileConfigUpdateReqVo,
 };
-use daoyi_common_support::vo::system_vo::IdParams;
+use daoyi_common_support::vo::system_vo::{IdParams, IdsParams};
 use daoyi_entity_infra::infra_entity::infra_file_config;
 use daoyi_entity_infra::infra_service::infra_file_config_service;
 
@@ -17,6 +17,24 @@ pub fn create_router() -> Router<AppState> {
         .route("/get", routing::get(get_file_config))
         .route("/update", routing::put(update_file_config))
         .route("/update-master", routing::put(update_file_config_master))
+        .route("/delete", routing::delete(delete_file_config))
+        .route("/delete-list", routing::delete(delete_file_config_list))
+}
+
+#[debug_handler]
+async fn delete_file_config_list(
+    ValidQuery(IdsParams { ids }): ValidQuery<IdsParams>,
+) -> RestApiResult<bool> {
+    infra_file_config_service::delete_file_config_list(&ids).await?;
+    ApiResponse::success(true)
+}
+
+#[debug_handler]
+async fn delete_file_config(
+    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
+) -> RestApiResult<bool> {
+    infra_file_config_service::delete_file_config(&id).await?;
+    ApiResponse::success(true)
 }
 
 #[debug_handler]
