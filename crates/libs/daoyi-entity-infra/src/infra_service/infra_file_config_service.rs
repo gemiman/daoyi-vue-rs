@@ -1,5 +1,5 @@
 use crate::infra_entity::infra_file_config;
-use crate::infra_entity::prelude::InfraFileConfig;
+use crate::infra_entity::prelude::*;
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::FileStorageEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
@@ -9,7 +9,8 @@ use daoyi_common_support::vo::infra_vo::{
     DbFileClientConfig, FileConfigPageReqVO, FileConfigSaveReqVo, FileConfigUpdateReqVo,
     FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig, SftpFileClientConfig,
 };
-use sea_orm::prelude::Json;
+use daoyi_macros::transactional;
+use sea_orm::prelude::*;
 use sea_orm::*;
 
 pub async fn get_file_config_page(
@@ -93,4 +94,36 @@ pub async fn get_file_config(id: &str) -> ApiResult<infra_file_config::Model> {
         .await?
         .ok_or_else(|| ApiError::biz("文件配置不存在"))?;
     Ok(model)
+}
+
+#[transactional]
+pub async fn update_file_config_master(id: &str) -> ApiResult<()> {
+    let db = database::get_db_async().await;
+    let list = InfraFileConfig::find_perm().await.all(&db).await?;
+    // 校验存在
+    if !list.iter().any(|m| m.id == id) {
+        return Err(ApiError::biz("文件配置不存在"));
+    }
+    // 更新其它为非 master
+    let ids = list
+        .iter()
+        .filter(|m| m.id != id)
+        .map(|m| m.id.as_str())
+        .collect::<Vec<_>>();
+    if !ids.is_empty() {
+        InfraFileConfig::update_many()
+            .col_expr(infra_file_config::Column::Master, Expr::value(false))
+            .filter(infra_file_config::Column::Master.eq(true))
+            .filter(infra_file_config::Column::Id.is_in(ids))
+            .exec(&db)
+            .await?;
+    }
+    // 更新
+    InfraFileConfig::update_many()
+        .col_expr(infra_file_config::Column::Master, Expr::value(true))
+        .filter(infra_file_config::Column::Master.eq(false))
+        .filter(infra_file_config::Column::Id.eq(id))
+        .exec(&db)
+        .await?;
+    Ok(())
 }
