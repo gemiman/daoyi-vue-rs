@@ -1,4 +1,4 @@
-use crate::enumeration::{CommonStatusEnum, SexEnum};
+use crate::enumeration::{CommonStatusEnum, MenuTypeEnum, SexEnum};
 use crate::models::pagination::PaginationParams;
 use crate::request::validation;
 use crate::serde::datetime_format;
@@ -213,6 +213,20 @@ pub struct MenuVO {
     pub children: Vec<MenuVO>,
 }
 
+/// MenuSimpleRespVO，管理后台 - 菜单精简信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MenuSimpleRespVo {
+    /// 菜单编号
+    pub id: String,
+    /// 菜单名称
+    pub name: String,
+    /// 父菜单 ID
+    pub parent_id: String,
+    /// 类型，参见 MenuTypeEnum 枚举类
+    pub r#type: MenuTypeEnum,
+}
+
 #[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct NameParams {
@@ -235,6 +249,24 @@ pub struct TenantIdParams {
 #[serde(rename_all = "camelCase")]
 pub struct TokenParams {
     pub token: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantPackagePageReqVO {
+    /// 套餐名
+    pub name: Option<String>,
+    /// 状态（0正常 1停用）
+    pub status: Option<CommonStatusEnum>,
+    /// 备注
+    pub remark: Option<String>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
 }
 
 #[derive(Debug, Deserialize, Validate)]

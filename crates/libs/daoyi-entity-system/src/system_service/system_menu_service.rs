@@ -65,3 +65,7 @@ fn build_children(
         vec![]
     }
 }
+
+pub async fn get_simple_menu_list() -> ApiResult<Vec<system_menu::Model>> {
+    todo!()
+}
