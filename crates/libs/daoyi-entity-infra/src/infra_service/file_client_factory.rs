@@ -7,8 +7,8 @@ use daoyi_common_support::vo::infra_vo::{
     DbFileClientConfig, FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig,
     SftpFileClientConfig,
 };
-use sea_orm::prelude::async_trait;
 use sea_orm::prelude::Json;
+use sea_orm::prelude::async_trait;
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use std::io::Write;
 use std::net::TcpStream;
@@ -191,10 +191,9 @@ impl FileClient for S3FileClient {
             .send()
             .await
             .map_err(|e| {
-                let error_msg =
-                    format!("S3 上传失败 (Endpoint: {})", self.config.endpoint);
+                let error_msg = format!("S3 上传失败 (Endpoint: {})", self.config.endpoint);
                 // Try to log it if tracing is available, otherwise just return it
-                tracing::error!("{}", error_msg);
+                tracing::error!("{error_msg}: {e:#?}");
                 ApiError::biz(error_msg)
             })?;
 
@@ -219,21 +218,6 @@ impl FileClient for S3FileClient {
         Ok(())
     }
 
-    async fn presign_put_url(&self, path: &str) -> ApiResult<String> {
-        let presigning_config = aws_sdk_s3::presigning::PresigningConfig::expires_in(std::time::Duration::from_secs(60 * 10)) // 10 mins
-             .map_err(|e| ApiError::biz(format!("S3 预签名配置失败: {}", e)))?;
-
-        let presigned_request = self.client
-            .put_object()
-            .bucket(&self.config.bucket)
-            .key(path)
-            .presigned(presigning_config)
-            .await
-            .map_err(|e| ApiError::biz(format!("S3 预签名失败: {}", e)))?;
-
-        Ok(presigned_request.uri().to_string())
-    }
-
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>> {
         let output = self
             .client
@@ -251,6 +235,24 @@ impl FileClient for S3FileClient {
             .map_err(|e| ApiError::biz(format!("S3 读取流失败: {}", e)))?
             .into_bytes();
         Ok(bytes.to_vec())
+    }
+
+    async fn presign_put_url(&self, path: &str) -> ApiResult<String> {
+        let presigning_config = aws_sdk_s3::presigning::PresigningConfig::expires_in(
+            std::time::Duration::from_secs(60 * 10),
+        ) // 10 mins
+        .map_err(|e| ApiError::biz(format!("S3 预签名配置失败: {}", e)))?;
+
+        let presigned_request = self
+            .client
+            .put_object()
+            .bucket(&self.config.bucket)
+            .key(path)
+            .presigned(presigning_config)
+            .await
+            .map_err(|e| ApiError::biz(format!("S3 预签名失败: {}", e)))?;
+
+        Ok(presigned_request.uri().to_string())
     }
 }
 
