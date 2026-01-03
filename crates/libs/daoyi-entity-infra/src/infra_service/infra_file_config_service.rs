@@ -190,14 +190,13 @@ pub async fn get_file_client(id: &str) -> ApiResult<Box<dyn FileClient>> {
 }
 
 pub async fn test_file_config(id: &str) -> ApiResult<String> {
-    // 读取 resources/file/erweima.jpg 文件
-    let file_path = std::path::Path::new("resources/file/erweima.jpg");
+    let file_path = std::path::Path::new("resources/file/mp.png");
     let content = tokio::fs::read(file_path)
         .await
         .map_err(|e| ApiError::biz(format!("读取文件失败: {}", e)))?;
-    let path = format!("test/{}.jpg", id_util::xid());
+    let path = format!("test/{}.png", id_util::xid());
     get_file_client(id)
         .await?
-        .upload(&content, &path, "image/jpeg")
+        .upload(&content, &path, "image/png")
         .await
 }
