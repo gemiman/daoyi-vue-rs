@@ -53,6 +53,16 @@ strum = { version = "0.27.2" }
 strum_macros = { version = "0.27.2" }
 serde_qs = "0.15.0"
 futures = { version = "0.3.31" }
+syn = { version = "2.0.112", features = ["full", "extra-traits"] }
+quote = "1.0.42"
+# S3
+aws-config = "1.8.12"
+aws-sdk-s3 = "1.119.0"
+aws-credential-types = "1.2.11"
+# FTP
+suppaftp = "7.0.7"
+# SFTP
+ssh2 = "0.9.5"
 
 [package]
 name = "daoyi-vue-rs"
