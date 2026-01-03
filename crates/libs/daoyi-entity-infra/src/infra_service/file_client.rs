@@ -1,11 +1,15 @@
+use crate::infra_entity::infra_file_content;
+use daoyi_common_support::database;
 use daoyi_common_support::enumeration::FileStorageEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::serde::validate_and_parse;
 use daoyi_common_support::vo::infra_vo::{
-    FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig, SftpFileClientConfig,
+    DbFileClientConfig, FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig,
+    SftpFileClientConfig,
 };
-use sea_orm::prelude::Json;
 use sea_orm::prelude::async_trait;
+use sea_orm::prelude::Json;
+use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use std::io::Write;
 use std::net::TcpStream;
 use std::path::Path;
@@ -22,6 +26,61 @@ pub trait FileClient: Send + Sync {
 
     /// Returns the content of the file at the specified path.
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>>;
+}
+
+// ================== DB File Client ==================
+
+pub struct DbFileClient {
+    config: DbFileClientConfig,
+    config_id: String,
+}
+
+impl DbFileClient {
+    pub fn new(config_id: String, config: DbFileClientConfig) -> Self {
+        Self { config, config_id }
+    }
+}
+
+#[async_trait::async_trait]
+impl FileClient for DbFileClient {
+    async fn upload(&self, content: &[u8], path: &str, _content_type: &str) -> ApiResult<String> {
+        let db = database::get_db_async().await;
+
+        // 删除旧的（如果存在）
+        self.delete(path).await?;
+
+        let model = infra_file_content::ActiveModel {
+            config_id: Set(self.config_id.clone()),
+            path: Set(path.to_string()),
+            content: Set(content.to_vec()),
+            ..Default::default()
+        };
+        model.insert(&db).await?;
+
+        // URL logic: domain + path
+        Ok(format!("{}/{}", self.config.domain, path))
+    }
+
+    async fn delete(&self, path: &str) -> ApiResult<()> {
+        let db = database::get_db_async().await;
+        infra_file_content::Entity::delete_many()
+            .filter(infra_file_content::Column::ConfigId.eq(&self.config_id))
+            .filter(infra_file_content::Column::Path.eq(path))
+            .exec(&db)
+            .await?;
+        Ok(())
+    }
+
+    async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>> {
+        let db = database::get_db_async().await;
+        let model = infra_file_content::Entity::find()
+            .filter(infra_file_content::Column::ConfigId.eq(&self.config_id))
+            .filter(infra_file_content::Column::Path.eq(path))
+            .one(&db)
+            .await?
+            .ok_or_else(|| ApiError::biz("文件不存在"))?;
+        Ok(model.content)
+    }
 }
 
 // ================== Local File Client ==================
@@ -126,9 +185,10 @@ impl FileClient for S3FileClient {
             .send()
             .await
             .map_err(|e| {
-                let error_msg = format!("S3 上传失败 (Endpoint: {})", self.config.endpoint);
+                let error_msg =
+                    format!("S3 上传失败 (Endpoint: {}): {:#?}", self.config.endpoint, e);
                 // Try to log it if tracing is available, otherwise just return it
-                tracing::error!("{}", error_msg);
+                // tracing::error!("{}", error_msg);
                 ApiError::biz(error_msg)
             })?;
 
@@ -359,11 +419,15 @@ impl FileClient for SftpFileClient {
 // ================== Factory ==================
 
 pub async fn create_file_client(
+    config_id: String,
     storage: &FileStorageEnum,
     config: &Json,
 ) -> ApiResult<Box<dyn FileClient>> {
     match storage {
-        FileStorageEnum::DB => Err(ApiError::biz("暂不支持 DB 存储")),
+        FileStorageEnum::DB => {
+            let config = validate_and_parse::<DbFileClientConfig>(config)?;
+            Ok(Box::new(DbFileClient::new(config_id, config)))
+        }
         FileStorageEnum::LOCAL => {
             let config = validate_and_parse::<LocalFileClientConfig>(config)?;
             Ok(Box::new(LocalFileClient::new(config)))

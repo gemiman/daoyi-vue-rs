@@ -1,7 +1,6 @@
 use crate::infra_entity::infra_file_config;
 use crate::infra_entity::prelude::*;
-use crate::infra_service::file_client::create_file_client;
-use daoyi_common_support::{database, id_util};
+use crate::infra_service::file_client::{FileClient, create_file_client};
 use daoyi_common_support::enumeration::FileStorageEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
@@ -10,6 +9,7 @@ use daoyi_common_support::vo::infra_vo::{
     DbFileClientConfig, FileConfigPageReqVO, FileConfigSaveReqVo, FileConfigUpdateReqVo,
     FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig, SftpFileClientConfig,
 };
+use daoyi_common_support::{database, id_util};
 use daoyi_macros::transactional;
 use sea_orm::prelude::*;
 use sea_orm::*;
@@ -18,7 +18,8 @@ pub async fn get_file_config_page(
     params: &FileConfigPageReqVO,
 ) -> ApiResult<Page<infra_file_config::Model>> {
     let db = database::get_db_async().await;
-    let paginator = InfraFileConfig::find_perm().await
+    let paginator = InfraFileConfig::find_perm()
+        .await
         .filter(infra_file_config::Column::Deleted.eq(false))
         .apply_if(params.name.as_ref(), |query, name| {
             query.filter(infra_file_config::Column::Name.contains(name))
@@ -170,14 +171,21 @@ pub async fn delete_file_config(id: &str) -> ApiResult<()> {
     Ok(())
 }
 
-pub async fn test_file_config(id: &str) -> ApiResult<String> {
+pub async fn get_file_client(id: &str) -> ApiResult<Box<dyn FileClient>> {
     let config = get_file_config(id).await?;
-    let client = create_file_client(&config.storage, &config.config).await?;
+    let client = create_file_client(String::from(id), &config.storage, &config.config).await?;
+    Ok(client)
+}
+
+pub async fn test_file_config(id: &str) -> ApiResult<String> {
     // 读取 resources/file/erweima.jpg 文件
     let file_path = std::path::Path::new("resources/file/erweima.jpg");
     let content = tokio::fs::read(file_path)
         .await
         .map_err(|e| ApiError::biz(format!("读取文件失败: {}", e)))?;
     let path = format!("test/{}.jpg", id_util::xid());
-    client.upload(&content, &path, "image/jpeg").await
+    get_file_client(id)
+        .await?
+        .upload(&content, &path, "image/jpeg")
+        .await
 }
