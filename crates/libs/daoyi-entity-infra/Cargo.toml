@@ -23,3 +23,4 @@ aws-credential-types.workspace = true
 suppaftp.workspace = true
 # SFTP
 ssh2.workspace = true
+chrono.workspace = true

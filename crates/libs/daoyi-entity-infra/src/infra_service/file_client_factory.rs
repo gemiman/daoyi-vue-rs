@@ -26,6 +26,12 @@ pub trait FileClient: Send + Sync {
 
     /// Returns the content of the file at the specified path.
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>>;
+
+    /// Returns a presigned URL for uploading a file to the specified path.
+    /// Only supported by S3-compatible storage.
+    async fn presign_put_url(&self, _path: &str) -> ApiResult<String> {
+        Err(ApiError::biz("当前存储器不支持预签名"))
+    }
 }
 
 // ================== DB File Client ==================
@@ -211,6 +217,21 @@ impl FileClient for S3FileClient {
             .await
             .map_err(|e| ApiError::biz(format!("S3 删除失败: {}", e)))?;
         Ok(())
+    }
+
+    async fn presign_put_url(&self, path: &str) -> ApiResult<String> {
+        let presigning_config = aws_sdk_s3::presigning::PresigningConfig::expires_in(std::time::Duration::from_secs(60 * 10)) // 10 mins
+             .map_err(|e| ApiError::biz(format!("S3 预签名配置失败: {}", e)))?;
+
+        let presigned_request = self.client
+            .put_object()
+            .bucket(&self.config.bucket)
+            .key(path)
+            .presigned(presigning_config)
+            .await
+            .map_err(|e| ApiError::biz(format!("S3 预签名失败: {}", e)))?;
+
+        Ok(presigned_request.uri().to_string())
     }
 
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>> {

@@ -136,5 +136,56 @@ pub struct S3FileClientConfig {
     #[allow(dead_code)]
     pub enable_public_access: bool,
     #[allow(dead_code)]
-    pub region: Option<String>,
-}
+        pub region: Option<String>,
+    }
+    
+    // ================== File VO ==================
+    
+    #[derive(Debug, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FileRespVO {
+        pub id: String,
+        pub config_id: Option<String>,
+        pub name: Option<String>,
+        pub path: String,
+        pub url: String,
+        pub r#type: Option<String>,
+        pub size: i32,
+        #[serde(with = "datetime_format")]
+        pub create_time: DateTime,
+    }
+    
+    #[derive(Debug, Deserialize, Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FilePageReqVO {
+        pub path: Option<String>,
+        pub r#type: Option<String>,
+        #[serde(default)]
+        #[serde(with = "option_vec_datetime_format")]
+        pub create_time: Option<Vec<DateTime>>,
+        #[serde(flatten)]
+        #[validate(nested)]
+        pub pagination: PaginationParams,
+    }
+    
+    #[derive(Debug, Deserialize, Validate)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FileCreateReqVO {
+        pub config_id: Option<String>,
+        #[validate(length(min = 1, message = "路径不能为空"))]
+        pub path: String,
+        #[validate(length(min = 1, message = "原文件名不能为空"))]
+        pub name: String,
+        pub r#type: Option<String>,
+        pub size: i32,
+        #[validate(url(message = "url 必须是 URL 格式"))]
+        pub url: String,
+    }
+    
+    #[derive(Debug, Serialize)]
+    #[serde(rename_all = "camelCase")]
+    pub struct FilePresignedUrlRespVO {
+        pub upload_url: String,
+        pub url: String,
+    }
+    

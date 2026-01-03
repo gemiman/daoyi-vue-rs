@@ -13,3 +13,6 @@ daoyi-common-support.workspace = true
 axum.workspace = true
 daoyi-entity-infra.workspace = true
 tracing.workspace = true
+mime_guess.workspace = true
+urlencoding.workspace = true
+serde.workspace = true

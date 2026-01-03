@@ -171,6 +171,18 @@ pub async fn delete_file_config(id: &str) -> ApiResult<()> {
     Ok(())
 }
 
+pub async fn get_master_file_client() -> ApiResult<(Box<dyn FileClient>, String)> {
+    let db = database::get_db_async().await;
+    let master_config = InfraFileConfig::find_perm()
+        .await
+        .filter(infra_file_config::Column::Master.eq(true))
+        .one(&db)
+        .await?
+        .ok_or_else(|| ApiError::biz("主文件配置不存在，请先设置主配置"))?;
+    let client = create_file_client(master_config.id.clone(), &master_config.storage, &master_config.config).await?;
+    Ok((client, master_config.id))
+}
+
 pub async fn get_file_client(id: &str) -> ApiResult<Box<dyn FileClient>> {
     let config = get_file_config(id).await?;
     let client = create_file_client(String::from(id), &config.storage, &config.config).await?;
