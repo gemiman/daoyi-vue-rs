@@ -1,6 +1,6 @@
 use crate::infra_entity::infra_file_config;
 use crate::infra_entity::prelude::*;
-use crate::infra_service::file_client::{FileClient, create_file_client};
+use crate::infra_service::file_client_factory::{FileClient, create_file_client};
 use daoyi_common_support::enumeration::FileStorageEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
