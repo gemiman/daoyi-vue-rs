@@ -14,6 +14,7 @@ use tower_http::cors::{self, CorsLayer};
 use tower_http::normalize_path::NormalizePathLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
+use crate::id_util;
 
 pub struct Server {
     config: &'static ServerConfig,
@@ -75,7 +76,7 @@ impl Server {
             .make_span_with(|request: &Request| {
                 let method = request.method();
                 let path = request.uri().path();
-                let id = xid::new();
+                let id = id_util::xid();
                 if let Some(principal) = request.extensions().get::<Principal>() {
                     tracing::info_span!("Api request ", id = %id, method = %method, path = %path, user_id = %principal.id, user_name = %principal.name)
                 } else {

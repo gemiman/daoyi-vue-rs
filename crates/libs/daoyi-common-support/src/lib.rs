@@ -4,7 +4,7 @@ pub mod configs;
 pub mod database;
 pub mod enumeration;
 pub mod error;
-pub mod id;
+pub mod id_util;
 pub mod logger;
 pub mod middlewares;
 pub mod models;

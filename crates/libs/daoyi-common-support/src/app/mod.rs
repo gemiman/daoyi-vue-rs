@@ -1,5 +1,5 @@
 use crate::configs::AppConfig;
-use crate::{database, id, logger, redis_utils, server};
+use crate::{database, id_util, logger, redis_utils, server};
 use axum::Router;
 use tracing::log;
 
@@ -15,7 +15,7 @@ pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Re
     log::info!("日志组件初始化完成... Starting redis_utils...");
     redis_utils::init_redis().await?;
     log::info!("redis组件初始化完成... Starting id generator...");
-    id::init().await?;
+    id_util::init().await?;
     log::info!("id generator 初始化完成... Starting database...");
     database::init().await?;
     log::info!("database 初始化完成... Starting app server...");

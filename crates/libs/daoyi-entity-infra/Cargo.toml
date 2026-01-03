@@ -13,3 +13,15 @@ daoyi-common-support.workspace = true
 daoyi-macros.workspace = true
 sea-orm.workspace = true
 serde.workspace = true
+tokio = { workspace = true, features = ["fs", "io-util"] }
+
+# S3
+aws-config = "1.5"
+aws-sdk-s3 = "1.74"
+aws-credential-types = "1.2"
+
+# FTP
+suppaftp = "6.0"
+
+# SFTP
+ssh2 = "0.9"

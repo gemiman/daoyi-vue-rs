@@ -68,14 +68,14 @@ pub struct FileConfigUpdateReqVo {
 }
 
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct DbFileClientConfig {
     #[validate(url(message = "domain 必须是 URL 格式"), length(min = 1, message = "domain 不能为空"))]
     pub domain: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LocalFileClientConfig {
     #[validate(length(min = 1, message = "基础路径不能为空"))]
@@ -84,7 +84,7 @@ pub struct LocalFileClientConfig {
     pub domain: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct FtpFileClientConfig {
     #[validate(length(min = 1, message = "基础路径不能为空"))]
@@ -102,7 +102,7 @@ pub struct FtpFileClientConfig {
     pub mode: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SftpFileClientConfig {
     #[validate(length(min = 1, message = "基础路径不能为空"))]
@@ -118,7 +118,7 @@ pub struct SftpFileClientConfig {
     pub password: String,
 }
 
-#[derive(Debug, Deserialize, Validate)]
+#[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct S3FileClientConfig {
     #[validate(length(min = 1, message = "endpoint 不能为空"))]

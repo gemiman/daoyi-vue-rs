@@ -24,3 +24,7 @@ pub fn next_i64() -> i64 {
 pub fn next_string() -> String {
     next_i64().to_string()
 }
+
+pub fn xid() -> String {
+    xid::new().to_string()
+}

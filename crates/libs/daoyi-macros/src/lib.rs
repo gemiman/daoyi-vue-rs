@@ -172,13 +172,13 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
         impl ActiveModel {
              pub async fn set_default_values(&mut self, insert: bool) -> Result<(), sea_orm::DbErr> {
                 use sea_orm::Set;
-                use daoyi_common_support::id;
+                use daoyi_common_support::id_util;
                 use daoyi_common_support::password::hash_password;
                 use daoyi_common_support::context::HttpRequestContext;
                 use sea_orm::sqlx::types::chrono::Local;
 
                 if insert {
-                    self.id = Set(id::next_string());
+                    self.id = Set(id_util::next_string());
                     #password_logic
                     self.create_time = Set(Local::now().naive_local());
                     self.update_time = Set(Local::now().naive_local());
@@ -287,7 +287,7 @@ pub fn derive_before_insert(input: TokenStream) -> TokenStream {
     // 生成 ID 自动生成代码
     for field in &auto_id_fields {
         insert_statements.push(quote! {
-            self.#field = sea_orm::Set(daoyi_common_support::id::next_string());
+            self.#field = sea_orm::Set(daoyi_common_support::id_util::next_string());
         });
     }
 

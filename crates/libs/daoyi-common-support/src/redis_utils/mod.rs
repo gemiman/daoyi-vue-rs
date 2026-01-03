@@ -1,6 +1,6 @@
 use crate::configs::AppConfig;
 use crate::error::ApiResult;
-use crate::id;
+use crate::id_util;
 use deadpool_redis::redis::{AsyncCommands, FromRedisValue, ToRedisArgs};
 use deadpool_redis::{Config, Connection, Pool, Runtime};
 use serde::de::DeserializeOwned;
@@ -29,7 +29,7 @@ async fn init() -> anyhow::Result<Pool> {
 
     // 测试连接
     let mut conn = pool.get().await?;
-    let _: () = conn.set(CONNECTION_TEST_KEY, id::next_string()).await?;
+    let _: () = conn.set(CONNECTION_TEST_KEY, id_util::next_string()).await?;
     let val: String = conn.get(CONNECTION_TEST_KEY).await?;
 
     tracing::info!("Redis connected successfully, {CONNECTION_TEST_KEY} = {val}");

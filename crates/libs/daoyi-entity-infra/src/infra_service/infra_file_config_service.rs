@@ -1,6 +1,7 @@
 use crate::infra_entity::infra_file_config;
 use crate::infra_entity::prelude::*;
-use daoyi_common_support::database;
+use crate::infra_service::file_client::create_file_client;
+use daoyi_common_support::{database, id_util};
 use daoyi_common_support::enumeration::FileStorageEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
@@ -9,8 +10,6 @@ use daoyi_common_support::vo::infra_vo::{
     DbFileClientConfig, FileConfigPageReqVO, FileConfigSaveReqVo, FileConfigUpdateReqVo,
     FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig, SftpFileClientConfig,
 };
-use crate::infra_service::file_client::create_file_client;
-use daoyi_common_support::id;
 use daoyi_macros::transactional;
 use sea_orm::prelude::*;
 use sea_orm::*;
@@ -173,8 +172,8 @@ pub async fn delete_file_config(id: &str) -> ApiResult<()> {
 
 pub async fn test_file_config(id: &str) -> ApiResult<String> {
     let config = get_file_config(id).await?;
-    let client = create_file_client(&config.storage, &config.config)?;
+    let client = create_file_client(&config.storage, &config.config).await?;
     let content = "test".as_bytes();
-    let path = format!("test/{}.jpg", id::next_string());
+    let path = format!("test/{}.jpg", id_util::xid());
     client.upload(content, &path, "image/jpeg").await
 }

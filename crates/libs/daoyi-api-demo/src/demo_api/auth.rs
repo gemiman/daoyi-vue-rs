@@ -1,7 +1,7 @@
 use axum::extract::ConnectInfo;
 use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
-use daoyi_common_support::database;
+use daoyi_common_support::{database, id_util};
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::password::verify_password;
 use daoyi_common_support::request::valid::ValidJson;
@@ -50,7 +50,7 @@ async fn login(
     if !verify_password(&params.password, &user.password).await? {
         return Err(ApiError::Biz(String::from("账号或密码不正确")));
     }
-    let access_token = xid::new().to_string();
+    let access_token = id_util::xid();
     tracing::info!("登录成功，access_token={access_token}");
     ApiResponse::success(LoginResult { access_token })
 }

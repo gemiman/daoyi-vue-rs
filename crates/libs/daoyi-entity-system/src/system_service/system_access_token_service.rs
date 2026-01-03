@@ -5,7 +5,7 @@ use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::AuthLoginRespVO;
-use daoyi_common_support::{database, redis_utils};
+use daoyi_common_support::{database, id_util, redis_utils};
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::Set;
@@ -44,7 +44,7 @@ pub async fn create_token_after_login_success(
     login_id: &str,
 ) -> ApiResult<AuthLoginRespVO> {
     let access_token = loop {
-        let token = xid::new().to_string();
+        let token = id_util::xid();
         if let Err(_) = get_access_token(&token).await {
             break token;
         }
