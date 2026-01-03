@@ -88,7 +88,7 @@ pub struct S3FileClient {
 impl S3FileClient {
     pub fn new(config: S3FileClientConfig) -> Self {
         let region =
-            aws_config::Region::new(config.region.clone().unwrap_or("us-east-1".to_string()));
+            aws_config::Region::new(config.region.clone().unwrap_or("hangzhou".to_string()));
         let credentials = aws_credential_types::Credentials::new(
             config.access_key.clone(),
             config.access_secret.clone(),
@@ -100,7 +100,8 @@ impl S3FileClient {
         let mut builder = aws_sdk_s3::config::Builder::new()
             .region(region)
             .credentials_provider(credentials)
-            .endpoint_url(&config.endpoint);
+            .endpoint_url(&config.endpoint)
+            .behavior_version(aws_sdk_s3::config::BehaviorVersion::latest());
 
         if config.enable_path_style_access {
             builder = builder.force_path_style(true);
@@ -124,7 +125,12 @@ impl FileClient for S3FileClient {
             .content_type(content_type)
             .send()
             .await
-            .map_err(|e| ApiError::biz(format!("S3 上传失败: {}", e)))?;
+            .map_err(|e| {
+                let error_msg = format!("S3 上传失败 (Endpoint: {}): {:#?}", self.config.endpoint, e);
+                // Try to log it if tracing is available, otherwise just return it
+                tracing::error!("{}", error_msg);
+                ApiError::biz(error_msg)
+            })?;
 
         let domain = self
             .config

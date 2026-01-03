@@ -14,6 +14,7 @@ daoyi-macros.workspace = true
 sea-orm.workspace = true
 serde.workspace = true
 tokio.workspace = true
+tracing.workspace = true
 # S3
 aws-config.workspace = true
 aws-sdk-s3.workspace = true

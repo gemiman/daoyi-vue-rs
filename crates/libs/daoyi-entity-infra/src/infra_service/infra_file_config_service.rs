@@ -18,7 +18,7 @@ pub async fn get_file_config_page(
     params: &FileConfigPageReqVO,
 ) -> ApiResult<Page<infra_file_config::Model>> {
     let db = database::get_db_async().await;
-    let paginator = InfraFileConfig::find()
+    let paginator = InfraFileConfig::find_perm().await
         .filter(infra_file_config::Column::Deleted.eq(false))
         .apply_if(params.name.as_ref(), |query, name| {
             query.filter(infra_file_config::Column::Name.contains(name))
@@ -173,7 +173,11 @@ pub async fn delete_file_config(id: &str) -> ApiResult<()> {
 pub async fn test_file_config(id: &str) -> ApiResult<String> {
     let config = get_file_config(id).await?;
     let client = create_file_client(&config.storage, &config.config).await?;
-    let content = "test".as_bytes();
+    // 读取 resources/file/erweima.jpg 文件
+    let file_path = std::path::Path::new("resources/file/erweima.jpg");
+    let content = tokio::fs::read(file_path)
+        .await
+        .map_err(|e| ApiError::biz(format!("读取文件失败: {}", e)))?;
     let path = format!("test/{}.jpg", id_util::xid());
-    client.upload(content, &path, "image/jpeg").await
+    client.upload(&content, &path, "image/jpeg").await
 }
