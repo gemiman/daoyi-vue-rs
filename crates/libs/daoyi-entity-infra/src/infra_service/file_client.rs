@@ -126,7 +126,7 @@ impl FileClient for S3FileClient {
             .send()
             .await
             .map_err(|e| {
-                let error_msg = format!("S3 上传失败 (Endpoint: {}): {:#?}", self.config.endpoint, e);
+                let error_msg = format!("S3 上传失败 (Endpoint: {})", self.config.endpoint);
                 // Try to log it if tracing is available, otherwise just return it
                 tracing::error!("{}", error_msg);
                 ApiError::biz(error_msg)
