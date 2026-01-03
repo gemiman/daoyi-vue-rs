@@ -172,9 +172,9 @@ pub async fn get_menu_list_by_tenant(
     .await?;
 
     let result = Arc::try_unwrap(menus_arc)
-        .map_err(|_| ApiError::biz("Failed to unwrap Arc"))?
+        .map_err(|_| ApiError::biz("解包 Arc 失败"))?
         .into_inner()
-        .map_err(|_| ApiError::biz("Failed to get mutex inner"))?;
+        .map_err(|_| ApiError::biz("获取互斥锁内部数据失败"))?;
 
     Ok(result)
 }
