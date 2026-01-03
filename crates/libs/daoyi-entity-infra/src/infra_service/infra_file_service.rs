@@ -7,26 +7,20 @@ use daoyi_common_support::vo::infra_vo::{
 };
 use daoyi_common_support::{database, id_util};
 use daoyi_macros::transactional;
+use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait,
-    Set,
+    ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
+    QueryTrait, Set,
 };
 
-pub async fn create_file(
-    name: String,
-    path: Option<String>,
-    content: Vec<u8>,
-    content_type: String,
-) -> ApiResult<String> {
-    let (client, config_id) = get_master_file_client().await?;
-
+async fn gen_filename(path: Option<&str>, name: &str) -> ApiResult<String> {
     let filename = if let Some(p) = path {
-        p
+        String::from(p)
     } else {
         // Generate path: yyyy/MM/dd/uuid.ext
-        let now = chrono::Local::now();
+        let now = Local::now();
         let uuid = id_util::xid();
-        let ext = std::path::Path::new(&name)
+        let ext = std::path::Path::new(name)
             .extension()
             .and_then(|s| s.to_str())
             .unwrap_or("");
@@ -39,6 +33,17 @@ pub async fn create_file(
             ext
         )
     };
+    Ok(filename)
+}
+pub async fn create_file(
+    name: String,
+    path: Option<String>,
+    content: Vec<u8>,
+    content_type: String,
+) -> ApiResult<String> {
+    let (client, config_id) = get_master_file_client().await?;
+
+    let filename = gen_filename(path.as_deref(), &name).await?;
 
     // Upload
     let url = client.upload(&content, &filename, &content_type).await?;
@@ -60,7 +65,7 @@ pub async fn create_file(
     Ok(url)
 }
 
-pub async fn create_file_from_req(req: FileCreateReqVO) -> ApiResult<i64> {
+pub async fn create_file_from_req(req: FileCreateReqVO) -> ApiResult<String> {
     let db = database::get_db_async().await;
     let config_id = if let Some(cid) = req.config_id {
         cid
@@ -70,7 +75,6 @@ pub async fn create_file_from_req(req: FileCreateReqVO) -> ApiResult<i64> {
     };
 
     let model = infra_file::ActiveModel {
-        id: Set(id_util::xid()),
         config_id: Set(Some(config_id)),
         name: Set(Some(req.name)),
         path: Set(req.path),
@@ -80,22 +84,7 @@ pub async fn create_file_from_req(req: FileCreateReqVO) -> ApiResult<i64> {
         ..Default::default()
     };
     let res = model.insert(&db).await?;
-    // The Java return type is Long (id), but here ID is String (xid).
-    // Assuming the API consumer expects the ID.
-    // However, the Java controller returns CommonResult<Long>. 
-    // In this Rust project, IDs are Strings (xid). 
-    // I will return the parsed i64 if possible, or 0.
-    // Actually, create_file in Java returns String (URL).
-    // create_file (mode 2) in Java returns Long (ID).
-    // Since xid is i64 compatible usually (snowflake), let's try to parse or return dummy if not.
-    // Looking at id_util, xid returns String.
-    // If the frontend strictly needs Long, we might have an issue if xid is not a number string.
-    // But usually it is.
-    
-    match res.id.parse::<i64>() {
-        Ok(v) => Ok(v),
-        Err(_) => Ok(0), // Fallback or change return type to String if possible.
-    }
+    Ok(res.id)
 }
 
 pub async fn delete_file(id: &str) -> ApiResult<()> {
@@ -137,48 +126,10 @@ pub async fn presign_put_url(
 ) -> ApiResult<FilePresignedUrlRespVO> {
     let (client, _config_id) = get_master_file_client().await?;
 
-    let filename = if let Some(p) = path {
-        p
-    } else {
-        let now = chrono::Local::now();
-        let uuid = id_util::xid();
-        let ext = std::path::Path::new(&name)
-            .extension()
-            .and_then(|s| s.to_str())
-            .unwrap_or("");
-        format!(
-            "{}/{}/{}/{}.{}",
-            now.format("%Y"),
-            now.format("%m"),
-            now.format("%d"),
-            uuid,
-            ext
-        )
-    };
+    let filename = gen_filename(path.as_deref(), &name).await?;
 
     let upload_url = client.presign_put_url(&filename).await?;
-    
-    // Java returns:
-    // uploadUrl: presigned URL
-    // url: final access URL (domain + path)
-    
-    // We need to construct the final URL. 
-    // The FileClient doesn't expose `domain` directly in trait.
-    // But `upload` returns the URL. `presign_put_url` returns the upload URL.
-    // We might need to guess the access URL or extend trait.
-    // For S3, access URL is domain + / + key.
-    
-    // Hack: We don't have domain in `FileClient` trait interface.
-    // We can assume the client configuration is correct?
-    // Let's just return the path as "url" if we can't build full URL, 
-    // or rely on frontend to know the domain?
-    // Java implementation: `fileClient.getPresignedUrl` returns just URL? 
-    // No, Java `FileService.presignPutUrl` returns `FilePresignedUrlRespVO`.
-    // It constructs the VO.
-    
-    // I will return the path relative to domain as `url` if I can't get domain.
-    // Or I can fetch config again.
-    
+
     Ok(FilePresignedUrlRespVO {
         upload_url,
         url: filename, // Ideally this should be full URL, but we lack domain access in trait
@@ -187,7 +138,8 @@ pub async fn presign_put_url(
 
 pub async fn get_file_page(params: &FilePageReqVO) -> ApiResult<Page<FileRespVO>> {
     let db = database::get_db_async().await;
-    let paginator = InfraFile::find()
+    let paginator = InfraFile::find_perm()
+        .await
         .apply_if(params.path.as_ref(), |query, val| {
             query.filter(infra_file::Column::Path.contains(val))
         })

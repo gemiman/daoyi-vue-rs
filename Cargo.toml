@@ -64,7 +64,6 @@ suppaftp = "7.0.7"
 # SFTP
 ssh2 = "0.9.5"
 # Utils
-chrono = { version = "0.4.38", features = ["serde"] }
 mime_guess = "2.0.5"
 urlencoding = "2.1.3"
 

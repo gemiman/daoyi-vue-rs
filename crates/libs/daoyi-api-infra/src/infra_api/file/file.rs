@@ -1,15 +1,19 @@
-use axum::extract::{Multipart, Path, Query};
+use axum::extract::{Multipart, Path};
 use axum::response::IntoResponse;
-use axum::{Json, Router, routing::{delete, get, post}};
+use axum::{
+    Router, debug_handler,
+    routing::{delete, get, post},
+};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::infra_vo::{
-    FileCreateReqVO, FilePageReqVO, FilePresignedUrlRespVO, FileRespVO,
+    FileCreateReqVO, FilePageReqVO, FilePresignedUrlRespVO, FileRespVO, PresignedUrlReq,
 };
+use daoyi_common_support::vo::system_vo::{IdParams, IdsParams};
 use daoyi_entity_infra::infra_service::infra_file_service;
-use serde::Deserialize;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -22,22 +26,7 @@ pub fn create_router() -> Router<AppState> {
         .route("/{config_id}/get/{*path}", get(get_file_content))
 }
 
-#[derive(Deserialize)]
-struct PresignedUrlReq {
-    name: String,
-    directory: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct DeleteReq {
-    id: String,
-}
-
-#[derive(Deserialize)]
-struct DeleteListReq {
-    ids: String, // Comma separated
-}
-
+#[debug_handler]
 async fn upload_file(mut multipart: Multipart) -> RestApiResult<String> {
     let mut file_content = Vec::new();
     let mut filename = String::new();
@@ -48,16 +37,19 @@ async fn upload_file(mut multipart: Multipart) -> RestApiResult<String> {
         let name = field.name().unwrap_or("").to_string();
         if name == "file" {
             filename = field.file_name().unwrap_or("").to_string();
-            content_type = field.content_type().unwrap_or("application/octet-stream").to_string();
+            content_type = field
+                .content_type()
+                .unwrap_or("application/octet-stream")
+                .to_string();
             if let Ok(bytes) = field.bytes().await {
                 file_content = bytes.to_vec();
             }
         } else if name == "path" || name == "directory" {
             // Support both parameter names
             if let Ok(txt) = field.text().await {
-                 if !txt.is_empty() {
-                     path = Some(txt);
-                 }
+                if !txt.is_empty() {
+                    path = Some(txt);
+                }
             }
         }
     }
@@ -66,65 +58,67 @@ async fn upload_file(mut multipart: Multipart) -> RestApiResult<String> {
         return Err(ApiError::biz("文件不能为空"));
     }
 
-    match infra_file_service::create_file(filename, path, file_content, content_type).await {
-        Ok(url) => ApiResponse::success(url),
-        Err(e) => Err(e),
-    }
+    let url = infra_file_service::create_file(filename, path, file_content, content_type).await?;
+    ApiResponse::success(url)
 }
 
-async fn delete_file(Query(req): Query<DeleteReq>) -> RestApiResult<()> {
-    match infra_file_service::delete_file(&req.id).await {
-        Ok(_) => ApiResponse::success(()),
-        Err(e) => Err(e),
-    }
+#[debug_handler]
+async fn delete_file(ValidQuery(IdParams { id }): ValidQuery<IdParams>) -> RestApiResult<bool> {
+    infra_file_service::delete_file(&id).await?;
+    ApiResponse::success(true)
 }
 
-async fn delete_file_list(Query(req): Query<DeleteListReq>) -> RestApiResult<()> {
-    let ids: Vec<String> = req.ids.split(',').map(|s| s.to_string()).collect();
-    match infra_file_service::delete_file_list(&ids).await {
-        Ok(_) => ApiResponse::success(()),
-        Err(e) => Err(e),
-    }
+#[debug_handler]
+async fn delete_file_list(
+    ValidQuery(IdsParams { ids }): ValidQuery<IdsParams>,
+) -> RestApiResult<bool> {
+    infra_file_service::delete_file_list(&ids).await?;
+    ApiResponse::success(true)
 }
 
-async fn get_file_page(Query(req): Query<FilePageReqVO>) -> RestApiResult<Page<FileRespVO>> {
-    match infra_file_service::get_file_page(&req).await {
-        Ok(page) => ApiResponse::success(page),
-        Err(e) => Err(e),
-    }
+#[debug_handler]
+async fn get_file_page(
+    ValidQuery(req): ValidQuery<FilePageReqVO>,
+) -> RestApiResult<Page<FileRespVO>> {
+    let page = infra_file_service::get_file_page(&req).await?;
+    ApiResponse::success(page)
 }
 
-async fn get_presigned_url(Query(req): Query<PresignedUrlReq>) -> RestApiResult<FilePresignedUrlRespVO> {
-    match infra_file_service::presign_put_url(req.name, req.directory).await {
-        Ok(data) => ApiResponse::success(data),
-        Err(e) => Err(e),
-    }
+#[debug_handler]
+async fn get_presigned_url(
+    ValidQuery(req): ValidQuery<PresignedUrlReq>,
+) -> RestApiResult<FilePresignedUrlRespVO> {
+    ApiResponse::success(infra_file_service::presign_put_url(req.name, req.directory).await?)
 }
 
-async fn create_file_record(Json(req): Json<FileCreateReqVO>) -> RestApiResult<i64> {
-    match infra_file_service::create_file_from_req(req).await {
-        Ok(id) => ApiResponse::success(id),
-        Err(e) => Err(e),
-    }
+#[debug_handler]
+async fn create_file_record(ValidJson(req): ValidJson<FileCreateReqVO>) -> RestApiResult<String> {
+    ApiResponse::success(infra_file_service::create_file_from_req(req).await?)
 }
 
-async fn get_file_content(
-    Path((config_id, path)): Path<(String, String)>,
-) -> impl IntoResponse {
+#[debug_handler]
+async fn get_file_content(Path((config_id, path)): Path<(String, String)>) -> impl IntoResponse {
     // path comes from wildcard, likely needs url decoding
     let decoded_path = urlencoding::decode(&path).unwrap_or(std::borrow::Cow::Borrowed(&path));
-    
+
     match infra_file_service::get_file_content(&config_id, &decoded_path).await {
         Ok(bytes) => {
             // Determine content type
             let mime = mime_guess::from_path(&*decoded_path).first_or_octet_stream();
-            
             // Return raw bytes with headers
-            ([(axum::http::header::CONTENT_TYPE, mime.to_string())], bytes).into_response()
-        },
+            (
+                [(axum::http::header::CONTENT_TYPE, mime.to_string())],
+                bytes,
+            )
+                .into_response()
+        }
         Err(e) => {
-             // In case of error (file not found), return 404
-             (axum::http::StatusCode::NOT_FOUND, format!("File not found: {}", e)).into_response()
+            // In case of error (file not found), return 404
+            (
+                axum::http::StatusCode::NOT_FOUND,
+                format!("File not found: {}", e),
+            )
+                .into_response()
         }
     }
 }
