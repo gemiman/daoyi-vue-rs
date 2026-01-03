@@ -1,14 +1,14 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::{system_tenant, system_tenant_package};
 use crate::system_service::{
-    system_role_menu_service, system_role_service, system_tenant_package_service,
-    system_user_role_service, system_users_service,
+    system_menu_service, system_role_menu_service, system_role_service,
+    system_tenant_package_service, system_user_role_service, system_users_service,
 };
 use daoyi_common_support::configs::AppConfig;
 use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::enumeration::{
-    CommonStatusEnum, PACKAGE_ID_SYSTEM, RoleCodeEnum, RoleTypeEnum,
+    CommonStatusEnum, RoleCodeEnum, RoleTypeEnum, PACKAGE_ID_SYSTEM,
 };
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
@@ -23,6 +23,7 @@ use futures::future::try_join_all;
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
+use std::collections::HashSet;
 
 #[transactional]
 pub async fn update_tenant(vo: TenantUpdateReqVo) -> ApiResult<()> {
@@ -172,6 +173,36 @@ where
     // 执行处理器
     handler(tenant).await?;
 
+    Ok(())
+}
+
+pub async fn handle_tenant_menu_async<F, Fut>(handler: F) -> ApiResult<()>
+where
+    F: FnOnce(Vec<String>) -> Fut,
+    Fut: Future<Output = ApiResult<()>>,
+{
+    // 如果禁用租户功能，则不执行逻辑
+    if is_tenant_disable().await {
+        return Ok(());
+    }
+    // 获得租户 ID
+    let tenant_id = HttpRequestContext::get_tenant_id_as_string().await?;
+    // 获得租户
+    let tenant = get_tenant_by_id(&tenant_id).await?;
+    let menu_ids = if is_system_tenant(&tenant).await? {
+        // 系统租户，菜单是全量的
+        system_menu_service::get_all_menu_list()
+            .await?
+            .into_iter()
+            .map(|m| m.id)
+            .collect()
+    } else {
+        system_tenant_package_service::valid_tenant_package(&tenant.package_id)
+            .await?
+            .menu_ids
+    };
+    // 执行处理器
+    handler(menu_ids).await?;
     Ok(())
 }
 

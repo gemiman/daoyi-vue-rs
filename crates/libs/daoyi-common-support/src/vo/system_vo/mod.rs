@@ -229,6 +229,73 @@ pub struct MenuSimpleRespVo {
 
 #[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
+pub struct MenuSaveVO {
+    #[validate(length(max = 50, message = "菜单名称长度不能超过50个字符"))]
+    pub name: String,
+    pub permission: Option<String>,
+    pub r#type: MenuTypeEnum,
+    pub sort: i32,
+    pub parent_id: String,
+    pub path: Option<String>,
+    pub icon: Option<String>,
+    pub component: Option<String>,
+    pub component_name: Option<String>,
+    pub status: CommonStatusEnum,
+    pub visible: bool,
+    pub keep_alive: bool,
+    pub always_show: bool,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct MenuUpdateVO {
+    pub id: String,
+    #[validate(length(max = 50, message = "菜单名称长度不能超过50个字符"))]
+    pub name: String,
+    pub permission: Option<String>,
+    pub r#type: MenuTypeEnum,
+    pub sort: i32,
+    pub parent_id: String,
+    pub path: Option<String>,
+    pub icon: Option<String>,
+    pub component: Option<String>,
+    pub component_name: Option<String>,
+    pub status: CommonStatusEnum,
+    pub visible: bool,
+    pub keep_alive: bool,
+    pub always_show: bool,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MenuRespVO {
+    pub id: String,
+    pub name: String,
+    pub permission: Option<String>,
+    pub r#type: MenuTypeEnum,
+    pub sort: i32,
+    pub parent_id: String,
+    pub path: Option<String>,
+    pub icon: Option<String>,
+    pub component: Option<String>,
+    pub component_name: Option<String>,
+    pub status: CommonStatusEnum,
+    pub visible: bool,
+    pub keep_alive: bool,
+    pub always_show: bool,
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct MenuListReqVO {
+    pub name: Option<String>,
+    pub status: Option<CommonStatusEnum>,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
 pub struct NameParams {
     pub name: String,
 }

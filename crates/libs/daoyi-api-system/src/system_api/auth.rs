@@ -72,7 +72,7 @@ async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
         .collect::<Vec<_>>();
     vo.permissions = menu_list
         .iter()
-        .map(|m| m.to_owned().permission)
+        .map(|m| m.to_owned().permission.unwrap_or_default())
         .filter(|p| !p.is_empty())
         .collect::<HashSet<_>>()
         .into_iter()
