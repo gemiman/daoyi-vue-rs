@@ -124,8 +124,7 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
             }
             pub async fn find_perm_with_tenant() -> sea_orm::Select<Entity> {
                 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
-                let mut query = <Self as EntityTrait>::find()
-                    .filter(Column::Deleted.eq(false));
+                let mut query = Self::find_perm().await;
 
                 if let Some(tenant_id) = daoyi_common_support::context::HttpRequestContext::get_tenant_id().await {
                      if !daoyi_common_support::context::HttpRequestContext::get_ignore_tenant() {
@@ -133,6 +132,57 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
                     }
                 }
                 query
+            }
+
+            pub async fn find_by_id_perm<C, T>(db: &C, id: T) -> Result<Option<Model>, sea_orm::DbErr>
+            where
+                C: sea_orm::ConnectionTrait,
+                T: Into<sea_orm::Value>,
+            {
+                use sea_orm::{QueryFilter, ColumnTrait};
+                Self::find_perm().await
+                    .filter(Column::Id.eq(id))
+                    .one(db)
+                    .await
+            }
+
+            pub async fn find_by_id_perm_with_tenant<C, T>(db: &C, id: T) -> Result<Option<Model>, sea_orm::DbErr>
+            where
+                C: sea_orm::ConnectionTrait,
+                T: Into<sea_orm::Value>,
+            {
+                use sea_orm::{QueryFilter, ColumnTrait};
+                Self::find_perm_with_tenant().await
+                    .filter(Column::Id.eq(id))
+                    .one(db)
+                    .await
+            }
+
+
+            pub async fn find_by_ids_perm<C, I, V>(db: &C, ids: I) -> Result<Vec<Model>, sea_orm::DbErr>
+            where
+                C: sea_orm::ConnectionTrait,
+                I: IntoIterator<Item = V>,
+                V: Into<sea_orm::Value>,
+            {
+                use sea_orm::{QueryFilter, ColumnTrait};
+                Self::find_perm().await
+                    .filter(Column::Id.is_in(ids))
+                    .all(db)
+                    .await
+            }
+
+            pub async fn find_by_ids_perm_with_tenant<C, I, V>(db: &C, ids: I) -> Result<Vec<Model>, sea_orm::DbErr>
+            where
+                C: sea_orm::ConnectionTrait,
+                I: IntoIterator<Item = V>,
+                V: Into<sea_orm::Value>,
+            {
+                use sea_orm::{QueryFilter, ColumnTrait};
+                Self::find_perm_with_tenant().await
+                    .filter(Column::Id.is_in(ids))
+                    .all(db)
+                    .await
             }
         }
     })

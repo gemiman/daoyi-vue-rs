@@ -7,14 +7,17 @@ use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::UserSaveReqVo;
-use sea_orm::entity::prelude::*;
 use sea_orm::Set;
+use sea_orm::entity::prelude::*;
 
 pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
     // 1.1 校验账户配合
     system_tenant_service::handle_tenant_info_async(async |tenant| {
         let db = database::get_db_async().await;
-        let count = SystemUsers::find_perm_with_tenant().await.count(&db).await? as i32;
+        let count = SystemUsers::find_perm_with_tenant()
+            .await
+            .count(&db)
+            .await? as i32;
         if count > tenant.account_count {
             return Err(ApiError::biz(format!(
                 "创建用户失败，原因：超过租户最大租户配额({})！",
@@ -158,10 +161,7 @@ pub async fn get_by_username(username: &str) -> ApiResult<Option<system_users::M
 
 pub async fn get_by_id(id: &str) -> ApiResult<system_users::Model> {
     let db = database::get_db_async().await;
-    SystemUsers::find_perm_with_tenant()
-        .await
-        .filter(system_users::Column::Id.eq(id))
-        .one(&db)
+    SystemUsers::find_by_id_perm_with_tenant(&db, id)
         .await?
         .ok_or(ApiError::biz("用户不存在"))
 }

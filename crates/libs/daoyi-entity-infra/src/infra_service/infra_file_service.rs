@@ -89,10 +89,7 @@ pub async fn create_file_from_req(req: FileCreateReqVO) -> ApiResult<String> {
 
 pub async fn delete_file(id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let file = InfraFile::find_perm_with_tenant()
-        .await
-        .filter(infra_file::Column::Id.eq(id))
-        .one(&db)
+    let file = InfraFile::find_by_id_perm_with_tenant(&db, id)
         .await?
         .ok_or_else(|| ApiError::biz("文件不存在"))?;
 

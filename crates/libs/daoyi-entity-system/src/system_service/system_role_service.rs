@@ -90,10 +90,7 @@ pub async fn has_any_super_admin(ids: &Vec<String>) -> ApiResult<bool> {
 
 pub async fn get_role_by_id(id: &str) -> ApiResult<system_role::Model> {
     let db = database::get_db_async().await;
-    let role = SystemRole::find_perm_with_tenant()
-        .await
-        .filter(system_role::Column::Id.eq(id))
-        .one(&db)
+    let role = SystemRole::find_by_id_perm_with_tenant(&db, id)
         .await?
         .ok_or(ApiError::biz("角色不存在"))?;
     Ok(role)

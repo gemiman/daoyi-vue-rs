@@ -8,7 +8,7 @@ use daoyi_common_support::configs::AppConfig;
 use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::enumeration::{
-    CommonStatusEnum, RoleCodeEnum, RoleTypeEnum, PACKAGE_ID_SYSTEM,
+    CommonStatusEnum, PACKAGE_ID_SYSTEM, RoleCodeEnum, RoleTypeEnum,
 };
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
@@ -26,7 +26,8 @@ use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
 
 pub async fn get_tenant_count_by_package_id(package_id: &str) -> ApiResult<u64> {
     let db = database::get_db_async().await;
-    let models = system_tenant::Entity::find_perm().await
+    let models = system_tenant::Entity::find_perm()
+        .await
         .filter(system_tenant::Column::PackageId.eq(package_id))
         .count(&db)
         .await?;
@@ -36,7 +37,8 @@ pub async fn get_tenant_list_by_package_id(
     package_id: &str,
 ) -> ApiResult<Vec<system_tenant::Model>> {
     let db = database::get_db_async().await;
-    let models = system_tenant::Entity::find_perm().await
+    let models = system_tenant::Entity::find_perm()
+        .await
         .filter(system_tenant::Column::PackageId.eq(package_id))
         .all(&db)
         .await?;
@@ -282,7 +284,8 @@ pub async fn get_tenant_list_by_status(
     status: Option<CommonStatusEnum>,
 ) -> ApiResult<Vec<system_tenant::Model>> {
     let db = database::get_db_async().await;
-    let list = SystemTenant::find_perm().await
+    let list = SystemTenant::find_perm()
+        .await
         .apply_if(status, |query, status| {
             query.filter(system_tenant::Column::Status.eq(status))
         })
@@ -293,9 +296,7 @@ pub async fn get_tenant_list_by_status(
 #[transactional]
 pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get_db_async().await;
-    let model = SystemTenant::find_by_id(tenant_id)
-        .filter(system_tenant::Column::Deleted.eq(false))
-        .one(&db)
+    let model = SystemTenant::find_by_id_perm(&db, tenant_id)
         .await?
         .ok_or_else(|| ApiError::biz("租户不存在"))?;
     Ok(model)
@@ -304,7 +305,8 @@ pub async fn get_tenant_by_id(tenant_id: &str) -> ApiResult<system_tenant::Model
 #[transactional]
 pub async fn get_tenant_by_name(name: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get_db_async().await;
-    let option = SystemTenant::find_perm().await
+    let option = SystemTenant::find_perm()
+        .await
         .filter(system_tenant::Column::Name.eq(name))
         .one(&db)
         .await?
@@ -315,7 +317,8 @@ pub async fn get_tenant_by_name(name: &str) -> ApiResult<system_tenant::Model> {
 #[transactional]
 pub async fn get_tenant_by_website(website: &str) -> ApiResult<system_tenant::Model> {
     let db = database::get_db_async().await;
-    let tenant = SystemTenant::find_perm().await
+    let tenant = SystemTenant::find_perm()
+        .await
         .filter(system_tenant::Column::Status.eq(CommonStatusEnum::Enable))
         .filter(Expr::cust_with_values("$1 = ANY(websites)", [website]))
         .one(&db)
@@ -348,7 +351,8 @@ pub async fn check_tenant_id(tenant_id: &str) -> ApiResult<TenantRespVO> {
 
 pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_tenant::Model>> {
     let db = database::get_db_async().await;
-    let paginator = SystemTenant::find_perm().await
+    let paginator = SystemTenant::find_perm()
+        .await
         .apply_if(params.contact_mobile.as_ref(), |query, contact_mobile| {
             query.filter(system_tenant::Column::ContactMobile.contains(contact_mobile))
         })

@@ -89,10 +89,7 @@ async fn validate_file_config_storage(storage: &FileStorageEnum, config: &Json) 
 
 pub async fn get_file_config(id: &str) -> ApiResult<infra_file_config::Model> {
     let db = database::get_db_async().await;
-    let model = InfraFileConfig::find_perm_with_tenant()
-        .await
-        .filter(infra_file_config::Column::Id.eq(id))
-        .one(&db)
+    let model = InfraFileConfig::find_by_id_perm_with_tenant(&db, id)
         .await?
         .ok_or_else(|| ApiError::biz("文件配置不存在"))?;
     Ok(model)
@@ -101,7 +98,10 @@ pub async fn get_file_config(id: &str) -> ApiResult<infra_file_config::Model> {
 #[transactional]
 pub async fn update_file_config_master(id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let list = InfraFileConfig::find_perm_with_tenant().await.all(&db).await?;
+    let list = InfraFileConfig::find_perm_with_tenant()
+        .await
+        .all(&db)
+        .await?;
     // 校验存在
     if !list.iter().any(|m| m.id == id) {
         return Err(ApiError::biz("文件配置不存在"));
