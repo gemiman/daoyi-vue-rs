@@ -113,7 +113,8 @@ pub async fn update_file_config_master(id: &str) -> ApiResult<()> {
         .map(|m| m.id.as_str())
         .collect::<Vec<_>>();
     if !ids.is_empty() {
-        InfraFileConfig::update_many()
+        InfraFileConfig::update_many_auto()
+            .await
             .col_expr(infra_file_config::Column::Master, Expr::value(false))
             .filter(infra_file_config::Column::Master.eq(true))
             .filter(infra_file_config::Column::Id.is_in(ids))
@@ -121,7 +122,8 @@ pub async fn update_file_config_master(id: &str) -> ApiResult<()> {
             .await?;
     }
     // 更新
-    InfraFileConfig::update_many()
+    InfraFileConfig::update_many_auto()
+        .await
         .col_expr(infra_file_config::Column::Master, Expr::value(true))
         .filter(infra_file_config::Column::Master.eq(false))
         .filter(infra_file_config::Column::Id.eq(id))
@@ -148,11 +150,7 @@ pub async fn delete_file_config_list(ids: &Vec<String>) -> ApiResult<()> {
     }
     // 批量删除
     let ids = configs.iter().map(|m| m.id.as_str()).collect::<Vec<_>>();
-    InfraFileConfig::update_many()
-        .col_expr(infra_file_config::Column::Deleted, Expr::value(true))
-        .filter(infra_file_config::Column::Id.is_in(ids))
-        .exec(&db)
-        .await?;
+    InfraFileConfig::batch_delete_logical_by_id(&db, ids).await?;
     Ok(())
 }
 
@@ -179,7 +177,12 @@ pub async fn get_master_file_client() -> ApiResult<(Box<dyn FileClient>, String)
         .one(&db)
         .await?
         .ok_or_else(|| ApiError::biz("主文件配置不存在，请先设置主配置"))?;
-    let client = create_file_client(master_config.id.clone(), &master_config.storage, &master_config.config).await?;
+    let client = create_file_client(
+        master_config.id.clone(),
+        &master_config.storage,
+        &master_config.config,
+    )
+    .await?;
     Ok((client, master_config.id))
 }
 

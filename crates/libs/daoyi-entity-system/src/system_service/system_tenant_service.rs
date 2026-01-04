@@ -386,11 +386,7 @@ pub async fn delete_tenant_list(ids: &Vec<String>) -> ApiResult<()> {
     try_join_all(ids.iter().map(|id| validate_update_tenant(id))).await?;
     // 删除
     let db = database::get_db_async().await;
-    SystemTenant::update_many_auto().await
-        .col_expr(system_tenant::Column::Deleted, Expr::value(true))
-        .filter(system_tenant::Column::Id.is_in(ids))
-        .exec(&db)
-        .await?;
+    SystemTenant::batch_delete_logical_by_id(&db, ids).await?;
     Ok(())
 }
 
@@ -399,10 +395,6 @@ pub async fn delete_tenant(id: &str) -> ApiResult<()> {
     validate_update_tenant(id).await?;
     // 删除
     let db = database::get_db_async().await;
-    SystemTenant::update_many_auto().await
-        .col_expr(system_tenant::Column::Deleted, Expr::value(true))
-        .filter(system_tenant::Column::Id.eq(id))
-        .exec(&db)
-        .await?;
+    SystemTenant::delete_logical_by_id(&db, id).await?;
     Ok(())
 }

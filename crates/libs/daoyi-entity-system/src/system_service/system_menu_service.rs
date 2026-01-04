@@ -2,14 +2,12 @@ use crate::system_entity::prelude::*;
 use crate::system_entity::system_menu;
 use crate::system_service::system_tenant_service;
 use daoyi_common_support::database;
-use daoyi_common_support::enumeration::{CommonStatusEnum, MenuTypeEnum, MENU_ID_ROOT};
+use daoyi_common_support::enumeration::{CommonStatusEnum, MENU_ID_ROOT, MenuTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::vo::system_vo::{
-    MenuListReqVO, MenuSaveVO, MenuUpdateVO, MenuVO,
-};
+use daoyi_common_support::vo::system_vo::{MenuListReqVO, MenuSaveVO, MenuUpdateVO, MenuVO};
 use daoyi_macros::transactional;
-use sea_orm::prelude::*;
 use sea_orm::QueryTrait;
+use sea_orm::prelude::*;
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
@@ -84,7 +82,7 @@ pub async fn delete_menu(id: &str) -> ApiResult<()> {
     {
         return Err(ApiError::biz("存在子菜单，无法删除"));
     }
-    SystemMenu::delete_by_id(id).exec(&db).await?;
+    SystemMenu::delete_logical_by_id(&db, id).await?;
     Ok(())
 }
 

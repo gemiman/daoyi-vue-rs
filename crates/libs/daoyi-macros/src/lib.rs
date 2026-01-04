@@ -237,6 +237,33 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
 
                 query
             }
+
+            pub async fn delete_logical_by_id<C, T>(db: &C, id: T) -> Result<sea_orm::UpdateResult, sea_orm::DbErr>
+            where
+                C: sea_orm::ConnectionTrait,
+                T: Into<sea_orm::Value>,
+            {
+                use sea_orm::{EntityTrait, sea_query::Expr, ColumnTrait, QueryFilter};
+                Self::update_many_auto().await
+                    .col_expr(Column::Deleted, Expr::value(true))
+                    .filter(Column::Id.eq(id))
+                    .exec(db)
+                    .await
+            }
+
+            pub async fn batch_delete_logical_by_id<C, I, V>(db: &C, ids: I) -> Result<sea_orm::UpdateResult, sea_orm::DbErr>
+            where
+                C: sea_orm::ConnectionTrait,
+                I: IntoIterator<Item = V>,
+                V: Into<sea_orm::Value>,
+            {
+                use sea_orm::{EntityTrait, sea_query::Expr, ColumnTrait, QueryFilter};
+                Self::update_many_auto().await
+                    .col_expr(Column::Deleted, Expr::value(true))
+                    .filter(Column::Id.is_in(ids))
+                    .exec(db)
+                    .await
+            }
         }
     };
 
