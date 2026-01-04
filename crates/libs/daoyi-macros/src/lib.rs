@@ -116,6 +116,12 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
         #item_struct
 
         impl Entity {
+            pub async fn find_perm() -> sea_orm::Select<Entity> {
+                use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
+                let mut query = <Self as EntityTrait>::find()
+                    .filter(Column::Deleted.eq(false));
+                query
+            }
             pub async fn find_perm_with_tenant() -> sea_orm::Select<Entity> {
                 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
                 let mut query = <Self as EntityTrait>::find()
