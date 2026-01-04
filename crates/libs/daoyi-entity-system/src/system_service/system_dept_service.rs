@@ -39,7 +39,7 @@ pub async fn get_dept_list(ids: &Vec<String>) -> ApiResult<Vec<system_dept::Mode
         return Ok(vec![]);
     }
     let db = database::get_db_async().await;
-    let list = SystemDept::find_perm()
+    let list = SystemDept::find_perm_with_tenant()
         .await
         .filter(system_dept::Column::Id.is_in(ids))
         .all(&db)

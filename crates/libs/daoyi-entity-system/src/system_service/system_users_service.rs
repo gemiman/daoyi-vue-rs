@@ -14,7 +14,7 @@ pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
     // 1.1 校验账户配合
     system_tenant_service::handle_tenant_info_async(async |tenant| {
         let db = database::get_db_async().await;
-        let count = SystemUsers::find_perm().await.count(&db).await? as i32;
+        let count = SystemUsers::find_perm_with_tenant().await.count(&db).await? as i32;
         if count > tenant.account_count {
             return Err(ApiError::biz(format!(
                 "创建用户失败，原因：超过租户最大租户配额({})！",
@@ -80,7 +80,7 @@ async fn validate_email_unique(id: Option<&str>, email: Option<&str>) -> ApiResu
     }
     let mobile = email.unwrap();
     let db = database::get_db_async().await;
-    let option = SystemUsers::find_perm()
+    let option = SystemUsers::find_perm_with_tenant()
         .await
         .filter(system_users::Column::Email.eq(mobile))
         .one(&db)
@@ -103,7 +103,7 @@ async fn validate_mobile_unique(id: Option<&str>, mobile: Option<&str>) -> ApiRe
     }
     let mobile = mobile.unwrap();
     let db = database::get_db_async().await;
-    let option = SystemUsers::find_perm()
+    let option = SystemUsers::find_perm_with_tenant()
         .await
         .filter(system_users::Column::Mobile.eq(mobile))
         .one(&db)
@@ -122,7 +122,7 @@ async fn validate_mobile_unique(id: Option<&str>, mobile: Option<&str>) -> ApiRe
 
 async fn validate_username_unique(id: Option<&str>, username: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let option = SystemUsers::find_perm()
+    let option = SystemUsers::find_perm_with_tenant()
         .await
         .filter(system_users::Column::Username.eq(username))
         .one(&db)
@@ -148,7 +148,7 @@ async fn validate_user_exists(id: Option<&str>) -> ApiResult<Option<system_users
 }
 pub async fn get_by_username(username: &str) -> ApiResult<Option<system_users::Model>> {
     let db = database::get_db_async().await;
-    let option = SystemUsers::find_perm()
+    let option = SystemUsers::find_perm_with_tenant()
         .await
         .filter(system_users::Column::Username.eq(username))
         .one(&db)
@@ -158,7 +158,7 @@ pub async fn get_by_username(username: &str) -> ApiResult<Option<system_users::M
 
 pub async fn get_by_id(id: &str) -> ApiResult<system_users::Model> {
     let db = database::get_db_async().await;
-    SystemUsers::find_perm()
+    SystemUsers::find_perm_with_tenant()
         .await
         .filter(system_users::Column::Id.eq(id))
         .one(&db)

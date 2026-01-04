@@ -10,7 +10,7 @@ pub async fn save_batch(user_id: &str, post_ids: &Vec<String>) -> ApiResult<()> 
     let db = database::get_db_async().await;
 
     // 1. 获得用户拥有的岗位编号
-    let db_post_ids: HashSet<String> = SystemUserPost::find_perm()
+    let db_post_ids: HashSet<String> = SystemUserPost::find_perm_with_tenant()
         .await
         .filter(system_user_post::Column::UserId.eq(user_id))
         .all(&db)

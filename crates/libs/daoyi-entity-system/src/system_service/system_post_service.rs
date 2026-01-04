@@ -39,7 +39,7 @@ pub async fn get_post_list(ids: &Vec<String>) -> ApiResult<Vec<system_post::Mode
         return Ok(vec![]);
     }
     let db = database::get_db_async().await;
-    let list = SystemPost::find_perm()
+    let list = SystemPost::find_perm_with_tenant()
         .await
         .filter(system_post::Column::Id.is_in(ids))
         .all(&db)

@@ -89,7 +89,7 @@ pub async fn create_file_from_req(req: FileCreateReqVO) -> ApiResult<String> {
 
 pub async fn delete_file(id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let file = InfraFile::find_perm()
+    let file = InfraFile::find_perm_with_tenant()
         .await
         .filter(infra_file::Column::Id.eq(id))
         .one(&db)
@@ -140,7 +140,7 @@ pub async fn presign_put_url(
 
 pub async fn get_file_page(params: &FilePageReqVO) -> ApiResult<Page<FileRespVO>> {
     let db = database::get_db_async().await;
-    let paginator = InfraFile::find_perm()
+    let paginator = InfraFile::find_perm_with_tenant()
         .await
         .apply_if(params.path.as_ref(), |query, val| {
             query.filter(infra_file::Column::Path.contains(val))

@@ -12,7 +12,7 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
     let db = database::get_db_async().await;
 
     // 1. 获得用户拥有的角色编号
-    let db_role_ids: HashSet<String> = SystemUserRole::find_perm()
+    let db_role_ids: HashSet<String> = SystemUserRole::find_perm_with_tenant()
         .await
         .filter(system_user_role::Column::UserId.eq(user_id))
         .all(&db)
@@ -57,7 +57,7 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
 }
 pub async fn get_user_role_id_list_by_user_id(user_id: &str) -> ApiResult<Vec<String>> {
     let db = database::get_db_async().await;
-    let list = SystemUserRole::find_perm()
+    let list = SystemUserRole::find_perm_with_tenant()
         .await
         .filter(system_user_role::Column::UserId.eq(user_id))
         .all(&db)

@@ -31,7 +31,7 @@ async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> Ap
     }
     let db = database::get_db_async().await;
     // 1. 该 name 名字被其它角色所使用
-    let role = SystemRole::find_perm()
+    let role = SystemRole::find_perm_with_tenant()
         .await
         .filter(system_role::Column::Name.eq(name))
         .one(&db)
@@ -47,7 +47,7 @@ async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> Ap
         }
     }
     // 2. 是否存在相同编码的角色
-    let role = SystemRole::find_perm()
+    let role = SystemRole::find_perm_with_tenant()
         .await
         .filter(system_role::Column::Code.eq(code))
         .one(&db)
@@ -66,7 +66,7 @@ async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> Ap
 }
 pub async fn get_role_list_by_ids(ids: &Vec<String>) -> ApiResult<Vec<system_role::Model>> {
     let db = database::get_db_async().await;
-    let list = SystemRole::find_perm()
+    let list = SystemRole::find_perm_with_tenant()
         .await
         .filter(system_role::Column::Id.is_in(ids))
         .all(&db)
@@ -90,7 +90,7 @@ pub async fn has_any_super_admin(ids: &Vec<String>) -> ApiResult<bool> {
 
 pub async fn get_role_by_id(id: &str) -> ApiResult<system_role::Model> {
     let db = database::get_db_async().await;
-    let role = SystemRole::find_perm()
+    let role = SystemRole::find_perm_with_tenant()
         .await
         .filter(system_role::Column::Id.eq(id))
         .one(&db)
@@ -113,6 +113,6 @@ pub async fn get_role_from_cache(id: &str) -> ApiResult<system_role::Model> {
 /// 获得所有角色列表
 pub async fn get_role_list() -> ApiResult<Vec<system_role::Model>> {
     let db = database::get_db_async().await;
-    let list = SystemRole::find_perm().await.all(&db).await?;
+    let list = SystemRole::find_perm_with_tenant().await.all(&db).await?;
     Ok(list)
 }

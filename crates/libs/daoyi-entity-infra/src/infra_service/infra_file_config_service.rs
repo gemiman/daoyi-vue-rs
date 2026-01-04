@@ -18,7 +18,7 @@ pub async fn get_file_config_page(
     params: &FileConfigPageReqVO,
 ) -> ApiResult<Page<infra_file_config::Model>> {
     let db = database::get_db_async().await;
-    let paginator = InfraFileConfig::find_perm()
+    let paginator = InfraFileConfig::find_perm_with_tenant()
         .await
         .filter(infra_file_config::Column::Deleted.eq(false))
         .apply_if(params.name.as_ref(), |query, name| {
@@ -89,7 +89,7 @@ async fn validate_file_config_storage(storage: &FileStorageEnum, config: &Json) 
 
 pub async fn get_file_config(id: &str) -> ApiResult<infra_file_config::Model> {
     let db = database::get_db_async().await;
-    let model = InfraFileConfig::find_perm()
+    let model = InfraFileConfig::find_perm_with_tenant()
         .await
         .filter(infra_file_config::Column::Id.eq(id))
         .one(&db)
@@ -101,7 +101,7 @@ pub async fn get_file_config(id: &str) -> ApiResult<infra_file_config::Model> {
 #[transactional]
 pub async fn update_file_config_master(id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let list = InfraFileConfig::find_perm().await.all(&db).await?;
+    let list = InfraFileConfig::find_perm_with_tenant().await.all(&db).await?;
     // 校验存在
     if !list.iter().any(|m| m.id == id) {
         return Err(ApiError::biz("文件配置不存在"));
@@ -136,7 +136,7 @@ pub async fn update_file_config_master(id: &str) -> ApiResult<()> {
 pub async fn delete_file_config_list(ids: &Vec<String>) -> ApiResult<()> {
     let db = database::get_db_async().await;
     // 校验是否有主配置
-    let configs = InfraFileConfig::find_perm()
+    let configs = InfraFileConfig::find_perm_with_tenant()
         .await
         .filter(infra_file_config::Column::Id.is_in(ids))
         .all(&db)
@@ -171,7 +171,7 @@ pub async fn delete_file_config(id: &str) -> ApiResult<()> {
 
 pub async fn get_master_file_client() -> ApiResult<(Box<dyn FileClient>, String)> {
     let db = database::get_db_async().await;
-    let master_config = InfraFileConfig::find_perm()
+    let master_config = InfraFileConfig::find_perm_with_tenant()
         .await
         .filter(infra_file_config::Column::Master.eq(true))
         .one(&db)

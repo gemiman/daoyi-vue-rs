@@ -12,7 +12,7 @@ pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResul
     let db = database::get_db_async().await;
 
     // 1. 获得角色拥有的菜单编号
-    let db_menu_ids: HashSet<String> = SystemRoleMenu::find_perm()
+    let db_menu_ids: HashSet<String> = SystemRoleMenu::find_perm_with_tenant()
         .await
         .filter(system_role_menu::Column::RoleId.eq(role_id))
         .all(&db)
@@ -68,7 +68,7 @@ pub async fn get_role_menu_list_by_role_id(role_ids: &Vec<String>) -> ApiResult<
             .collect());
     }
     let db = database::get_db_async().await;
-    Ok(SystemRoleMenu::find_perm()
+    Ok(SystemRoleMenu::find_perm_with_tenant()
         .await
         .filter(system_role_menu::Column::RoleId.is_in(role_ids))
         .all(&db)
