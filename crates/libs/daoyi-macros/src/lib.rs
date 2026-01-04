@@ -222,6 +222,21 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                 }
                 <Self as sea_orm::EntityTrait>::insert_many(models_vec).exec(db).await
             }
+
+            pub async fn update_many_auto() -> sea_orm::UpdateMany<Entity> {
+                use sea_orm::{EntityTrait, sea_query::Expr};
+                use daoyi_common_support::context::HttpRequestContext;
+                use sea_orm::sqlx::types::chrono::Local;
+
+                let mut query = <Self as sea_orm::EntityTrait>::update_many()
+                    .col_expr(Column::UpdateTime, Expr::value(Local::now().naive_local()));
+
+                if let Ok(login_id) = HttpRequestContext::get_login_id_as_string().await {
+                    query = query.col_expr(Column::Updater, Expr::value(login_id));
+                }
+
+                query
+            }
         }
     };
 
