@@ -23,7 +23,27 @@ use futures::future::try_join_all;
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
-use std::collections::HashSet;
+
+pub async fn get_tenant_count_by_package_id(package_id: &str) -> ApiResult<u64> {
+    let db = database::get_db_async().await;
+    let models = system_tenant::Entity::find()
+        .filter(system_tenant::Column::Deleted.eq(false))
+        .filter(system_tenant::Column::PackageId.eq(package_id))
+        .count(&db)
+        .await?;
+    Ok(models)
+}
+pub async fn get_tenant_list_by_package_id(
+    package_id: &str,
+) -> ApiResult<Vec<system_tenant::Model>> {
+    let db = database::get_db_async().await;
+    let models = system_tenant::Entity::find()
+        .filter(system_tenant::Column::Deleted.eq(false))
+        .filter(system_tenant::Column::PackageId.eq(package_id))
+        .all(&db)
+        .await?;
+    Ok(models)
+}
 
 #[transactional]
 pub async fn update_tenant(vo: TenantUpdateReqVo) -> ApiResult<()> {
@@ -366,7 +386,8 @@ pub async fn delete_tenant_list(ids: &Vec<String>) -> ApiResult<()> {
     try_join_all(ids.iter().map(|id| validate_update_tenant(id))).await?;
     // 删除
     let db = database::get_db_async().await;
-    SystemTenant::delete_many()
+    SystemTenant::update_many()
+        .col_expr(system_tenant::Column::Deleted, Expr::value(true))
         .filter(system_tenant::Column::Id.is_in(ids))
         .exec(&db)
         .await?;
@@ -378,6 +399,10 @@ pub async fn delete_tenant(id: &str) -> ApiResult<()> {
     validate_update_tenant(id).await?;
     // 删除
     let db = database::get_db_async().await;
-    SystemTenant::delete_by_id(id).exec(&db).await?;
+    SystemTenant::update_many()
+        .col_expr(system_tenant::Column::Deleted, Expr::value(true))
+        .filter(system_tenant::Column::Id.eq(id))
+        .exec(&db)
+        .await?;
     Ok(())
 }

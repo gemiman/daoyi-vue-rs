@@ -387,3 +387,31 @@ pub struct IdsParams {
     #[serde(deserialize_with = "de_comma_separated")]
     pub ids: Vec<String>,
 }
+
+/// TenantPackageSaveReqVO，管理后台 - 租户套餐创建/修改 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantPackageSaveReqVo {
+    /// 关联的菜单编号
+    pub menu_ids: Vec<String>,
+    /// 套餐名
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+}
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct TenantPackageUpdateReqVo {
+    /// 套餐编号
+    pub id: String,
+    /// 关联的菜单编号
+    pub menu_ids: Vec<String>,
+    /// 套餐名
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+}
