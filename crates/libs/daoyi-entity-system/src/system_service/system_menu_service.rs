@@ -13,10 +13,7 @@ use std::sync::{Arc, Mutex};
 
 pub async fn get_all_menu_list() -> ApiResult<Vec<system_menu::Model>> {
     let db = database::get_db_async().await;
-    Ok(SystemMenu::find()
-        .filter(system_menu::Column::Deleted.eq(false))
-        .all(&db)
-        .await?)
+    Ok(SystemMenu::find_perm().await.all(&db).await?)
 }
 
 pub async fn get_menu_list(ids: Option<&Vec<String>>) -> ApiResult<Vec<system_menu::Model>> {
@@ -24,7 +21,7 @@ pub async fn get_menu_list(ids: Option<&Vec<String>>) -> ApiResult<Vec<system_me
         return Ok(vec![]);
     }
     let db = database::get_db_async().await;
-    Ok(SystemMenu::find()
+    Ok(SystemMenu::find_perm().await
         .apply_if(ids, |query, ids| {
             query.filter(system_menu::Column::Id.is_in(ids))
         })
@@ -34,7 +31,7 @@ pub async fn get_menu_list(ids: Option<&Vec<String>>) -> ApiResult<Vec<system_me
 
 pub async fn get_menu_list_by_req(req: &MenuListReqVO) -> ApiResult<Vec<system_menu::Model>> {
     let db = database::get_db_async().await;
-    Ok(SystemMenu::find()
+    Ok(SystemMenu::find_perm().await
         .apply_if(req.name.as_ref(), |query, name| {
             query.filter(system_menu::Column::Name.contains(name))
         })
@@ -74,7 +71,7 @@ pub async fn delete_menu(id: &str) -> ApiResult<()> {
     validate_menu(id).await?;
     let db = database::get_db_async().await;
     // 校验是否还有子菜单
-    if SystemMenu::find()
+    if SystemMenu::find_perm().await
         .filter(system_menu::Column::ParentId.eq(id))
         .count(&db)
         .await?

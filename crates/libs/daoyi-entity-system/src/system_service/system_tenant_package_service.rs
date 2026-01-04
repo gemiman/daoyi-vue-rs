@@ -51,8 +51,7 @@ pub async fn get_tenant_package_list_by_status(
     status: CommonStatusEnum,
 ) -> ApiResult<Vec<system_tenant_package::Model>> {
     let db = database::get_db_async().await;
-    let list = SystemTenantPackage::find()
-        .filter(system_tenant_package::Column::Deleted.eq(false))
+    let list = SystemTenantPackage::find_perm().await
         .filter(system_tenant_package::Column::Status.eq(status))
         .all(&db)
         .await?;
@@ -63,8 +62,7 @@ pub async fn get_tenant_package_page(
     params: &TenantPackagePageReqVO,
 ) -> ApiResult<Page<system_tenant_package::Model>> {
     let db = database::get_db_async().await;
-    let paginator = SystemTenantPackage::find()
-        .filter(system_tenant_package::Column::Deleted.eq(false))
+    let paginator = SystemTenantPackage::find_perm().await
         .apply_if(params.remark.as_ref(), |query, remark| {
             query.filter(system_tenant_package::Column::Remark.contains(remark))
         })
@@ -101,8 +99,7 @@ pub async fn create_tenant_package(
 
 async fn validate_tenant_package_name_unique(id: Option<&str>, name: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let model = SystemTenantPackage::find()
-        .filter(system_tenant_package::Column::Deleted.eq(false))
+    let model = SystemTenantPackage::find_perm().await
         .filter(system_tenant_package::Column::Name.eq(name))
         .one(&db)
         .await?;

@@ -79,7 +79,7 @@ impl FileClient for DbFileClient {
 
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>> {
         let db = database::get_db_async().await;
-        let model = infra_file_content::Entity::find()
+        let model = infra_file_content::Entity::find_perm().await
             .filter(infra_file_content::Column::ConfigId.eq(&self.config_id))
             .filter(infra_file_content::Column::Path.eq(path))
             .one(&db)
