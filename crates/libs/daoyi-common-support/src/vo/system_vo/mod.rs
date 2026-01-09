@@ -287,6 +287,18 @@ pub struct MenuRespVO {
     pub create_time: DateTime,
 }
 
+/// 管理后台 - 部门精简信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeptSimpleRespVO {
+    /// 部门编号
+    pub id: String,
+    /// 部门名称
+    pub name: String,
+    /// 父部门 ID
+    pub parent_id: String,
+}
+
 /// DeptRespVO，管理后台 - 部门信息 Response VO
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -449,4 +461,18 @@ pub struct TenantPackageUpdateReqVo {
     pub remark: Option<String>,
     /// 状态，参见 CommonStatusEnum 枚举
     pub status: CommonStatusEnum,
+}
+
+/// UserSimpleRespVO，管理后台 - 用户精简信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserSimpleRespVo {
+    /// 部门ID
+    pub dept_id: Option<String>,
+    /// 部门名称
+    pub dept_name: Option<String>,
+    /// 用户编号
+    pub id: String,
+    /// 用户昵称
+    pub nickname: String,
 }

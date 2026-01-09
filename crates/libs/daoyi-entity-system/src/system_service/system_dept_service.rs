@@ -28,7 +28,11 @@ pub async fn validate_dept_list(ids: &Vec<String>) -> ApiResult<()> {
     Ok(())
 }
 
-pub async fn get_dept_map(ids: &Vec<String>) -> ApiResult<HashMap<String, system_dept::Model>> {
+pub async fn get_dept_map<I, S>(ids: I) -> ApiResult<HashMap<String, system_dept::Model>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
     let map = get_dept_list(ids)
         .await?
         .into_iter()
@@ -36,14 +40,20 @@ pub async fn get_dept_map(ids: &Vec<String>) -> ApiResult<HashMap<String, system
         .collect::<HashMap<_, _>>();
     Ok(map)
 }
-pub async fn get_dept_list(ids: &Vec<String>) -> ApiResult<Vec<system_dept::Model>> {
-    if ids.is_empty() {
+
+pub async fn get_dept_list<I, S>(ids: I) -> ApiResult<Vec<system_dept::Model>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let ids_vec: Vec<String> = ids.into_iter().map(|s| s.as_ref().to_string()).collect();
+    if ids_vec.is_empty() {
         return Ok(vec![]);
     }
     let db = database::get_db_async().await;
     let list = SystemDept::find_perm_with_tenant()
         .await
-        .filter(system_dept::Column::Id.is_in(ids))
+        .filter(system_dept::Column::Id.is_in(&ids_vec))
         .all(&db)
         .await?;
     Ok(list)

@@ -165,3 +165,15 @@ pub async fn get_by_id(id: &str) -> ApiResult<system_users::Model> {
         .await?
         .ok_or(ApiError::biz("用户不存在"))
 }
+
+pub async fn get_user_list_by_status(
+    status: CommonStatusEnum,
+) -> ApiResult<Vec<system_users::Model>> {
+    let db = database::get_db_async().await;
+    let list = SystemUsers::find_perm_with_tenant()
+        .await
+        .filter(system_users::Column::Status.eq(status))
+        .all(&db)
+        .await?;
+    Ok(list)
+}
