@@ -246,6 +246,48 @@ pub struct MenuSaveVO {
     pub always_show: bool,
 }
 
+/// DeptSaveReqVO，管理后台 - 部门创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeptSaveReqVO {
+    /// 邮箱
+    pub email: Option<String>,
+    /// 负责人的用户编号
+    pub leader_user_id: Option<String>,
+    /// 部门名称
+    pub name: String,
+    /// 父部门 ID
+    pub parent_id: Option<String>,
+    /// 联系电话
+    #[validate(custom(function = "validation::is_mobile_phone"))]
+    pub phone: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态,见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+}
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeptUpdateReqVO {
+    /// 邮箱
+    pub email: Option<String>,
+    /// 部门编号
+    pub id: String,
+    /// 负责人的用户编号
+    pub leader_user_id: Option<String>,
+    /// 部门名称
+    pub name: String,
+    /// 父部门 ID
+    pub parent_id: Option<String>,
+    /// 联系电话
+    #[validate(custom(function = "validation::is_mobile_phone"))]
+    pub phone: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态,见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+}
+
 #[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuUpdateVO {

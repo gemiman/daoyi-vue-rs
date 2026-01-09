@@ -7,9 +7,7 @@ use crate::system_service::{
 use daoyi_common_support::configs::AppConfig;
 use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
-use daoyi_common_support::enumeration::{
-    CommonStatusEnum, PACKAGE_ID_SYSTEM, RoleCodeEnum, RoleTypeEnum,
-};
+use daoyi_common_support::enumeration::{CommonStatusEnum, ID_ROOT, RoleCodeEnum, RoleTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::utils::collectors;
@@ -131,7 +129,7 @@ async fn validate_update_tenant(id: &str) -> ApiResult<system_tenant::Model> {
 }
 
 async fn is_system_tenant(tenant: &system_tenant::Model) -> ApiResult<bool> {
-    Ok(tenant.package_id == PACKAGE_ID_SYSTEM)
+    Ok(tenant.package_id == ID_ROOT)
 }
 
 #[transactional]

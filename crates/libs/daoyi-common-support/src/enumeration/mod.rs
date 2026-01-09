@@ -5,9 +5,9 @@ use sea_orm::prelude::*;
 use serde::{Deserialize, Serialize};
 
 /// 套餐编号 - 系统
-pub const PACKAGE_ID_SYSTEM: &str = "0";
 /// 菜单编号 - 根节点
-pub const MENU_ID_ROOT: &str = "0";
+/// 部门编号 - 根节点
+pub const ID_ROOT: &str = "0";
 
 #[derive(
     Debug,

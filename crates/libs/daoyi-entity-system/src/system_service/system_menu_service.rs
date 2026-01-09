@@ -2,7 +2,7 @@ use crate::system_entity::prelude::*;
 use crate::system_entity::system_menu;
 use crate::system_service::system_tenant_service;
 use daoyi_common_support::database;
-use daoyi_common_support::enumeration::{CommonStatusEnum, MENU_ID_ROOT, MenuTypeEnum};
+use daoyi_common_support::enumeration::{CommonStatusEnum, ID_ROOT, MenuTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::{MenuListReqVO, MenuSaveVO, MenuUpdateVO, MenuVO};
 use daoyi_macros::transactional;
@@ -46,7 +46,7 @@ pub async fn get_menu_list_by_req(req: &MenuListReqVO) -> ApiResult<Vec<system_m
 
 pub async fn create_menu(req: MenuSaveVO) -> ApiResult<String> {
     // 校验父菜单存在
-    if req.parent_id.as_str() != MENU_ID_ROOT {
+    if req.parent_id.as_str() != ID_ROOT {
         validate_menu(&req.parent_id).await?;
     }
     let db = database::get_db_async().await;
@@ -59,7 +59,7 @@ pub async fn update_menu(req: MenuUpdateVO) -> ApiResult<()> {
     if req.parent_id == req.id {
         return Err(ApiError::biz("Parent menu cannot be self"));
     }
-    if req.parent_id.as_str() != MENU_ID_ROOT {
+    if req.parent_id.as_str() != ID_ROOT {
         validate_menu(&req.parent_id).await?;
     }
 
