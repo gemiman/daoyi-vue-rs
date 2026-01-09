@@ -3,7 +3,9 @@ use crate::system_entity::system_dept;
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
+use daoyi_common_support::vo::system_vo::DeptListReqVO;
 use sea_orm::entity::prelude::*;
+use sea_orm::{QueryOrder, QueryTrait};
 use std::collections::HashMap;
 
 pub async fn validate_dept_list(ids: &Vec<String>) -> ApiResult<()> {
@@ -42,6 +44,22 @@ pub async fn get_dept_list(ids: &Vec<String>) -> ApiResult<Vec<system_dept::Mode
     let list = SystemDept::find_perm_with_tenant()
         .await
         .filter(system_dept::Column::Id.is_in(ids))
+        .all(&db)
+        .await?;
+    Ok(list)
+}
+
+pub async fn get_dept_list_by_req(req: &DeptListReqVO) -> ApiResult<Vec<system_dept::Model>> {
+    let db = database::get_db_async().await;
+    let list = SystemDept::find_perm_with_tenant()
+        .await
+        .apply_if(req.name.as_deref(), |query, name| {
+            query.filter(system_dept::Column::Name.contains(name))
+        })
+        .apply_if(req.status, |query, status| {
+            query.filter(system_dept::Column::Status.eq(status))
+        })
+        .order_by_asc(system_dept::Column::Sort)
         .all(&db)
         .await?;
     Ok(list)

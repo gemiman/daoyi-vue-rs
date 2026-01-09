@@ -287,6 +287,41 @@ pub struct MenuRespVO {
     pub create_time: DateTime,
 }
 
+/// DeptRespVO，管理后台 - 部门信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DeptRespVo {
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 邮箱
+    pub email: Option<String>,
+    /// 部门编号
+    pub id: String,
+    /// 负责人的用户编号
+    pub leader_user_id: Option<String>,
+    /// 部门名称
+    pub name: String,
+    /// 父部门 ID
+    pub parent_id: String,
+    /// 联系电话
+    pub phone: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态,见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+}
+
+/// 管理后台 - 部门列表 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct DeptListReqVO {
+    /// 部门名称，模糊匹配
+    pub name: Option<String>,
+    /// 展示状态，参见 CommonStatusEnum 枚举类
+    pub status: Option<CommonStatusEnum>,
+}
+
 #[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct MenuListReqVO {
