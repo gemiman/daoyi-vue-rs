@@ -9,8 +9,7 @@ use daoyi_common_support::{database, id_util};
 use daoyi_macros::transactional;
 use sea_orm::sqlx::types::chrono::Local;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryFilter, QueryOrder,
-    QueryTrait, Set,
+    ActiveModelTrait, ColumnTrait, PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Set,
 };
 
 async fn gen_filename(path: Option<&str>, name: &str) -> ApiResult<String> {
