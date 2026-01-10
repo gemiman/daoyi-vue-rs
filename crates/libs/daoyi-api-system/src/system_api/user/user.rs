@@ -4,7 +4,7 @@ use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::request::valid::ValidQuery;
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
-use daoyi_common_support::vo::system_vo::{UserPageReqVO, UserRespVO, UserSimpleRespVo};
+use daoyi_common_support::vo::system_vo::{IdParams, UserPageReqVO, UserRespVO, UserSimpleRespVo};
 use daoyi_entity_system::system_service::{system_dept_service, system_users_service};
 use std::collections::HashSet;
 
@@ -14,6 +14,18 @@ pub fn create_router() -> Router<AppState> {
         .route("/simple-list", axum::routing::get(get_simple_user_list))
         .route("/page", axum::routing::get(get_user_page))
         .route("/export-excel", axum::routing::get(get_user_page))
+        .route("/get", axum::routing::get(get_user))
+}
+
+#[debug_handler]
+async fn get_user(ValidQuery(IdParams { id }): ValidQuery<IdParams>) -> RestApiResult<UserRespVO> {
+    let user = system_users_service::get_by_id(&id).await?;
+    if let Some(dept_id) = user.dept_id.as_deref() {
+        // 拼接数据
+        let dept = system_dept_service::get_dept(dept_id).await?;
+        return ApiResponse::success(user.convert_vo(dept.map(|d| d.name)));
+    }
+    ApiResponse::success(user.convert_vo(None))
 }
 
 #[debug_handler]
