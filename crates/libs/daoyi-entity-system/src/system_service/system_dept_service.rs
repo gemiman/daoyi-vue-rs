@@ -173,3 +173,39 @@ pub async fn update_dept(vo: DeptUpdateReqVO) -> ApiResult<()> {
     active_model.update(&database::get_db_async().await).await?;
     Ok(())
 }
+
+async fn select_count_by_parent_id(pid: &str) -> ApiResult<u64> {
+    let db = database::get_db_async().await;
+    let i = SystemDept::find_perm_with_tenant()
+        .await
+        .filter(system_dept::Column::ParentId.eq(pid))
+        .count(&db)
+        .await?;
+    Ok(i)
+}
+
+pub async fn delete_dept(id: &str) -> ApiResult<()> {
+    // 校验是否存在
+    validate_dept_exists(id).await?;
+    // 校验是否有子部门
+    if select_count_by_parent_id(id).await? > 0 {
+        return Err(ApiError::biz("存在子部门，无法删除"));
+    }
+    // 删除部门
+    SystemDept::delete_logical_by_id(&database::get_db_async().await, id).await?;
+    Ok(())
+}
+
+pub async fn delete_dept_list(ids: &Vec<String>) -> ApiResult<()> {
+    for id in ids {
+        // 校验是否存在
+        validate_dept_exists(id).await?;
+        // 校验是否有子部门
+        if select_count_by_parent_id(id).await? > 0 {
+            return Err(ApiError::biz("存在子部门，无法删除"));
+        }
+    }
+    // 批量删除部门
+    SystemDept::batch_delete_logical_by_id(&database::get_db_async().await, ids).await?;
+    Ok(())
+}

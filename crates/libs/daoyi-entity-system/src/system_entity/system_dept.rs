@@ -36,7 +36,7 @@ impl From<DeptSaveReqVO> for ActiveModel {
             email: Set(value.email),
             leader_user_id: Set(value.leader_user_id),
             name: Set(value.name),
-            parent_id: Set(String::from(ID_ROOT)),
+            parent_id: Set(value.parent_id.unwrap_or(String::from(ID_ROOT))),
             phone: Set(value.phone),
             sort: Set(value.sort),
             status: Set(value.status),
