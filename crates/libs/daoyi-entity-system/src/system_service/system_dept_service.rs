@@ -209,3 +209,49 @@ pub async fn delete_dept_list(ids: &Vec<String>) -> ApiResult<()> {
     SystemDept::batch_delete_logical_by_id(&database::get_db_async().await, ids).await?;
     Ok(())
 }
+
+pub async fn get_child_dept_list(id: &str) -> ApiResult<Vec<system_dept::Model>> {
+    get_all_child_dept_list(vec![id]).await
+}
+
+pub async fn get_all_child_dept_list<I, S>(ids: I) -> ApiResult<Vec<system_dept::Model>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let mut children = vec![];
+    let mut parent_ids: Vec<String> = ids.into_iter().map(|s| s.as_ref().to_string()).collect();
+    loop {
+        // 查询当前层，所有的子部门
+        let dept_list = select_list_by_parent_id(&parent_ids).await?;
+        // 1. 如果没有子部门，则结束遍历
+        if dept_list.is_empty() {
+            break;
+        }
+        // 2. 如果有子部门，继续遍历
+        children.extend(dept_list.clone());
+        parent_ids = dept_list.iter().map(|dept| dept.id.clone()).collect();
+    }
+    Ok(children)
+}
+
+pub async fn select_list_by_parent_id<I, S>(parent_ids: I) -> ApiResult<Vec<system_dept::Model>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let parent_ids: Vec<String> = parent_ids
+        .into_iter()
+        .map(|s| s.as_ref().to_string())
+        .collect();
+    if parent_ids.is_empty() {
+        return Ok(vec![]);
+    }
+    let db = database::get_db_async().await;
+    let list = SystemDept::find_perm_with_tenant()
+        .await
+        .filter(system_dept::Column::ParentId.is_in(parent_ids))
+        .all(&db)
+        .await?;
+    Ok(list)
+}

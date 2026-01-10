@@ -4,6 +4,7 @@ use crate::models::pagination::PaginationParams;
 use crate::request::validation;
 use crate::serde::datetime_format;
 use crate::serde::de_comma_separated;
+use crate::serde::option_datetime_format;
 use crate::serde::option_vec_datetime_format;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
@@ -389,6 +390,67 @@ pub struct TenantIdParams {
 #[serde(rename_all = "camelCase")]
 pub struct TokenParams {
     pub token: String,
+}
+
+/// 管理后台 - 角色分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct UserPageReqVO {
+    /// 用户账号，模糊匹配
+    pub username: Option<String>,
+    /// 手机号码，模糊匹配
+    pub mobile: Option<String>,
+    /// 状态（0正常 1停用）展示状态，参见 CommonStatusEnum 枚举类
+    pub status: Option<CommonStatusEnum>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    /// 部门编号，同时筛选子部门
+    pub dept_id: Option<String>,
+    /// 角色编号
+    pub role_id: Option<String>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+
+/// UserRespVO，管理后台 - 用户信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct UserRespVO {
+    /// 用户头像
+    pub avatar: Option<String>,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 部门ID
+    pub dept_id: Option<String>,
+    /// 部门名称
+    pub dept_name: Option<String>,
+    /// 用户邮箱
+    pub email: Option<String>,
+    /// 用户编号
+    pub id: String,
+    /// 最后登录时间
+    #[serde(with = "option_datetime_format")]
+    pub login_date: Option<DateTime>,
+    /// 最后登录 IP
+    pub login_ip: Option<String>,
+    /// 手机号码
+    pub mobile: Option<String>,
+    /// 用户昵称
+    pub nickname: String,
+    /// 岗位编号数组
+    pub post_ids: Option<Vec<String>>,
+    /// 备注
+    pub remark: Option<String>,
+    /// 用户性别，参见 SexEnum 枚举类
+    pub sex: Option<SexEnum>,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 用户账号
+    pub username: String,
 }
 
 /// 管理后台 - 角色分页 Request VO

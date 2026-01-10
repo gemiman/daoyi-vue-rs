@@ -1,8 +1,10 @@
 use axum::{Router, debug_handler};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
+use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::request::valid::ValidQuery;
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
-use daoyi_common_support::vo::system_vo::UserSimpleRespVo;
+use daoyi_common_support::vo::system_vo::{UserPageReqVO, UserRespVO, UserSimpleRespVo};
 use daoyi_entity_system::system_service::{system_dept_service, system_users_service};
 use std::collections::HashSet;
 
@@ -10,6 +12,15 @@ pub fn create_router() -> Router<AppState> {
     Router::new()
         .route("/list-all-simple", axum::routing::get(get_simple_user_list))
         .route("/simple-list", axum::routing::get(get_simple_user_list))
+        .route("/page", axum::routing::get(get_user_page))
+        .route("/export-excel", axum::routing::get(get_user_page))
+}
+
+#[debug_handler]
+async fn get_user_page(
+    ValidQuery(params): ValidQuery<UserPageReqVO>,
+) -> RestApiResult<Page<UserRespVO>> {
+    ApiResponse::success(system_users_service::get_user_page(&params).await?)
 }
 
 #[debug_handler]
@@ -33,7 +44,7 @@ async fn get_simple_user_list() -> RestApiResult<Vec<UserSimpleRespVo>> {
                 .dept_id
                 .as_ref()
                 .and_then(|dept_id| dept_map.get(dept_id).map(|d| d.name.clone()));
-            u.convert_simple_list(dept_name)
+            u.convert_simple_vo(dept_name)
         })
         .collect();
     ApiResponse::success(list)

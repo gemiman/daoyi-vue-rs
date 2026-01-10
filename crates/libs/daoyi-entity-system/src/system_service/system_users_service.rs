@@ -2,13 +2,16 @@ use crate::system_entity::prelude::*;
 use crate::system_entity::system_users;
 use crate::system_service::{
     system_dept_service, system_post_service, system_tenant_service, system_user_post_service,
+    system_user_role_service,
 };
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::vo::system_vo::UserSaveReqVo;
-use sea_orm::Set;
+use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::vo::system_vo::{UserPageReqVO, UserRespVO, UserSaveReqVo};
 use sea_orm::entity::prelude::*;
+use sea_orm::{QueryOrder, QueryTrait, Set};
+use std::collections::HashSet;
 
 pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
     // 1.1 校验账户配合
@@ -176,4 +179,90 @@ pub async fn get_user_list_by_status(
         .all(&db)
         .await?;
     Ok(list)
+}
+
+async fn get_dept_condition(dept_id: Option<&str>) -> ApiResult<Option<Vec<String>>> {
+    if dept_id.is_none() {
+        return Ok(None);
+    }
+    let dept_id = String::from(dept_id.unwrap());
+    let mut dept_ids = system_dept_service::get_child_dept_list(&dept_id)
+        .await?
+        .into_iter()
+        .map(|dept| dept.id)
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    if !dept_ids.contains(&dept_id) {
+        dept_ids.push(dept_id); // 包括自身
+    }
+    Ok(Some(dept_ids))
+}
+
+pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<Page<UserRespVO>> {
+    let db = database::get_db_async().await;
+    // 获得用户分页列表
+    // 如果有角色编号，查询角色对应的用户编号
+    let user_ids = if let Some(role_id) = &params.role_id {
+        let user_ids = system_user_role_service::get_user_role_id_list_by_role_id(&role_id).await?;
+        Some(user_ids)
+    } else {
+        None
+    };
+    if let Some(user_ids) = &user_ids
+        && user_ids.is_empty()
+    {
+        return Ok(Page::empty(&params.pagination));
+    }
+    let dept_ids = get_dept_condition(params.dept_id.as_deref()).await?;
+    // 分页查询
+    let paginator = SystemUsers::find_perm_with_tenant()
+        .await
+        .apply_if(params.username.as_ref(), |query, username| {
+            query.filter(system_users::Column::Username.contains(username))
+        })
+        .apply_if(params.mobile.as_ref(), |query, mobile| {
+            query.filter(system_users::Column::Mobile.contains(mobile))
+        })
+        .apply_if(params.status, |query, status| {
+            query.filter(system_users::Column::Status.eq(status))
+        })
+        .apply_if(params.create_time.as_ref(), |query, create_time| {
+            query.filter(system_users::Column::CreateTime.between(create_time[0], create_time[1]))
+        })
+        .apply_if(dept_ids, |query, dept_ids| {
+            query.filter(system_users::Column::DeptId.is_in(dept_ids))
+        })
+        .apply_if(user_ids, |query, user_ids| {
+            query.filter(system_users::Column::Id.is_in(user_ids))
+        })
+        .order_by_desc(system_users::Column::CreateTime)
+        .order_by_desc(system_users::Column::Id)
+        .paginate(&db, params.pagination.page_size);
+    let total = paginator.num_items().await?;
+    let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
+    if list.is_empty() {
+        return Ok(Page::empty(&params.pagination));
+    }
+    let dept_ids = list
+        .iter()
+        .filter(|x| x.dept_id.is_some())
+        .map(|x| x.dept_id.as_deref().unwrap())
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect::<Vec<_>>();
+    let dept_map = system_dept_service::get_dept_map(dept_ids).await?;
+    let list = list
+        .into_iter()
+        .map(|u| {
+            let dept_name = u
+                .dept_id
+                .as_ref()
+                .and_then(|dept_id| dept_map.get(dept_id).map(|d| d.name.clone()));
+            u.convert_vo(dept_name)
+        })
+        .collect();
+    // 拼接数据
+    let page = Page::from_pagination(&params.pagination, total, list);
+    Ok(page)
 }

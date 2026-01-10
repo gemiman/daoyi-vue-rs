@@ -70,6 +70,21 @@ pub async fn get_user_role_id_list_by_user_id(user_id: &str) -> ApiResult<Vec<St
     Ok(list)
 }
 
+pub async fn get_user_role_id_list_by_role_id(role_id: &str) -> ApiResult<Vec<String>> {
+    let db = database::get_db_async().await;
+    let list = SystemUserRole::find_perm_with_tenant()
+        .await
+        .filter(system_user_role::Column::RoleId.eq(role_id))
+        .all(&db)
+        .await?
+        .into_iter()
+        .map(|item| item.user_id)
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
+    Ok(list)
+}
+
 pub async fn delete_list_by_role_id(role_id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
     SystemUserRole::update_many_auto()
