@@ -2,10 +2,10 @@ use crate::system_entity::prelude::*;
 use crate::system_entity::system_user_role;
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiResult;
+use daoyi_macros::transactional;
 use sea_orm::Set;
 use sea_orm::prelude::*;
 use std::collections::HashSet;
-use daoyi_macros::transactional;
 
 #[transactional]
 pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResult<()> {
@@ -68,4 +68,15 @@ pub async fn get_user_role_id_list_by_user_id(user_id: &str) -> ApiResult<Vec<St
         .into_iter()
         .collect();
     Ok(list)
+}
+
+pub async fn delete_list_by_role_id(role_id: &str) -> ApiResult<()> {
+    let db = database::get_db_async().await;
+    SystemUserRole::update_many_auto()
+        .await
+        .filter(system_user_role::Column::RoleId.eq(role_id))
+        .col_expr(system_user_role::Column::Deleted, Expr::value(true))
+        .exec(&db)
+        .await?;
+    Ok(())
 }

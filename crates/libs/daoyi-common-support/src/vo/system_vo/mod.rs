@@ -1,4 +1,4 @@
-use crate::enumeration::{CommonStatusEnum, MenuTypeEnum, SexEnum};
+use crate::enumeration::{CommonStatusEnum, DataScopeEnum, MenuTypeEnum, RoleTypeEnum, SexEnum};
 use crate::models::FlexibleInt;
 use crate::models::pagination::PaginationParams;
 use crate::request::validation;
@@ -55,23 +55,6 @@ impl From<&TenantSaveReqVo> for UserSaveReqVo {
             ..Default::default()
         }
     }
-}
-
-/// RoleSaveReqVO，管理后台 - 角色创建/更新 Request VO
-#[derive(Debug, Deserialize, Validate)]
-pub struct RoleSaveReqVo {
-    /// 角色标志
-    pub code: String,
-    /// 角色编号
-    pub id: Option<String>,
-    /// 角色名称
-    pub name: String,
-    /// 备注
-    pub remark: Option<String>,
-    /// 显示顺序
-    pub sort: i32,
-    /// 状态
-    pub status: CommonStatusEnum,
 }
 
 /// TenantSaveReqVO，管理后台 - 租户创建 Request VO
@@ -408,6 +391,52 @@ pub struct TokenParams {
     pub token: String,
 }
 
+/// 管理后台 - 角色分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct RolePageReqVO {
+    /// 角色名称，模糊匹配
+    pub name: Option<String>,
+    /// 状态（0正常 1停用）展示状态，参见 CommonStatusEnum 枚举类
+    pub status: Option<CommonStatusEnum>,
+    /// 角色标识，模糊匹配
+    pub code: Option<String>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+
+/// RoleRespVO，管理后台 - 角色信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RoleRespVO {
+    /// 角色标志
+    pub code: String,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 数据范围，参见 DataScopeEnum 枚举类
+    pub data_scope: DataScopeEnum,
+    /// 数据范围(指定部门数组)
+    pub data_scope_dept_ids: Vec<String>,
+    /// 角色编号
+    pub id: String,
+    /// 角色名称
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 角色类型，参见 RoleTypeEnum 枚举类
+    pub r#type: RoleTypeEnum,
+}
+
 #[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct TenantPackagePageReqVO {
@@ -594,4 +623,38 @@ pub struct PostSimpleRespVo {
     pub id: String,
     /// 岗位名称
     pub name: String,
+}
+
+/// RoleSaveReqVO，管理后台 - 角色创建/更新 Request VO
+#[derive(Debug, Deserialize, Validate)]
+pub struct RoleSaveReqVO {
+    /// 角色标志
+    #[validate(length(max = 100, message = "角色标志长度不能超过 100 个字符"))]
+    pub code: String,
+    /// 角色名称
+    #[validate(length(max = 30, message = "角色名称长度不能超过 30 个字符"))]
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: FlexibleInt<i32>,
+    /// 状态
+    pub status: CommonStatusEnum,
+}
+#[derive(Debug, Deserialize, Validate)]
+pub struct RoleUpdateReqVO {
+    /// 角色标志
+    #[validate(length(max = 100, message = "角色标志长度不能超过 100 个字符"))]
+    pub code: String,
+    /// 角色编号
+    pub id: String,
+    /// 角色名称
+    #[validate(length(max = 30, message = "角色名称长度不能超过 30 个字符"))]
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: FlexibleInt<i32>,
+    /// 状态
+    pub status: CommonStatusEnum,
 }

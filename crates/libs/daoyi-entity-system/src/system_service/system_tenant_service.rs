@@ -9,11 +9,12 @@ use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::enumeration::{CommonStatusEnum, ID_ROOT, RoleCodeEnum, RoleTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
+use daoyi_common_support::models::FlexibleInt;
 use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::utils::collectors;
 use daoyi_common_support::vo::system_vo::TenantPageReqVo;
 use daoyi_common_support::vo::system_vo::{
-    RoleSaveReqVo, TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo,
+    RoleSaveReqVO, TenantRespVO, TenantSaveReqVo, TenantUpdateReqVo,
 };
 use daoyi_common_support::{database, redis_utils};
 use daoyi_macros::transactional;
@@ -231,15 +232,16 @@ async fn is_tenant_disable() -> bool {
 #[transactional]
 async fn create_role(tenant_package: &system_tenant_package::Model) -> ApiResult<String> {
     // 创建角色
-    let req_vo = RoleSaveReqVo {
+    let req_vo = RoleSaveReqVO {
         code: String::from(RoleCodeEnum::TenantAdmin.code()),
-        id: None,
         name: String::from(RoleCodeEnum::TenantAdmin.name()),
         remark: Some(String::from("系统自动生成")),
-        sort: 0,
+        sort: FlexibleInt(0),
         status: CommonStatusEnum::Enable,
     };
-    let role_id = system_role_service::create_role(req_vo, Some(RoleTypeEnum::SYSTEM)).await?;
+    let role_id = system_role_service::create_role(req_vo, Some(RoleTypeEnum::SYSTEM))
+        .await?
+        .id;
     // 分配权限
     system_role_menu_service::assign_role_menu(&role_id, &tenant_package.menu_ids).await?;
     Ok(role_id)

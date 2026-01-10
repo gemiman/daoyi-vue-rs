@@ -3,9 +3,9 @@ use crate::system_entity::system_role_menu;
 use crate::system_service::{system_menu_service, system_role_service};
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiResult;
+use daoyi_macros::transactional;
 use sea_orm::prelude::*;
 use std::collections::HashSet;
-use daoyi_macros::transactional;
 
 #[transactional]
 pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResult<()> {
@@ -78,4 +78,15 @@ pub async fn get_role_menu_list_by_role_id(role_ids: &Vec<String>) -> ApiResult<
         .collect::<HashSet<_>>()
         .into_iter()
         .collect())
+}
+
+pub async fn delete_list_by_role_id(role_id: &str) -> ApiResult<()> {
+    let db = database::get_db_async().await;
+    SystemRoleMenu::update_many_auto()
+        .await
+        .filter(system_role_menu::Column::RoleId.eq(role_id))
+        .col_expr(system_role_menu::Column::Deleted, Expr::value(true))
+        .exec(&db)
+        .await?;
+    Ok(())
 }
