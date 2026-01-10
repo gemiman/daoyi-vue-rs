@@ -1,4 +1,5 @@
 use crate::enumeration::{CommonStatusEnum, MenuTypeEnum, SexEnum};
+use crate::models::FlexibleInt;
 use crate::models::pagination::PaginationParams;
 use crate::request::validation;
 use crate::serde::datetime_format;
@@ -517,4 +518,80 @@ pub struct UserSimpleRespVo {
     pub id: String,
     /// 用户昵称
     pub nickname: String,
+}
+
+/// 管理后台 - 岗位分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct PostPageReqVO {
+    /// 岗位名称，模糊匹配
+    pub name: Option<String>,
+    /// 状态（0正常 1停用）
+    pub status: Option<CommonStatusEnum>,
+    /// 岗位编码，模糊匹配
+    pub code: Option<String>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+/// PostRespVO，管理后台 - 岗位信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PostRespVo {
+    /// 岗位编码
+    pub code: String,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 岗位序号
+    pub id: String,
+    /// 岗位名称
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+}
+/// PostSaveReqVO，管理后台 - 岗位创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+pub struct PostSaveReqVO {
+    /// 岗位编码
+    #[validate(length(max = 64, message = "岗位名称长度不能超过 64 个字符"))]
+    pub code: String,
+    /// 岗位名称
+    #[validate(length(max = 50, message = "岗位名称长度不能超过 50 个字符"))]
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: FlexibleInt<i32>,
+    /// 状态
+    pub status: CommonStatusEnum,
+}
+#[derive(Debug, Validate, Deserialize)]
+pub struct PostUpdateReqVo {
+    /// 岗位编码
+    #[validate(length(max = 64, message = "岗位名称长度不能超过 64 个字符"))]
+    pub code: String,
+    /// 岗位编号
+    pub id: String,
+    /// 岗位名称
+    #[validate(length(max = 50, message = "岗位名称长度不能超过 50 个字符"))]
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: FlexibleInt<i32>,
+    /// 状态
+    pub status: CommonStatusEnum,
+}
+/// PostSimpleRespVO，管理后台 - 岗位信息的精简 Response VO
+#[derive(Debug, Serialize)]
+pub struct PostSimpleRespVo {
+    /// 岗位序号
+    pub id: String,
+    /// 岗位名称
+    pub name: String,
 }

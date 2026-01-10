@@ -1,9 +1,9 @@
+use crate::error::{ApiError, ApiResult};
+use sea_orm::prelude::Json;
 use serde::{Deserialize, Deserializer};
 use std::fmt::Display;
 use std::str::FromStr;
-use sea_orm::prelude::Json;
 use validator::Validate;
-use crate::error::{ApiError, ApiResult};
 
 pub fn de_comma_separated<'de, D, T>(deserializer: D) -> Result<Vec<T>, D::Error>
 where
@@ -18,7 +18,7 @@ where
 }
 #[derive(Deserialize)]
 #[serde(untagged)]
-enum StringOrNumber<T> {
+pub enum StringOrNumber<T> {
     String(String),
     Number(T),
 }
@@ -98,7 +98,6 @@ pub mod option_vec_datetime_format {
         }
     }
 }
-
 
 pub fn validate_and_parse<T>(config: &Json) -> ApiResult<T>
 where
