@@ -75,6 +75,15 @@ pub struct UserSaveReqVO {
     #[validate(length(min = 4, max = 16, message = "密码长度为4-16"))]
     pub password: String,
 }
+/// UserUpdatePasswordReqVO，管理后台 - 用户更新密码 Request VO
+#[derive(Debug, Validate, Deserialize)]
+pub struct UserUpdatePasswordReqVo {
+    /// 用户编号
+    pub id: String,
+    /// 密码
+    #[validate(length(min = 4, max = 16, message = "密码长度为4-16"))]
+    pub password: String,
+}
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
 pub struct UserUpdateReqVO {

@@ -5,7 +5,8 @@ use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
-    IdParams, UserPageReqVO, UserRespVO, UserSaveReqVO, UserSimpleRespVo, UserUpdateReqVO,
+    IdParams, UserPageReqVO, UserRespVO, UserSaveReqVO, UserSimpleRespVo, UserUpdatePasswordReqVo,
+    UserUpdateReqVO,
 };
 use daoyi_entity_system::system_service::{system_dept_service, system_users_service};
 use std::collections::HashSet;
@@ -19,6 +20,15 @@ pub fn create_router() -> Router<AppState> {
         .route("/get", axum::routing::get(get_user))
         .route("/create", axum::routing::post(create_user))
         .route("/update", axum::routing::put(update_user))
+        .route("/update-password", axum::routing::put(update_user_password))
+}
+
+#[debug_handler]
+async fn update_user_password(
+    ValidJson(vo): ValidJson<UserUpdatePasswordReqVo>,
+) -> RestApiResult<bool> {
+    system_users_service::update_user_password(vo).await?;
+    ApiResponse::success(true)
 }
 
 #[debug_handler]

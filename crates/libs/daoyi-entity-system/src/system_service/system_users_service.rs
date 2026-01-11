@@ -8,13 +8,26 @@ use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::password::hash_password;
 use daoyi_common_support::vo::system_vo::{
-    UserPageReqVO, UserRespVO, UserSaveReqVO, UserUpdateReqVO,
+    UserPageReqVO, UserRespVO, UserSaveReqVO, UserUpdatePasswordReqVo, UserUpdateReqVO,
 };
 use daoyi_macros::transactional;
 use sea_orm::entity::prelude::*;
-use sea_orm::{QueryOrder, QueryTrait, Set, Unchanged};
+use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set, Unchanged};
 use std::collections::HashSet;
+
+pub async fn update_user_password(vo: UserUpdatePasswordReqVo) -> ApiResult<()> {
+    // 1. 校验用户存在
+    let mut active_model = validate_user_exists(Some(&vo.id))
+        .await?
+        .unwrap()
+        .into_active_model();
+    // 2. 更新密码
+    active_model.password = Set(hash_password(&vo.password).await?);
+    active_model.update(&database::get_db_async().await).await?;
+    Ok(())
+}
 
 #[transactional]
 pub async fn update_user(vo: UserUpdateReqVO) -> ApiResult<()> {
