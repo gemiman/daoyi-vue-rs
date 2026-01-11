@@ -19,6 +19,19 @@ pub struct PermissionAssignRoleMenuReqVO {
     /// 角色编号
     pub role_id: String,
 }
+
+/// PermissionAssignRoleDataScopeReqVO，管理后台 - 赋予角色数据权限 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PermissionAssignRoleDataScopeReqVO {
+    /// 数据范围，参见 DataScopeEnum 枚举类
+    pub data_scope: DataScopeEnum,
+    /// 部门编号列表，只有范围类型为 DEPT_CUSTOM 时，该字段才需要
+    pub data_scope_dept_ids: Option<Vec<String>>,
+    /// 角色编号
+    pub role_id: String,
+}
+
 /// UserSaveReqVO，管理后台 - 用户创建/修改 Request VO
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]

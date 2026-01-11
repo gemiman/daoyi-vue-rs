@@ -3,14 +3,30 @@ use daoyi_common_support::app::AppState;
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
-use daoyi_common_support::vo::system_vo::{PermissionAssignRoleMenuReqVO, RoleIdParams};
-use daoyi_entity_system::system_service::{system_role_menu_service, system_tenant_service};
+use daoyi_common_support::vo::system_vo::{
+    PermissionAssignRoleDataScopeReqVO, PermissionAssignRoleMenuReqVO, RoleIdParams,
+};
+use daoyi_entity_system::system_service::{
+    system_role_menu_service, system_role_service, system_tenant_service,
+};
 use std::sync::{Arc, Mutex};
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
         .route("/list-role-menus", routing::get(get_role_menu_list))
         .route("/assign-role-menu", routing::post(assign_role_menu))
+        .route(
+            "/assign-role-data-scope",
+            routing::post(assign_role_data_scope),
+        )
+}
+
+#[debug_handler]
+async fn assign_role_data_scope(
+    ValidJson(vo): ValidJson<PermissionAssignRoleDataScopeReqVO>,
+) -> RestApiResult<bool> {
+    system_role_service::update_role_data_scope(vo).await?;
+    ApiResponse::success(true)
 }
 
 #[debug_handler]

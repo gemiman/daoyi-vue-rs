@@ -264,7 +264,7 @@ CREATE TABLE system.system_role
     code                varchar(100) NOT NULL,
     sort                int4         NOT NULL,
     data_scope          varchar(1)   NOT NULL DEFAULT '1',
-    data_scope_dept_ids varchar(1)[] NOT NULL DEFAULT '{}',
+    data_scope_dept_ids varchar(32)[] NOT NULL DEFAULT '{}',
     status              varchar(1)   NOT NULL,
     type                varchar(1)   NOT NULL,
     remark              varchar(500) NULL     DEFAULT NULL,

@@ -7,12 +7,14 @@ use daoyi_common_support::enumeration::{
 };
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::vo::system_vo::{RolePageReqVO, RoleSaveReqVO, RoleUpdateReqVO};
+use daoyi_common_support::vo::system_vo::{
+    PermissionAssignRoleDataScopeReqVO, RolePageReqVO, RoleSaveReqVO, RoleUpdateReqVO,
+};
 use daoyi_common_support::{database, redis_utils};
 use daoyi_macros::transactional;
 use futures::future::try_join_all;
 use sea_orm::prelude::*;
-use sea_orm::{QueryOrder, QueryTrait, Set};
+use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set};
 
 #[transactional]
 pub async fn create_role(
@@ -41,13 +43,13 @@ pub async fn update_role(vo: RoleUpdateReqVO) -> ApiResult<()> {
     Ok(())
 }
 
-async fn validate_role_for_update(id: &str) -> ApiResult<()> {
+async fn validate_role_for_update(id: &str) -> ApiResult<system_role::Model> {
     let model = get_role_by_id(id).await?;
     // 内置角色，不允许删除
     if RoleTypeEnum::SYSTEM == model.r#type {
         return Err(ApiError::biz("不能操作类型为系统内置的角色"));
     }
-    Ok(())
+    Ok(model)
 }
 
 async fn validate_role_duplicate(name: &str, code: &str, id: Option<&str>) -> ApiResult<()> {
@@ -211,5 +213,17 @@ pub async fn delete_role_list(ids: &Vec<String>) -> ApiResult<()> {
     SystemRole::batch_delete_logical_by_id(&db, ids).await?;
     // 2.2 删除相关数据
     try_join_all(ids.iter().map(|id| process_role_deleted(id))).await?;
+    Ok(())
+}
+
+pub async fn update_role_data_scope(vo: PermissionAssignRoleDataScopeReqVO) -> ApiResult<()> {
+    // 校验是否可以更新
+    let mut active_model = validate_role_for_update(&vo.role_id)
+        .await?
+        .into_active_model();
+    // 更新数据范围
+    active_model.data_scope = Set(vo.data_scope);
+    active_model.data_scope_dept_ids = Set(vo.data_scope_dept_ids.unwrap_or_default());
+    active_model.update(&database::get_db_async().await).await?;
     Ok(())
 }
