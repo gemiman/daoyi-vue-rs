@@ -1,5 +1,6 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_user_role;
+use crate::system_service::system_users_service;
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiResult;
 use daoyi_macros::transactional;
@@ -9,6 +10,9 @@ use std::collections::HashSet;
 
 #[transactional]
 pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResult<()> {
+    // 0. 校验 User 是否存在且属于当前租户
+    system_users_service::get_by_id(user_id).await?;
+
     let db = database::get_db_async().await;
 
     // 1. 获得用户拥有的角色编号

@@ -1,15 +1,15 @@
 use crate::configs::AppConfig;
 use anyhow::{Context, anyhow};
 use sea_orm::{
-    ConnectOptions, ConnectionTrait, Database, DatabaseConnection, DbBackend, Statement,
-    DatabaseTransaction, TransactionTrait, DbErr, ExecResult, QueryResult, TransactionError
+    ConnectOptions, ConnectionTrait, Database, DatabaseConnection, DatabaseTransaction, DbBackend,
+    DbErr, ExecResult, QueryResult, Statement, TransactionError, TransactionTrait,
 };
 use std::cmp::max;
+use std::future::Future;
+use std::pin::Pin;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::sync::OnceCell;
-use std::sync::Arc;
-use std::pin::Pin;
-use std::future::Future;
 
 static DB_CONN: OnceCell<DatabaseConnection> = OnceCell::const_new();
 
@@ -64,7 +64,7 @@ impl ConnectionTrait for DbGuard {
 
 impl DbGuard {
     pub async fn begin(&self) -> Result<DatabaseTransaction, DbErr> {
-         match self {
+        match self {
             DbGuard::Global(db) => db.begin().await,
             DbGuard::Tx(tx) => tx.begin().await,
         }
@@ -72,11 +72,14 @@ impl DbGuard {
 
     pub async fn transaction<F, T, E>(&self, callback: F) -> Result<T, E>
     where
-        F: for<'c> FnOnce(&'c DatabaseTransaction) -> Pin<Box<dyn Future<Output = Result<T, E>> + Send + 'c>> + Send,
+        F: for<'c> FnOnce(
+                &'c DatabaseTransaction,
+            ) -> Pin<Box<dyn Future<Output = Result<T, E>> + Send + 'c>>
+            + Send,
         T: Send,
         E: From<DbErr> + std::fmt::Display + std::fmt::Debug + Send,
     {
-         let res = match self {
+        let res = match self {
             DbGuard::Global(db) => db.transaction(callback).await,
             DbGuard::Tx(tx) => tx.transaction(callback).await,
         };
@@ -110,35 +113,27 @@ where
         return func.await;
     }
 
-    let db = get().await;
+    let db = get();
     let txn = db.begin().await?;
     let txn_arc = Arc::new(txn);
 
     let result = TX_CONTEXT.scope(txn_arc.clone(), func).await;
 
     match result {
-        Ok(v) => {
-            match Arc::try_unwrap(txn_arc) {
-                Ok(txn) => {
-                    txn.commit().await.map_err(Into::into)?;
-                    Ok(v)
-                }
-                Err(_) => {
-                     Err(DbErr::Custom("Transaction reference leak: cannot commit".into()).into())
-                }
+        Ok(v) => match Arc::try_unwrap(txn_arc) {
+            Ok(txn) => {
+                txn.commit().await.map_err(Into::into)?;
+                Ok(v)
             }
+            Err(_) => Err(DbErr::Custom("Transaction reference leak: cannot commit".into()).into()),
         },
-        Err(e) => {
-            match Arc::try_unwrap(txn_arc) {
-                Ok(txn) => {
-                     txn.rollback().await.map_err(Into::into)?;
-                     Err(e)
-                },
-                Err(_) => {
-                    Err(e)
-                }
+        Err(e) => match Arc::try_unwrap(txn_arc) {
+            Ok(txn) => {
+                txn.rollback().await.map_err(Into::into)?;
+                Err(e)
             }
-        }
+            Err(_) => Err(e),
+        },
     }
 }
 
@@ -171,7 +166,7 @@ pub async fn init_db() -> anyhow::Result<()> {
         .with_context(|| anyhow!("Failed to set database config"))?;
     Ok(())
 }
-async fn get() -> &'static DatabaseConnection {
+fn get() -> &'static DatabaseConnection {
     DB_CONN
         .get()
         .unwrap_or_else(|| panic!("Failed to load database config"))

@@ -9,6 +9,9 @@ use std::collections::HashSet;
 
 #[transactional]
 pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResult<()> {
+    // 0. 校验 Role 是否存在且属于当前租户
+    system_role_service::get_role_by_id(role_id).await?;
+
     let db = database::get_db_async().await;
 
     // 1. 获得角色拥有的菜单编号
