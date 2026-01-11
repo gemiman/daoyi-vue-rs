@@ -251,7 +251,7 @@ async fn valid_tenant_website_duplicate(
     websites: &Option<Vec<String>>,
     id: Option<&str>,
 ) -> ApiResult<()> {
-    if websites.is_none() || websites.as_ref().unwrap().is_empty() {
+    if websites.as_ref().map_or(true, |w| w.is_empty()) {
         return Ok(());
     }
     let websites = websites.as_ref().unwrap();

@@ -3,8 +3,8 @@ use crate::error::ApiResult;
 use crate::id_util;
 use deadpool_redis::redis::{AsyncCommands, FromRedisValue, ToRedisArgs};
 use deadpool_redis::{Config, Connection, Pool, Runtime};
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use tokio::sync::OnceCell;
 
 static REDIS: OnceCell<Pool> = OnceCell::const_new();
@@ -29,7 +29,9 @@ async fn init() -> anyhow::Result<Pool> {
 
     // 测试连接
     let mut conn = pool.get().await?;
-    let _: () = conn.set(CONNECTION_TEST_KEY, id_util::next_string()).await?;
+    let _: () = conn
+        .set(CONNECTION_TEST_KEY, id_util::next_string())
+        .await?;
     let val: String = conn.get(CONNECTION_TEST_KEY).await?;
 
     tracing::info!("Redis connected successfully, {CONNECTION_TEST_KEY} = {val}");
@@ -74,11 +76,11 @@ where
     V: DeserializeOwned,
 {
     let json_str = get::<Option<String>>(key_generator(key).as_str()).await?;
-    if json_str.is_none() {
-        return Ok(None);
+    if let Some(json_str) = json_str {
+        Ok(serde_json::from_str(json_str.as_ref())?)
+    } else {
+        Ok(None)
     }
-    let json_str = json_str.unwrap();
-    Ok(serde_json::from_str(json_str.as_ref())?)
 }
 
 pub async fn cache_set_json<V>(key: &str, value: &V) -> ApiResult<()>

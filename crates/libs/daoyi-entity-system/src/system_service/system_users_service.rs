@@ -131,14 +131,15 @@ async fn validate_email_unique(id: Option<&str>, email: Option<&str>) -> ApiResu
         .filter(system_users::Column::Email.eq(mobile))
         .one(&db)
         .await?;
-    if option.is_none() {
-        return Ok(());
-    }
-    if id.is_none() {
-        return Err(ApiError::biz("邮箱已经存在"));
-    }
-    if option.unwrap().id != id.unwrap() {
-        return Err(ApiError::biz("邮箱已经存在"));
+
+    if let Some(user) = option {
+        if let Some(id_val) = id {
+            if user.id != id_val {
+                return Err(ApiError::biz("邮箱已经存在"));
+            }
+        } else {
+            return Err(ApiError::biz("邮箱已经存在"));
+        }
     }
     Ok(())
 }
@@ -154,14 +155,15 @@ async fn validate_mobile_unique(id: Option<&str>, mobile: Option<&str>) -> ApiRe
         .filter(system_users::Column::Mobile.eq(mobile))
         .one(&db)
         .await?;
-    if option.is_none() {
-        return Ok(());
-    }
-    if id.is_none() {
-        return Err(ApiError::biz("手机号已经存在"));
-    }
-    if option.unwrap().id != id.unwrap() {
-        return Err(ApiError::biz("手机号已经存在"));
+
+    if let Some(user) = option {
+        if let Some(id_val) = id {
+            if user.id != id_val {
+                return Err(ApiError::biz("手机号已经存在"));
+            }
+        } else {
+            return Err(ApiError::biz("手机号已经存在"));
+        }
     }
     Ok(())
 }
@@ -173,14 +175,15 @@ async fn validate_username_unique(id: Option<&str>, username: &str) -> ApiResult
         .filter(system_users::Column::Username.eq(username))
         .one(&db)
         .await?;
-    if option.is_none() {
-        return Ok(());
-    }
-    if id.is_none() {
-        return Err(ApiError::biz("用户账号已经存在"));
-    }
-    if option.unwrap().id != id.unwrap() {
-        return Err(ApiError::biz("用户账号已经存在"));
+
+    if let Some(user) = option {
+        if let Some(id_val) = id {
+            if user.id != id_val {
+                return Err(ApiError::biz("用户账号已经存在"));
+            }
+        } else {
+            return Err(ApiError::biz("用户账号已经存在"));
+        }
     }
     Ok(())
 }

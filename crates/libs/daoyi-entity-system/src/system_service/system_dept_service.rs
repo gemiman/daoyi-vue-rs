@@ -122,11 +122,13 @@ async fn validate_dept_name_unique(
         .filter(system_dept::Column::Id.eq(parent_id.unwrap_or(ID_ROOT)))
         .one(&db)
         .await?;
-    if dept.is_none() {
-        return Ok(());
-    }
+
     if let Some(dept) = dept {
-        if id.is_none() || id.unwrap() != dept.id {
+        if let Some(id_val) = id {
+            if id_val != dept.id {
+                return Err(ApiError::biz("已经存在该名字的部门"));
+            }
+        } else {
             return Err(ApiError::biz("已经存在该名字的部门"));
         }
     }

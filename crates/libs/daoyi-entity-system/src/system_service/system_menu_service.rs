@@ -163,7 +163,9 @@ pub async fn get_menu_list_by_tenant(
     let menus_clone = Arc::clone(&menus_arc);
 
     system_tenant_service::handle_tenant_menu_async(move |menu_ids| async move {
-        let mut menus = menus_clone.lock().unwrap();
+        let mut menus = menus_clone
+            .lock()
+            .map_err(|_| ApiError::biz("获取互斥锁失败"))?;
         menus.retain(|m| menu_ids.contains(&m.id));
         Ok(())
     })

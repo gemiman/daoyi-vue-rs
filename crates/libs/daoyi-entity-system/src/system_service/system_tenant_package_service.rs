@@ -103,11 +103,13 @@ async fn validate_tenant_package_name_unique(id: Option<&str>, name: &str) -> Ap
         .filter(system_tenant_package::Column::Name.eq(name))
         .one(&db)
         .await?;
-    if model.is_some() {
-        if id.is_none() {
-            return Err(ApiError::biz("已经存在该名字的租户套餐"));
-        }
-        if model.unwrap().id != id.unwrap() {
+
+    if let Some(model) = model {
+        if let Some(id_val) = id {
+            if model.id != id_val {
+                return Err(ApiError::biz("已经存在该名字的租户套餐"));
+            }
+        } else {
             return Err(ApiError::biz("已经存在该名字的租户套餐"));
         }
     }

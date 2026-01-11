@@ -154,8 +154,12 @@ pub struct S3FileClient {
 
 impl S3FileClient {
     pub fn new(config: S3FileClientConfig) -> Self {
-        let region =
-            aws_config::Region::new(config.region.clone().unwrap_or("hangzhou".to_string()));
+        let region = aws_config::Region::new(
+            config
+                .region
+                .clone()
+                .unwrap_or_else(|| "hangzhou".to_string()),
+        );
         let credentials = aws_credential_types::Credentials::new(
             config.access_key.clone(),
             config.access_secret.clone(),
