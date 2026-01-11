@@ -8,10 +8,37 @@ use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::vo::system_vo::{UserPageReqVO, UserRespVO, UserSaveReqVO};
+use daoyi_common_support::vo::system_vo::{
+    UserPageReqVO, UserRespVO, UserSaveReqVO, UserUpdateReqVO,
+};
+use daoyi_macros::transactional;
 use sea_orm::entity::prelude::*;
-use sea_orm::{QueryOrder, QueryTrait, Set};
+use sea_orm::{QueryOrder, QueryTrait, Set, Unchanged};
 use std::collections::HashSet;
+
+#[transactional]
+pub async fn update_user(vo: UserUpdateReqVO) -> ApiResult<()> {
+    // 1. 校验正确性
+    let old_user = validate_user_for_create_or_update(
+        Some(&vo.id),
+        &vo.username,
+        vo.mobile.as_deref(),
+        vo.email.as_deref(),
+        vo.dept_id.as_deref(),
+        vo.post_ids.as_ref(),
+    )
+    .await?
+    .unwrap();
+    // 2.1 更新用户
+    let mut active_model: system_users::ActiveModel = vo.into();
+    active_model.password = Unchanged(old_user.password);
+    let db = database::get_db_async().await;
+    let model = active_model.update(&db).await?;
+    // 2.2 更新岗位
+    let post_ids = &model.post_ids.unwrap_or_default();
+    system_user_post_service::save_batch(&model.id, post_ids).await?;
+    Ok(())
+}
 
 pub async fn create_user(req_vo: UserSaveReqVO) -> ApiResult<system_users::Model> {
     // 1.1 校验账户配合

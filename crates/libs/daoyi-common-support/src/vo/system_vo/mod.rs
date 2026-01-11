@@ -105,9 +105,6 @@ pub struct UserUpdateReqVO {
     pub sex: Option<SexEnum>,
     /// 用户头像
     pub avatar: Option<String>,
-    /// 密码
-    #[validate(length(min = 4, max = 16, message = "密码长度为4-16"))]
-    pub password: String,
 }
 
 impl From<&TenantSaveReqVo> for UserSaveReqVO {

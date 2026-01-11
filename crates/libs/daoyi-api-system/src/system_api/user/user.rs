@@ -5,7 +5,7 @@ use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
-    IdParams, UserPageReqVO, UserRespVO, UserSaveReqVO, UserSimpleRespVo,
+    IdParams, UserPageReqVO, UserRespVO, UserSaveReqVO, UserSimpleRespVo, UserUpdateReqVO,
 };
 use daoyi_entity_system::system_service::{system_dept_service, system_users_service};
 use std::collections::HashSet;
@@ -18,6 +18,13 @@ pub fn create_router() -> Router<AppState> {
         .route("/export-excel", axum::routing::get(get_user_page))
         .route("/get", axum::routing::get(get_user))
         .route("/create", axum::routing::post(create_user))
+        .route("/update", axum::routing::put(update_user))
+}
+
+#[debug_handler]
+async fn update_user(ValidJson(vo): ValidJson<UserUpdateReqVO>) -> RestApiResult<bool> {
+    system_users_service::update_user(vo).await?;
+    ApiResponse::success(true)
 }
 
 #[debug_handler]

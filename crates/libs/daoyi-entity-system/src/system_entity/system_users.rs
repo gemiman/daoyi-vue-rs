@@ -67,7 +67,6 @@ impl From<UserUpdateReqVO> for ActiveModel {
             mobile: Set(value.mobile),
             sex: Set(value.sex),
             avatar: Set(value.avatar),
-            password: Set(value.password),
             ..Default::default()
         }
     }
