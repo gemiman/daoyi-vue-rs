@@ -170,7 +170,7 @@ pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Mode
 #[transactional]
 async fn create_user(role_id: &str, req_vo: &TenantSaveReqVo) -> ApiResult<String> {
     // 创建用户
-    let user_id = system_users_service::create_user(req_vo.into()).await?;
+    let user_id = system_users_service::create_user(req_vo.into()).await?.id;
     // 分配角色
     system_user_role_service::assign_user_role(&user_id, &vec![String::from(role_id)]).await?;
     Ok(user_id)

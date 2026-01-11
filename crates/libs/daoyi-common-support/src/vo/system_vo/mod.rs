@@ -10,6 +10,16 @@ use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+/// PermissionAssignUserRoleReqVO，管理后台 - 赋予用户角色 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PermissionAssignUserRoleReqVO {
+    /// 角色编号列表
+    pub role_ids: Option<Vec<String>>,
+    /// 用户编号
+    pub user_id: String,
+}
+
 /// PermissionAssignRoleMenuReqVO，管理后台 - 赋予角色菜单 Request VO
 #[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -35,9 +45,41 @@ pub struct PermissionAssignRoleDataScopeReqVO {
 /// UserSaveReqVO，管理后台 - 用户创建/修改 Request VO
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
-pub struct UserSaveReqVo {
+pub struct UserSaveReqVO {
+    /// 用户账号
+    #[validate(
+        length(min = 4, max = 16, message = "账号长度为4-16"),
+        custom(function = "validation::is_valid_username")
+    )]
+    pub username: String,
+    /// 用户昵称
+    #[validate(length(max = 30, message = "用户昵称长度不能超过30个字符"))]
+    pub nickname: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 部门编号
+    pub dept_id: Option<String>,
+    /// 岗位编号数组
+    pub post_ids: Option<Vec<String>>,
+    /// 用户邮箱
+    #[validate(email(message = "邮箱格式不正确"))]
+    pub email: Option<String>,
+    /// 手机号码
+    #[validate(custom(function = "validation::is_mobile_phone"))]
+    pub mobile: Option<String>,
+    /// 用户性别，参见 SexEnum 枚举类
+    pub sex: Option<SexEnum>,
+    /// 用户头像
+    pub avatar: Option<String>,
+    /// 密码
+    #[validate(length(min = 4, max = 16, message = "密码长度为4-16"))]
+    pub password: String,
+}
+#[derive(Debug, Deserialize, Validate, Default)]
+#[serde(rename_all = "camelCase")]
+pub struct UserUpdateReqVO {
     /// 用户编号
-    pub id: Option<String>,
+    pub id: String,
     /// 用户账号
     #[validate(
         length(min = 4, max = 16, message = "账号长度为4-16"),
@@ -68,7 +110,7 @@ pub struct UserSaveReqVo {
     pub password: String,
 }
 
-impl From<&TenantSaveReqVo> for UserSaveReqVo {
+impl From<&TenantSaveReqVo> for UserSaveReqVO {
     fn from(value: &TenantSaveReqVo) -> Self {
         Self {
             username: value.username.clone(),
@@ -400,6 +442,12 @@ pub struct NameParams {
 #[serde(rename_all = "camelCase")]
 pub struct WebsiteParams {
     pub website: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct UserIdParams {
+    pub user_id: String,
 }
 
 #[derive(Debug, Deserialize, Validate)]

@@ -2,9 +2,11 @@ use axum::{Router, debug_handler};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::request::valid::ValidQuery;
+use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
-use daoyi_common_support::vo::system_vo::{IdParams, UserPageReqVO, UserRespVO, UserSimpleRespVo};
+use daoyi_common_support::vo::system_vo::{
+    IdParams, UserPageReqVO, UserRespVO, UserSaveReqVO, UserSimpleRespVo,
+};
 use daoyi_entity_system::system_service::{system_dept_service, system_users_service};
 use std::collections::HashSet;
 
@@ -15,6 +17,12 @@ pub fn create_router() -> Router<AppState> {
         .route("/page", axum::routing::get(get_user_page))
         .route("/export-excel", axum::routing::get(get_user_page))
         .route("/get", axum::routing::get(get_user))
+        .route("/create", axum::routing::post(create_user))
+}
+
+#[debug_handler]
+async fn create_user(ValidJson(vo): ValidJson<UserSaveReqVO>) -> RestApiResult<String> {
+    ApiResponse::success(system_users_service::create_user(vo).await?.id)
 }
 
 #[debug_handler]

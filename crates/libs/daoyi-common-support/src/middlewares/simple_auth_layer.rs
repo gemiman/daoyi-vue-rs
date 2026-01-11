@@ -60,6 +60,7 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             if let Some(token) = token {
                 let token_info = auth::check_token(token).await?;
                 token_tenant_id = Some(token_info.tenant_id);
+                context.tenant_id = token_tenant_id.clone();
                 context.token = Some(String::from(token));
                 context.login_id = Some(String::from(token_info.user_id));
             };
@@ -76,7 +77,9 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                 // Tenant 为空，返回错误信息
                 return Err(ApiError::unauthenticated("No Tenant header").into_response());
             }
-            if let Some(tenant_id) = tenant_id {
+            if let Some(tenant_id) = tenant_id
+                && !is_ignored_tenant
+            {
                 if let Some(token_tenant_id) = token_tenant_id {
                     if token_tenant_id != tenant_id {
                         return Err(

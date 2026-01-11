@@ -4,10 +4,11 @@ use daoyi_common_support::error::ApiError;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
-    PermissionAssignRoleDataScopeReqVO, PermissionAssignRoleMenuReqVO, RoleIdParams,
+    PermissionAssignRoleDataScopeReqVO, PermissionAssignRoleMenuReqVO,
+    PermissionAssignUserRoleReqVO, RoleIdParams, UserIdParams,
 };
 use daoyi_entity_system::system_service::{
-    system_role_menu_service, system_role_service, system_tenant_service,
+    system_role_menu_service, system_role_service, system_tenant_service, system_user_role_service,
 };
 use std::sync::{Arc, Mutex};
 
@@ -19,6 +20,28 @@ pub fn create_router() -> Router<AppState> {
             "/assign-role-data-scope",
             routing::post(assign_role_data_scope),
         )
+        .route("/list-user-roles", routing::get(list_admin_roles))
+        .route("/assign-user-role", routing::post(assign_user_role))
+}
+
+/// 赋予用户角色
+#[debug_handler]
+async fn assign_user_role(
+    ValidJson(vo): ValidJson<PermissionAssignUserRoleReqVO>,
+) -> RestApiResult<bool> {
+    system_user_role_service::assign_user_role(&vo.user_id, &vo.role_ids.unwrap_or_default())
+        .await?;
+    ApiResponse::success(true)
+}
+
+/// 获得管理员拥有的角色编号列表
+#[debug_handler]
+async fn list_admin_roles(
+    ValidQuery(UserIdParams { user_id }): ValidQuery<UserIdParams>,
+) -> RestApiResult<Vec<String>> {
+    ApiResponse::success(
+        system_user_role_service::get_user_role_id_list_by_user_id(&user_id).await?,
+    )
 }
 
 #[debug_handler]

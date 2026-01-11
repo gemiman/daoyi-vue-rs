@@ -8,12 +8,12 @@ use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::Page;
-use daoyi_common_support::vo::system_vo::{UserPageReqVO, UserRespVO, UserSaveReqVo};
+use daoyi_common_support::vo::system_vo::{UserPageReqVO, UserRespVO, UserSaveReqVO};
 use sea_orm::entity::prelude::*;
 use sea_orm::{QueryOrder, QueryTrait, Set};
 use std::collections::HashSet;
 
-pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
+pub async fn create_user(req_vo: UserSaveReqVO) -> ApiResult<system_users::Model> {
     // 1.1 校验账户配合
     system_tenant_service::handle_tenant_info_async(async |tenant| {
         let db = database::get_db_async().await;
@@ -46,12 +46,12 @@ pub async fn create_user(req_vo: UserSaveReqVo) -> ApiResult<String> {
     active_model.status = Set(CommonStatusEnum::Enable);
     let model = active_model.insert(&db).await?;
     // 2.2 插入关联岗位
-    if let Some(post_ids) = model.post_ids
+    if let Some(post_ids) = &model.post_ids
         && !post_ids.is_empty()
     {
-        system_user_post_service::save_batch(&model.id, &post_ids).await?;
+        system_user_post_service::save_batch(&model.id, post_ids).await?;
     }
-    Ok(model.id)
+    Ok(model)
 }
 async fn validate_user_for_create_or_update(
     id: Option<&str>,
