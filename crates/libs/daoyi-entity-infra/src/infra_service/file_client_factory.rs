@@ -13,6 +13,7 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use std::io::Write;
 use std::net::TcpStream;
 use std::path::Path;
+use std::sync::Arc;
 use tokio::io::AsyncWriteExt;
 
 #[async_trait::async_trait]
@@ -259,18 +260,20 @@ impl FileClient for S3FileClient {
 // ================== FTP File Client ==================
 
 pub struct FtpFileClient {
-    config: FtpFileClientConfig,
+    config: Arc<FtpFileClientConfig>,
 }
 
 impl FtpFileClient {
     pub fn new(config: FtpFileClientConfig) -> Self {
-        Self { config }
+        Self {
+            config: Arc::new(config),
+        }
     }
 
     // Helper to run sync FTP operations
     async fn run_sync<F, R>(&self, f: F) -> ApiResult<R>
     where
-        F: FnOnce(&mut suppaftp::FtpStream) -> ApiResult<R> + Send + 'static,
+        F: FnOnce(&mut suppaftp::FtpStream, &FtpFileClientConfig) -> ApiResult<R> + Send + 'static,
         R: Send + 'static,
     {
         let config = self.config.clone(); // Clone for the thread
@@ -281,7 +284,7 @@ impl FtpFileClient {
             ftp.login(&config.username, &config.password)
                 .map_err(|e| ApiError::biz(format!("FTP 登录失败: {}", e)))?;
 
-            f(&mut ftp)
+            f(&mut ftp, &config)
         })
         .await
         .map_err(|e| ApiError::biz(format!("FTP 任务执行错误: {}", e)))?
@@ -293,10 +296,10 @@ impl FileClient for FtpFileClient {
     async fn upload(&self, content: &[u8], path: &str, _content_type: &str) -> ApiResult<String> {
         let content = content.to_vec();
         let path_str = path.to_string();
-        let base_path = self.config.base_path.clone();
 
         let path_clone = path_str.clone();
-        self.run_sync(move |ftp| {
+        self.run_sync(move |ftp, config| {
+            let base_path = &config.base_path;
             let full_path = format!("{}/{}", base_path.trim_end_matches('/'), path_clone);
             if let Some(parent) = Path::new(&full_path).parent() {
                 let parent_str = parent.to_string_lossy();
@@ -314,8 +317,8 @@ impl FileClient for FtpFileClient {
 
     async fn delete(&self, path: &str) -> ApiResult<()> {
         let path = path.to_string();
-        let base_path = self.config.base_path.clone();
-        self.run_sync(move |ftp| {
+        self.run_sync(move |ftp, config| {
+            let base_path = &config.base_path;
             let full_path = format!("{}/{}", base_path.trim_end_matches('/'), path);
             ftp.rm(&full_path)
                 .map_err(|e| ApiError::biz(format!("FTP 删除失败: {}", e)))?;
@@ -326,8 +329,8 @@ impl FileClient for FtpFileClient {
 
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>> {
         let path = path.to_string();
-        let base_path = self.config.base_path.clone();
-        self.run_sync(move |ftp| {
+        self.run_sync(move |ftp, config| {
+            let base_path = &config.base_path;
             let full_path = format!("{}/{}", base_path.trim_end_matches('/'), path);
             let bytes = ftp
                 .retr_as_buffer(&full_path)
@@ -342,17 +345,19 @@ impl FileClient for FtpFileClient {
 // ================== SFTP File Client ==================
 
 pub struct SftpFileClient {
-    config: SftpFileClientConfig,
+    config: Arc<SftpFileClientConfig>,
 }
 
 impl SftpFileClient {
     pub fn new(config: SftpFileClientConfig) -> Self {
-        Self { config }
+        Self {
+            config: Arc::new(config),
+        }
     }
 
     async fn run_sync<F, R>(&self, f: F) -> ApiResult<R>
     where
-        F: FnOnce(&ssh2::Session, &ssh2::Sftp) -> ApiResult<R> + Send + 'static,
+        F: FnOnce(&ssh2::Session, &ssh2::Sftp, &SftpFileClientConfig) -> ApiResult<R> + Send + 'static,
         R: Send + 'static,
     {
         let config = self.config.clone();
@@ -373,7 +378,7 @@ impl SftpFileClient {
                 .sftp()
                 .map_err(|e| ApiError::biz(format!("SFTP 初始化失败: {}", e)))?;
 
-            f(&sess, &sftp)
+            f(&sess, &sftp, &config)
         })
         .await
         .map_err(|e| ApiError::biz(format!("SFTP 任务执行错误: {}", e)))?
@@ -385,10 +390,10 @@ impl FileClient for SftpFileClient {
     async fn upload(&self, content: &[u8], path: &str, _content_type: &str) -> ApiResult<String> {
         let content = content.to_vec();
         let path_str = path.to_string();
-        let base_path = self.config.base_path.clone();
 
         let path_clone = path_str.clone();
-        self.run_sync(move |_sess, sftp| {
+        self.run_sync(move |_sess, sftp, config| {
+            let base_path = &config.base_path;
             let full_path = Path::new(&base_path).join(&path_clone);
 
             if let Some(parent) = full_path.parent() {
@@ -411,8 +416,8 @@ impl FileClient for SftpFileClient {
 
     async fn delete(&self, path: &str) -> ApiResult<()> {
         let path = path.to_string();
-        let base_path = self.config.base_path.clone();
-        self.run_sync(move |_sess, sftp| {
+        self.run_sync(move |_sess, sftp, config| {
+            let base_path = &config.base_path;
             let full_path = Path::new(&base_path).join(&path);
             sftp.unlink(&full_path)
                 .map_err(|e| ApiError::biz(format!("SFTP 删除失败: {}", e)))?;
@@ -423,8 +428,8 @@ impl FileClient for SftpFileClient {
 
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>> {
         let path = path.to_string();
-        let base_path = self.config.base_path.clone();
-        self.run_sync(move |_sess, sftp| {
+        self.run_sync(move |_sess, sftp, config| {
+            let base_path = &config.base_path;
             let full_path = Path::new(&base_path).join(&path);
             let mut file = sftp
                 .open(&full_path)

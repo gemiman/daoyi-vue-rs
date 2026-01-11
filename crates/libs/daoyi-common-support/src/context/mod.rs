@@ -131,34 +131,27 @@ impl HttpRequestContext {
     }
 
     pub async fn get_login_id() -> Option<String> {
-        if let Ok(login_id) = Self::get_login_id_as_string().await {
-            return Some(login_id);
-        }
-        None
+        CONTEXT.try_with(|c| c.login_id.clone()).ok().flatten()
     }
 
     pub async fn get_tenant_id() -> Option<String> {
-        if let Ok(tenant_id) = Self::get_tenant_id_as_string().await {
-            return Some(tenant_id);
-        }
-        None
+        CONTEXT.try_with(|c| c.tenant_id.clone()).ok().flatten()
     }
     pub async fn get_login_id_as_string() -> anyhow::Result<String> {
-        Self::get_current()
-            .and_then(|ctx| ctx.login_id)
+        Self::get_login_id()
+            .await
             .ok_or_else(|| anyhow::anyhow!("login_id is None"))
     }
 
     pub async fn get_tenant_id_as_string() -> anyhow::Result<String> {
-        Self::get_current()
-            .and_then(|ctx| ctx.tenant_id)
+        Self::get_tenant_id()
+            .await
             .ok_or_else(|| anyhow::anyhow!("tenant_id is None"))
     }
 
     pub fn get_ignore_tenant() -> bool {
-        Self::get_current()
-            .and_then(|ctx| ctx.ignore_tenant)
-            .ok_or_else(|| anyhow::anyhow!("ignore_tenant is None"))
+        CONTEXT
+            .try_with(|c| c.ignore_tenant.unwrap_or(false))
             .unwrap_or(false)
     }
 }

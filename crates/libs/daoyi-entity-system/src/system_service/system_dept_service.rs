@@ -229,8 +229,8 @@ where
             break;
         }
         // 2. 如果有子部门，继续遍历
-        children.extend(dept_list.clone());
         parent_ids = dept_list.iter().map(|dept| dept.id.clone()).collect();
+        children.extend(dept_list);
     }
     Ok(children)
 }

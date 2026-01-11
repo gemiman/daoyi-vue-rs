@@ -143,7 +143,7 @@ pub async fn create_tenant(vo: TenantSaveReqVo) -> ApiResult<system_tenant::Mode
     let package = system_tenant_package_service::valid_tenant_package(&vo.package_id).await?;
     // 创建租户
     let db = database::get_db_async().await;
-    let active_model: system_tenant::ActiveModel = vo.clone().into();
+    let active_model: system_tenant::ActiveModel = vo.into();
     let model = active_model.insert(&db).await?;
     // 创建租户的管理员
     HttpRequestContext::execute_with_other_context_async(
