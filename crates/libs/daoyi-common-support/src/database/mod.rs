@@ -146,12 +146,13 @@ pub async fn init_db() -> anyhow::Result<()> {
     let database_config = AppConfig::get().database();
     let mut options = ConnectOptions::new(format!(
         "postgres://{}:{}@{}:{}/{}",
-        database_config.username,
-        database_config.password,
-        database_config.host,
-        database_config.port,
-        database_config.database
+        database_config.user(),
+        database_config.password(),
+        database_config.host(),
+        database_config.port(),
+        database_config.database()
     ));
+    let cpus = num_cpus::get() as u32;
     options
         .min_connections(max(cpus * 4, 10))
         .max_connections(max(cpus * 8, 20))
