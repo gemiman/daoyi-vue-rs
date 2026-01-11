@@ -21,7 +21,7 @@ pub async fn update_user_password(vo: UserUpdatePasswordReqVo) -> ApiResult<()> 
     // 1. 校验用户存在
     let mut active_model = validate_user_exists(Some(&vo.id))
         .await?
-        .unwrap()
+        .ok_or_else(|| ApiError::biz("用户不存在"))?
         .into_active_model();
     // 2. 更新密码
     active_model.password = Set(hash_password(&vo.password).await?);
@@ -41,7 +41,7 @@ pub async fn update_user(vo: UserUpdateReqVO) -> ApiResult<()> {
         vo.post_ids.as_ref(),
     )
     .await?
-    .unwrap();
+    .ok_or_else(|| ApiError::biz("用户不存在"))?;
     // 2.1 更新用户
     let mut active_model: system_users::ActiveModel = vo.into();
     active_model.password = Unchanged(old_user.password);
