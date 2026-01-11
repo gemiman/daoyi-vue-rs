@@ -1,7 +1,11 @@
 use std::collections::HashSet;
 
 pub fn intersection_distinct<T: Eq + std::hash::Hash + Clone>(a: &[T], b: &[T]) -> Vec<T> {
-    let set_a: HashSet<_> = a.iter().cloned().collect();
-    let set_b: HashSet<_> = b.iter().cloned().collect();
-    set_a.intersection(&set_b).cloned().collect()
+    let set_a: HashSet<&T> = a.iter().collect();
+    b.iter()
+        .filter(|item| set_a.contains(item))
+        .collect::<HashSet<&T>>()
+        .into_iter()
+        .cloned()
+        .collect()
 }

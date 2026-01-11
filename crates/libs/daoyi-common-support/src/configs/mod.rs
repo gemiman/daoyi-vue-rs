@@ -147,7 +147,7 @@ impl AppConfig {
         Ok(())
     }
 
-    pub async fn get() -> &'static Self {
+    pub fn get() -> &'static Self {
         APP_CONFIG
             .get()
             .unwrap_or_else(|| panic!("Failed to load application config"))

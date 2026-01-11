@@ -4,8 +4,8 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-pub async fn init() {
-    let app_config = AppConfig::get().await;
+pub async fn init_logger() {
+    let app_config = AppConfig::get();
     let log_config = app_config.log();
 
     // 根据配置创建文件 appender

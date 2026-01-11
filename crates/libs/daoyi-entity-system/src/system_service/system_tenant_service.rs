@@ -73,7 +73,7 @@ pub async fn update_tenant_role_menu(tenant_id: &str, menu_ids: &Vec<String>) ->
             .ignore_tenant(false)
             .build(),
         async || -> ApiResult<()> {
-            let tenant_id = HttpRequestContext::get_tenant_id_as_string().await?;
+            let tenant_id = HttpRequestContext::get_tenant_id_as_string()?;
             // 获得所有角色
             let roles = system_role_service::get_role_list().await?;
             for role in &roles {
@@ -186,7 +186,7 @@ where
         return Ok(());
     }
     // 获得租户 ID
-    let tenant_id = HttpRequestContext::get_tenant_id_as_string().await?;
+    let tenant_id = HttpRequestContext::get_tenant_id_as_string()?;
     // 获得租户
     let tenant = get_tenant_by_id(&tenant_id).await?;
     // 执行处理器
@@ -205,7 +205,7 @@ where
         return Ok(());
     }
     // 获得租户 ID
-    let tenant_id = HttpRequestContext::get_tenant_id_as_string().await?;
+    let tenant_id = HttpRequestContext::get_tenant_id_as_string()?;
     // 获得租户
     let tenant = get_tenant_by_id(&tenant_id).await?;
     let menu_ids = if is_system_tenant(&tenant).await? {
@@ -226,7 +226,7 @@ where
 }
 
 async fn is_tenant_disable() -> bool {
-    !AppConfig::get().await.auth().tenant_enable()
+    !AppConfig::get().auth().tenant_enable()
 }
 
 #[transactional]

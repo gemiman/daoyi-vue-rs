@@ -121,20 +121,20 @@ pub async fn build_menu_tree(menus: Vec<system_menu::Model>) -> ApiResult<Vec<Me
             .push(menu);
     }
 
-    Ok(build_children(String::from("0"), &map))
+    Ok(build_children(String::from("0"), &mut map))
 }
 
 fn build_children(
     parent_id: String,
-    map: &HashMap<String, Vec<system_menu::Model>>,
+    map: &mut HashMap<String, Vec<system_menu::Model>>,
 ) -> Vec<MenuVO> {
-    if let Some(children) = map.get(&parent_id) {
+    if let Some(children) = map.remove(&parent_id) {
         children
-            .iter()
+            .into_iter()
             .map(|m| {
-                let m = m.to_owned();
+                let id = m.id.clone();
                 MenuVO {
-                    id: m.id.clone(),
+                    id: m.id,
                     parent_id: m.parent_id,
                     name: m.name,
                     path: m.path,
@@ -144,7 +144,7 @@ fn build_children(
                     visible: m.visible,
                     keep_alive: m.keep_alive,
                     always_show: m.always_show,
-                    children: build_children(m.id, map),
+                    children: build_children(id, map),
                 }
             })
             .collect()

@@ -12,7 +12,7 @@ static REDIS: OnceCell<Pool> = OnceCell::const_new();
 const CONNECTION_TEST_KEY: &str = "connection_test_key";
 
 async fn init() -> anyhow::Result<Pool> {
-    let redis_config = AppConfig::get().await.redis();
+    let redis_config = AppConfig::get().redis();
     let host = redis_config.host();
     let port = redis_config.port();
     let db = redis_config.database();
@@ -65,15 +65,15 @@ pub async fn test_redis() -> anyhow::Result<String> {
     Ok(v)
 }
 
-async fn key_generator(key: &str) -> String {
-    let cache_key_prefix = AppConfig::get().await.redis().cache_key_prefix();
+fn key_generator(key: &str) -> String {
+    let cache_key_prefix = AppConfig::get().redis().cache_key_prefix();
     format!("{}:{}", cache_key_prefix, key)
 }
 pub async fn cache_get_json<V>(key: &str) -> ApiResult<Option<V>>
 where
     V: DeserializeOwned,
 {
-    let json_str = get::<Option<String>>(key_generator(key).await.as_str()).await?;
+    let json_str = get::<Option<String>>(key_generator(key).as_str()).await?;
     if json_str.is_none() {
         return Ok(None);
     }
@@ -100,14 +100,14 @@ pub async fn cache_get<V>(key: &str) -> ApiResult<Option<V>>
 where
     V: FromRedisValue + Send + Sync + 'static,
 {
-    let value = get(key_generator(key).await.as_ref()).await?;
+    let value = get(key_generator(key).as_ref()).await?;
     Ok(value)
 }
 pub async fn cache_set<V>(key: &str, value: V) -> ApiResult<()>
 where
     V: ToRedisArgs + Send + Sync + 'static,
 {
-    let expire_seconds = AppConfig::get().await.redis().expire_seconds();
+    let expire_seconds = AppConfig::get().redis().expire_seconds();
     cache_set_ex(key, value, expire_seconds).await
 }
 
@@ -115,7 +115,7 @@ pub async fn cache_set_ex<V>(key: &str, value: V, expire_seconds: u64) -> ApiRes
 where
     V: ToRedisArgs + Send + Sync + 'static,
 {
-    set_ex(key_generator(key).await.as_ref(), value, expire_seconds).await?;
+    set_ex(key_generator(key).as_ref(), value, expire_seconds).await?;
     Ok(())
 }
 

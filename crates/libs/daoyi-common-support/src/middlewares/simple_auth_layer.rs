@@ -30,7 +30,8 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
     fn authorize(&mut self, mut request: Request<Body>) -> Self::Future {
         Box::pin(async move {
             let mut context = HttpRequestContext::new();
-            let auth_config = AppConfig::get().await.auth();
+        // Check if tenant is enabled
+        let auth_config = AppConfig::get().auth();
             let url = request.uri().path();
             let headers = request.headers();
             let is_ignored_tenant = auth_config.is_ignored_tenant(url);

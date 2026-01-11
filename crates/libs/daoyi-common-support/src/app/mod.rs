@@ -9,7 +9,7 @@ pub struct AppState {}
 pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Result<()> {
     println!("==============================================开始加载配置...");
     AppConfig::load(app_name.unwrap_or("app")).await?;
-    // println!("配置信息：\n{:#?}", AppConfig::get().await);
+    // println!("配置信息：\n{:#?}", AppConfig::get());
     println!("==============================================配置加载完成...开始初始化日志组件....");
     logger::init().await;
     log::info!("日志组件初始化完成... Starting redis_utils...");
@@ -20,6 +20,6 @@ pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Re
     database::init().await?;
     log::info!("database 初始化完成... Starting app server...");
     let state = AppState {};
-    let server = server::Server::new(AppConfig::get().await.server());
+    let server = server::Server::new(AppConfig::get().server());
     server.start(state, router).await
 }

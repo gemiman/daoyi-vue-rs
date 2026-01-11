@@ -28,7 +28,7 @@ pub fn create_router() -> Router<AppState> {
 #[debug_handler]
 async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
     let mut vo = AuthPermissionInfoRespVO::default();
-    let login_user_id = HttpRequestContext::get_login_id().await;
+    let login_user_id = HttpRequestContext::get_login_id();
     if login_user_id.is_none() {
         return ApiResponse::success(vo);
     }

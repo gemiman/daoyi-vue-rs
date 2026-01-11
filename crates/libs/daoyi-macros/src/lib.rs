@@ -126,7 +126,7 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
                 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
                 let mut query = Self::find_perm().await;
 
-                if let Some(tenant_id) = daoyi_common_support::context::HttpRequestContext::get_tenant_id().await {
+                if let Some(tenant_id) = daoyi_common_support::context::HttpRequestContext::get_tenant_id() {
                      if !daoyi_common_support::context::HttpRequestContext::get_ignore_tenant() {
                         query = query.filter(Column::TenantId.eq(tenant_id));
                     }
@@ -238,16 +238,16 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                     #password_logic
                     self.create_time = Set(Local::now().naive_local());
                     self.update_time = Set(Local::now().naive_local());
-                    if let Ok(login_id) = HttpRequestContext::get_login_id_as_string().await {
+                                        if let Ok(login_id) = HttpRequestContext::get_login_id_as_string() {
                         self.creator = Set(Some(login_id.clone()));
                         self.updater = Set(Some(login_id));
                     }
-                    if let Ok(tenant_id) = HttpRequestContext::get_tenant_id_as_string().await {
+                    if let Ok(tenant_id) = HttpRequestContext::get_tenant_id_as_string() {
                         self.tenant_id = Set(tenant_id);
                     }
                 } else {
                     self.update_time = Set(Local::now().naive_local());
-                    if let Ok(login_id) = HttpRequestContext::get_login_id_as_string().await {
+                                        if let Ok(login_id) = HttpRequestContext::get_login_id_as_string() {
                         self.updater = Set(Some(login_id));
                     }
                 }
@@ -287,7 +287,7 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                 let mut query = <Self as sea_orm::EntityTrait>::update_many()
                     .col_expr(Column::UpdateTime, Expr::value(Local::now().naive_local()));
 
-                if let Ok(login_id) = HttpRequestContext::get_login_id_as_string().await {
+                                    if let Ok(login_id) = HttpRequestContext::get_login_id_as_string() {
                     query = query.col_expr(Column::Updater, Expr::value(login_id));
                 }
 

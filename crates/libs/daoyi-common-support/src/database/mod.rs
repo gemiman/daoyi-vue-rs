@@ -142,20 +142,15 @@ where
     }
 }
 
-pub async fn init() -> anyhow::Result<()> {
-    if DB_CONN.get().is_some() {
-        return Ok(());
-    }
-    let cpus = num_cpus::get() as u32;
-    let database_config = AppConfig::get().await.database();
+pub async fn init_db() -> anyhow::Result<()> {
+    let database_config = AppConfig::get().database();
     let mut options = ConnectOptions::new(format!(
-        "{}://{}:{}@{}:{}/{}",
-        database_config.driver(),
-        database_config.user(),
-        database_config.password(),
-        database_config.host(),
-        database_config.port(),
-        database_config.database()
+        "postgres://{}:{}@{}:{}/{}",
+        database_config.username,
+        database_config.password,
+        database_config.host,
+        database_config.port,
+        database_config.database
     ));
     options
         .min_connections(max(cpus * 4, 10))

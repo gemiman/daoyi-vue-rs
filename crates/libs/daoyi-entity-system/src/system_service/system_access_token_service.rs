@@ -55,7 +55,7 @@ pub async fn create_token_after_login_success(
     context.tenant_id = Some(String::from(tenant_id));
 
     HttpRequestContext::scope(context, || async move {
-        let token_expiration = AppConfig::get().await.auth().token_expiration();
+        let token_expiration = AppConfig::get().auth().token_expiration();
         let db = database::get_db_async().await;
         let mut active_model = system_access_token::ActiveModel::new();
         active_model.user_id = Set(String::from(login_id));

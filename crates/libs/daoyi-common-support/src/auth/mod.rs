@@ -22,8 +22,7 @@ pub async fn check_token(token: &str) -> ApiResult<AuthLoginRespVO> {
     }
 
     // 2. Call remote check URL
-    let token_check_url = AppConfig::get().await.auth().token_check_url();
-    let client = reqwest::Client::new();
+            let token_check_url = AppConfig::get().auth().token_check_url();    let client = reqwest::Client::new();
 
     let resp = client
         .post(token_check_url)
@@ -75,8 +74,7 @@ pub async fn check_tenant_id(tenant_id: &str) -> ApiResult<TenantRespVO> {
     }
 
     // 2. Call remote check URL
-    let tenant_check_url = AppConfig::get().await.auth().tenant_check_url();
-    let client = reqwest::Client::new();
+            let tenant_check_url = AppConfig::get().auth().tenant_check_url();    let client = reqwest::Client::new();
 
     let resp = client
         .post(tenant_check_url)
