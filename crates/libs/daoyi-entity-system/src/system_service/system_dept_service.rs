@@ -8,13 +8,14 @@ use sea_orm::entity::prelude::*;
 use sea_orm::{QueryOrder, QueryTrait};
 use std::collections::HashMap;
 
-pub async fn validate_dept_list(ids: &Vec<String>) -> ApiResult<()> {
+pub async fn validate_dept_list<S: AsRef<str> + Sync>(ids: &[S]) -> ApiResult<()> {
     if ids.is_empty() {
         return Ok(());
     }
-    let map = get_dept_map(ids).await?;
+    let map = get_dept_map(ids.iter().map(|s| s.as_ref().to_string())).await?;
     for id in ids {
-        if let Some(dept) = map.get(id) {
+        let id_str = id.as_ref();
+        if let Some(dept) = map.get(id_str) {
             if CommonStatusEnum::Enable != dept.status {
                 return Err(ApiError::biz(format!(
                     "部门({})不处于开启状态，不允许选择",

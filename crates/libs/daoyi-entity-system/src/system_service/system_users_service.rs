@@ -111,7 +111,7 @@ async fn validate_user_for_create_or_update(
     validate_email_unique(id, email).await?;
     // 校验部门处于开启状态
     if let Some(dept_id) = dept_id {
-        system_dept_service::validate_dept_list(&vec![String::from(dept_id)]).await?;
+        system_dept_service::validate_dept_list(&[dept_id]).await?;
     }
     // 校验岗位处于开启状态
     if let Some(post_ids) = post_ids {
@@ -221,7 +221,7 @@ pub async fn get_user_list_by_status(
     Ok(list)
 }
 
-async fn get_dept_condition(dept_id: Option<&str>) -> ApiResult<Option<Vec<String>>> {
+async fn get_dept_condition(dept_id: Option<&str>) -> ApiResult<Option<HashSet<String>>> {
     if dept_id.is_none() {
         return Ok(None);
     }
@@ -230,12 +230,8 @@ async fn get_dept_condition(dept_id: Option<&str>) -> ApiResult<Option<Vec<Strin
         .await?
         .into_iter()
         .map(|dept| dept.id)
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect::<Vec<_>>();
-    if !dept_ids.contains(&dept_id) {
-        dept_ids.push(dept_id); // 包括自身
-    }
+        .collect::<HashSet<_>>();
+    dept_ids.insert(dept_id); // 包括自身
     Ok(Some(dept_ids))
 }
 
@@ -288,9 +284,7 @@ pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<Page<UserRespVO>
         .iter()
         .filter(|x| x.dept_id.is_some())
         .map(|x| x.dept_id.as_deref().unwrap())
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect::<Vec<_>>();
+        .collect::<HashSet<_>>();
     let dept_map = system_dept_service::get_dept_map(dept_ids).await?;
     let list = list
         .into_iter()

@@ -70,9 +70,7 @@ async fn get_simple_user_list() -> RestApiResult<Vec<UserSimpleRespVo>> {
         .iter()
         .filter(|x| x.dept_id.is_some())
         .map(|x| x.dept_id.as_deref().unwrap())
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect::<Vec<_>>();
+        .collect::<HashSet<_>>();
     let dept_map = system_dept_service::get_dept_map(dept_ids).await?;
     let list = list
         .into_iter()
