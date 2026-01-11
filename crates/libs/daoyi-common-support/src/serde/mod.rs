@@ -47,10 +47,7 @@ pub mod option_datetime_format {
         S: Serializer,
     {
         match date {
-            Some(dt) => {
-                let s = format!("{}", dt.format(FORMAT));
-                serializer.serialize_some(&s)
-            }
+            Some(dt) => serializer.collect_str(&dt.format(FORMAT)),
             None => serializer.serialize_none(),
         }
     }
@@ -93,8 +90,7 @@ pub mod datetime_format {
     where
         S: Serializer,
     {
-        let s = format!("{}", date.format(FORMAT));
-        serializer.serialize_str(&s)
+        serializer.collect_str(&date.format(FORMAT))
     }
 
     pub fn deserialize<'de, D>(deserializer: D) -> Result<DateTime, D::Error>
