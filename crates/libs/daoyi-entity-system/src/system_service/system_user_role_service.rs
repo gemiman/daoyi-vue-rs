@@ -37,10 +37,10 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
     // 5. 执行新增操作
     if !create_role_ids.is_empty() {
         let active_models: Vec<system_user_role::ActiveModel> = create_role_ids
-            .iter()
+            .into_iter()
             .map(|role_id| system_user_role::ActiveModel {
                 user_id: Set(user_id.to_string()),
-                role_id: Set(role_id.clone()),
+                role_id: Set(role_id),
                 ..Default::default()
             })
             .collect();

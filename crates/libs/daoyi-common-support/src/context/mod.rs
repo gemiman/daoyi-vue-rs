@@ -6,6 +6,7 @@
 //! 来传递上下文，而不是使用 thread_local。这里提供的是一个简单的实现。
 
 use std::future::Future;
+use std::sync::Arc;
 
 tokio::task_local! {
     static CONTEXT: HttpRequestContext;
@@ -23,13 +24,13 @@ tokio::task_local! {
 #[derive(Debug, Clone)]
 pub struct HttpRequestContext {
     /// 当前请求的 token | Current request's token
-    pub token: Option<String>,
+    pub token: Option<Arc<String>>,
 
     /// 当前请求的 租户信息 | Current request's tenant info
-    pub tenant_id: Option<String>,
+    pub tenant_id: Option<Arc<String>>,
 
     /// 登录 ID | Login ID
-    pub login_id: Option<String>,
+    pub login_id: Option<Arc<String>>,
 
     /// 是否忽略租户
     pub ignore_tenant: Option<bool>,
@@ -38,9 +39,9 @@ pub struct HttpRequestContext {
 /// HttpRequestContext 构建器
 #[derive(Debug, Clone, Default)]
 pub struct HttpRequestContextBuilder {
-    token: Option<String>,
-    tenant_id: Option<String>,
-    login_id: Option<String>,
+    token: Option<Arc<String>>,
+    tenant_id: Option<Arc<String>>,
+    login_id: Option<Arc<String>>,
     ignore_tenant: Option<bool>,
 }
 
@@ -52,19 +53,19 @@ impl HttpRequestContextBuilder {
 
     /// 设置 token
     pub fn token(mut self, token: impl Into<String>) -> Self {
-        self.token = Some(token.into());
+        self.token = Some(Arc::new(token.into()));
         self
     }
 
     /// 设置租户 ID
     pub fn tenant_id(mut self, tenant_id: impl Into<String>) -> Self {
-        self.tenant_id = Some(tenant_id.into());
+        self.tenant_id = Some(Arc::new(tenant_id.into()));
         self
     }
 
     /// 设置登录 ID
     pub fn login_id(mut self, login_id: impl Into<String>) -> Self {
-        self.login_id = Some(login_id.into());
+        self.login_id = Some(Arc::new(login_id.into()));
         self
     }
 
@@ -131,20 +132,24 @@ impl HttpRequestContext {
     }
 
     pub fn get_login_id() -> Option<String> {
-        CONTEXT.try_with(|c| c.login_id.clone()).ok().flatten()
+        CONTEXT
+            .try_with(|c| c.login_id.as_ref().map(|s| s.as_ref().clone()))
+            .ok()
+            .flatten()
     }
 
     pub fn get_tenant_id() -> Option<String> {
-        CONTEXT.try_with(|c| c.tenant_id.clone()).ok().flatten()
+        CONTEXT
+            .try_with(|c| c.tenant_id.as_ref().map(|s| s.as_ref().clone()))
+            .ok()
+            .flatten()
     }
     pub fn get_login_id_as_string() -> anyhow::Result<String> {
-        Self::get_login_id()
-            .ok_or_else(|| anyhow::anyhow!("login_id is None"))
+        Self::get_login_id().ok_or_else(|| anyhow::anyhow!("login_id is None"))
     }
 
     pub fn get_tenant_id_as_string() -> anyhow::Result<String> {
-        Self::get_tenant_id()
-            .ok_or_else(|| anyhow::anyhow!("tenant_id is None"))
+        Self::get_tenant_id().ok_or_else(|| anyhow::anyhow!("tenant_id is None"))
     }
 
     pub fn get_ignore_tenant() -> bool {

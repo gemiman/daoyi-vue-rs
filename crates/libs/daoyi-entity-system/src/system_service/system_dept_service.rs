@@ -31,7 +31,7 @@ pub async fn validate_dept_list(ids: &Vec<String>) -> ApiResult<()> {
 pub async fn get_dept_map<I, S>(ids: I) -> ApiResult<HashMap<String, system_dept::Model>>
 where
     I: IntoIterator<Item = S>,
-    S: AsRef<str>,
+    S: Into<String>,
 {
     let map = get_dept_list(ids)
         .await?
@@ -44,9 +44,9 @@ where
 pub async fn get_dept_list<I, S>(ids: I) -> ApiResult<Vec<system_dept::Model>>
 where
     I: IntoIterator<Item = S>,
-    S: AsRef<str>,
+    S: Into<String>,
 {
-    let ids_vec: Vec<String> = ids.into_iter().map(|s| s.as_ref().to_string()).collect();
+    let ids_vec: Vec<String> = ids.into_iter().map(|s| s.into()).collect();
     if ids_vec.is_empty() {
         return Ok(vec![]);
     }
@@ -217,13 +217,13 @@ pub async fn get_child_dept_list(id: &str) -> ApiResult<Vec<system_dept::Model>>
 pub async fn get_all_child_dept_list<I, S>(ids: I) -> ApiResult<Vec<system_dept::Model>>
 where
     I: IntoIterator<Item = S>,
-    S: AsRef<str>,
+    S: Into<String>,
 {
     let mut children = vec![];
-    let mut parent_ids: Vec<String> = ids.into_iter().map(|s| s.as_ref().to_string()).collect();
+    let mut parent_ids: Vec<String> = ids.into_iter().map(|s| s.into()).collect();
     loop {
         // 查询当前层，所有的子部门
-        let dept_list = select_list_by_parent_id(&parent_ids).await?;
+        let dept_list = select_list_by_parent_id(parent_ids).await?;
         // 1. 如果没有子部门，则结束遍历
         if dept_list.is_empty() {
             break;
@@ -238,12 +238,9 @@ where
 pub async fn select_list_by_parent_id<I, S>(parent_ids: I) -> ApiResult<Vec<system_dept::Model>>
 where
     I: IntoIterator<Item = S>,
-    S: AsRef<str>,
+    S: Into<String>,
 {
-    let parent_ids: Vec<String> = parent_ids
-        .into_iter()
-        .map(|s| s.as_ref().to_string())
-        .collect();
+    let parent_ids: Vec<String> = parent_ids.into_iter().map(|s| s.into()).collect();
     if parent_ids.is_empty() {
         return Ok(vec![]);
     }

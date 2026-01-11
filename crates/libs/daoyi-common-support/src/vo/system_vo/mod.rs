@@ -128,6 +128,18 @@ impl From<&TenantSaveReqVo> for UserSaveReqVO {
     }
 }
 
+impl From<TenantSaveReqVo> for UserSaveReqVO {
+    fn from(value: TenantSaveReqVo) -> Self {
+        Self {
+            username: value.username,
+            password: value.password,
+            nickname: value.contact_name,
+            mobile: value.contact_mobile,
+            ..Default::default()
+        }
+    }
+}
+
 /// TenantSaveReqVO，管理后台 - 租户创建 Request VO
 #[derive(Debug, Deserialize, Validate, Clone)]
 #[serde(rename_all = "camelCase")]

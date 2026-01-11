@@ -6,9 +6,9 @@ use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::AuthLoginRespVO;
 use daoyi_common_support::{database, id_util, redis_utils};
+use sea_orm::Set;
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
-use sea_orm::Set;
 
 pub async fn get_access_token(token: &str) -> ApiResult<system_access_token::Model> {
     let db = database::get_db_async().await;
@@ -39,6 +39,8 @@ pub async fn check_access_token(token: &str) -> ApiResult<AuthLoginRespVO> {
     Ok(vo)
 }
 
+use std::sync::Arc;
+
 pub async fn create_token_after_login_success(
     tenant_id: &str,
     login_id: &str,
@@ -50,9 +52,9 @@ pub async fn create_token_after_login_success(
         }
     };
     let mut context = HttpRequestContext::new();
-    context.token = Some(access_token.clone());
-    context.login_id = Some(String::from(login_id));
-    context.tenant_id = Some(String::from(tenant_id));
+    context.token = Some(Arc::new(access_token.clone()));
+    context.login_id = Some(Arc::new(String::from(login_id)));
+    context.tenant_id = Some(Arc::new(String::from(tenant_id)));
 
     HttpRequestContext::scope(context, || async move {
         let token_expiration = AppConfig::get().auth().token_expiration();

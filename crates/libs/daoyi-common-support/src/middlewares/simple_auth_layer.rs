@@ -7,6 +7,7 @@ use axum::http::{Request, Response};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
 use std::pin::Pin;
+use std::sync::Arc;
 use tokio::sync::OnceCell;
 use tower_http::auth::{AsyncAuthorizeRequest, AsyncRequireAuthorizationLayer};
 
@@ -30,8 +31,8 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
     fn authorize(&mut self, mut request: Request<Body>) -> Self::Future {
         Box::pin(async move {
             let mut context = HttpRequestContext::new();
-        // Check if tenant is enabled
-        let auth_config = AppConfig::get().auth();
+            // Check if tenant is enabled
+            let auth_config = AppConfig::get().auth();
             let url = request.uri().path();
             let headers = request.headers();
             let is_ignored_tenant = auth_config.is_ignored_tenant(url);
@@ -61,9 +62,9 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             if let Some(token) = token {
                 let token_info = auth::check_token(token).await?;
                 token_tenant_id = Some(token_info.tenant_id);
-                context.tenant_id = token_tenant_id.clone();
-                context.token = Some(String::from(token));
-                context.login_id = Some(String::from(token_info.user_id));
+                context.tenant_id = token_tenant_id.clone().map(Arc::new);
+                context.token = Some(Arc::new(String::from(token)));
+                context.login_id = Some(Arc::new(String::from(token_info.user_id)));
             };
             let tenant_id = headers
                 .get(auth_config.header_key_tenant())
@@ -90,7 +91,7 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                 } else {
                     auth::check_tenant_id(tenant_id).await?;
                 }
-                context.tenant_id = Some(String::from(tenant_id));
+                context.tenant_id = Some(Arc::new(String::from(tenant_id)));
             };
             request.extensions_mut().insert(context);
             Ok(request)
