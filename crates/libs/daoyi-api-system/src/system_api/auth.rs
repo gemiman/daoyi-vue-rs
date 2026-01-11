@@ -50,19 +50,9 @@ async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
         .into_iter()
         .filter(|r| r.status == CommonStatusEnum::Enable)
         .collect::<Vec<system_role::Model>>();
-    let role_codes = roles
-        .iter()
-        .map(|r| r.code.to_owned())
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect();
+    let role_codes = roles.iter().map(|r| r.code.to_owned()).collect();
     vo.roles = role_codes;
-    let role_ids = roles
-        .iter()
-        .map(|r| r.id.to_owned())
-        .collect::<HashSet<_>>()
-        .into_iter()
-        .collect::<Vec<_>>();
+    let role_ids = roles.iter().map(|r| r.id.to_owned()).collect::<Vec<_>>();
     // 1.3 获得菜单列表
     let menu_ids = system_role_menu_service::get_role_menu_list_by_role_ids(&role_ids).await?;
     let menu_list = system_menu_service::get_menu_list(Some(&menu_ids))
@@ -72,7 +62,7 @@ async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
         .collect::<Vec<_>>();
     vo.permissions = menu_list
         .iter()
-        .map(|m| m.to_owned().permission.unwrap_or_default())
+        .filter_map(|m| m.permission.clone())
         .filter(|p| !p.is_empty())
         .collect::<HashSet<_>>()
         .into_iter()
@@ -91,9 +81,9 @@ async fn login(
     tracing::info!("开始处理登录逻辑。。。");
     let user = system_users_service::get_by_username(&params.username)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("账号或密码不正确")))?;
+        .ok_or_else(|| ApiError::biz("账号或密码不正确"))?;
     if !verify_password(&params.password, &user.password).await? {
-        return Err(ApiError::Biz(String::from("账号或密码不正确")));
+        return Err(ApiError::biz("账号或密码不正确"));
     }
     tracing::info!(
         "登录成功，HttpRequestContext={:?}",

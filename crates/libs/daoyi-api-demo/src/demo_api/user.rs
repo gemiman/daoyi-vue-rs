@@ -61,7 +61,7 @@ async fn update(
     let mut existed_active_model = SysUser::find_by_id(&id)
         .one(&db)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("待修改的用户不存在")))?
+        .ok_or_else(|| ApiError::biz("待修改的用户不存在"))?
         .into_active_model();
     let old_password = existed_active_model.password.clone();
     let password = params.password.clone();
@@ -83,7 +83,7 @@ async fn delete(Path(id): Path<String>) -> RestApiResult<u64> {
     let existed_user = SysUser::find_by_id(id)
         .one(&db)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("待删除的用户不存在")))?;
+        .ok_or_else(|| ApiError::biz("待删除的用户不存在"))?;
     let result = existed_user.delete(&db).await?.rows_affected;
     Ok(ApiResponse::ok(Some(result)))
 }

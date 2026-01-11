@@ -19,13 +19,13 @@ pub enum ApiError {
     #[error("请求体参数错误: {0}")]
     Json(#[from] JsonRejection),
     #[error("参数校验错误: {0}")]
-    Validation(String),
+    Validation(std::borrow::Cow<'static, str>),
     #[error("密码Hash错误: {0}")]
     Bcrypt(#[from] bcrypt::BcryptError),
     #[error("未授权：{0}")]
-    Unauthenticated(String),
+    Unauthenticated(std::borrow::Cow<'static, str>),
     #[error("{0}")]
-    Biz(String),
+    Biz(std::borrow::Cow<'static, str>),
     #[error("系统错误: {0}")]
     Internal(#[from] anyhow::Error),
     #[error("glob错误: {0}")]
@@ -48,7 +48,7 @@ impl From<ValidRejection<ApiError>> for ApiError {
                 } else {
                     error_messages.join(" | ")
                 };
-                ApiError::Validation(combined_message)
+                ApiError::Validation(std::borrow::Cow::Owned(combined_message))
             }
             ValidationRejection::Inner(errors) => errors,
         }
@@ -97,15 +97,15 @@ fn format_validation_errors(
 }
 
 impl ApiError {
-    pub fn biz<M: AsRef<str>>(msg: M) -> Self {
-        Self::Biz(String::from(msg.as_ref()))
+    pub fn biz(msg: impl Into<std::borrow::Cow<'static, str>>) -> Self {
+        Self::Biz(msg.into())
     }
 
-    pub fn valid<M: AsRef<str>>(msg: M) -> Self {
-        Self::Validation(String::from(msg.as_ref()))
+    pub fn valid(msg: impl Into<std::borrow::Cow<'static, str>>) -> Self {
+        Self::Validation(msg.into())
     }
-    pub fn unauthenticated<M: AsRef<str>>(msg: M) -> Self {
-        Self::Unauthenticated(String::from(msg.as_ref()))
+    pub fn unauthenticated(msg: impl Into<std::borrow::Cow<'static, str>>) -> Self {
+        Self::Unauthenticated(msg.into())
     }
     pub fn status_code(&self) -> StatusCode {
         use ApiError::*;

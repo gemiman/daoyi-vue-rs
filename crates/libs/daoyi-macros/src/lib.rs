@@ -126,9 +126,9 @@ pub fn daoyi_model(_args: TokenStream, input: TokenStream) -> TokenStream {
                 use sea_orm::{EntityTrait, QueryFilter, ColumnTrait};
                 let mut query = Self::find_perm().await;
 
-                if let Some(tenant_id) = daoyi_common_support::context::HttpRequestContext::get_tenant_id() {
+                if let Some(tenant_id) = daoyi_common_support::context::HttpRequestContext::get_tenant_id_arc() {
                      if !daoyi_common_support::context::HttpRequestContext::get_ignore_tenant() {
-                        query = query.filter(Column::TenantId.eq(tenant_id));
+                        query = query.filter(Column::TenantId.eq(tenant_id.as_str()));
                     }
                 }
                 query

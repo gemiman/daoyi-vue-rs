@@ -1,11 +1,11 @@
 use axum::extract::ConnectInfo;
 use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
-use daoyi_common_support::{database, id_util};
 use daoyi_common_support::error::ApiError;
 use daoyi_common_support::password::verify_password;
 use daoyi_common_support::request::valid::ValidJson;
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
+use daoyi_common_support::{database, id_util};
 use daoyi_entity_demo::demo_entity::prelude::*;
 use daoyi_entity_demo::demo_entity::sys_user;
 use sea_orm::prelude::*;
@@ -46,9 +46,9 @@ async fn login(
         .filter(sys_user::Column::Account.eq(params.account))
         .one(&db)
         .await?
-        .ok_or_else(|| ApiError::Biz(String::from("账号或密码不正确")))?;
+        .ok_or_else(|| ApiError::biz("账号或密码不正确"))?;
     if !verify_password(&params.password, &user.password).await? {
-        return Err(ApiError::Biz(String::from("账号或密码不正确")));
+        return Err(ApiError::biz("账号或密码不正确"));
     }
     let access_token = id_util::xid();
     tracing::info!("登录成功，access_token={access_token}");

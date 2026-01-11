@@ -28,10 +28,9 @@ where
             Ok(value) => Ok(Query(value)),
             Err(e) => {
                 tracing::warn!("Query string parse error: {}", e);
-                Err(ApiError::Validation(format!(
-                    "Invalid query parameters: {}",
-                    e
-                )))
+                Err(ApiError::Validation(
+                    format!("Invalid query parameters: {}", e).into(),
+                ))
             }
         }
     }

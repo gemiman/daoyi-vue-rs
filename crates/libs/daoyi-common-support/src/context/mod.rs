@@ -138,11 +138,19 @@ impl HttpRequestContext {
             .flatten()
     }
 
+    pub fn get_login_id_arc() -> Option<Arc<String>> {
+        CONTEXT.try_with(|c| c.login_id.clone()).ok().flatten()
+    }
+
     pub fn get_tenant_id() -> Option<String> {
         CONTEXT
             .try_with(|c| c.tenant_id.as_ref().map(|s| s.as_ref().clone()))
             .ok()
             .flatten()
+    }
+
+    pub fn get_tenant_id_arc() -> Option<Arc<String>> {
+        CONTEXT.try_with(|c| c.tenant_id.clone()).ok().flatten()
     }
     pub fn get_login_id_as_string() -> anyhow::Result<String> {
         Self::get_login_id().ok_or_else(|| anyhow::anyhow!("login_id is None"))
