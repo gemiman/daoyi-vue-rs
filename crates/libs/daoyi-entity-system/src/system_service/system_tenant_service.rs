@@ -99,7 +99,7 @@ pub async fn update_tenant_role_menu(tenant_id: &str, menu_ids: &Vec<String>) ->
                 } else {
                     // 如果是其他角色，则去掉超过套餐的权限
                     let role_menu_ids =
-                        system_role_menu_service::get_role_menu_list_by_role_id(&vec![
+                        system_role_menu_service::get_role_menu_list_by_role_ids(&vec![
                             String::from(role_id),
                         ])
                         .await?;

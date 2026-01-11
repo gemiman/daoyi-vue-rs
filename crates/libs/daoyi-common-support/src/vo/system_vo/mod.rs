@@ -10,6 +10,15 @@ use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
 use validator::Validate;
 
+/// PermissionAssignRoleMenuReqVO，管理后台 - 赋予角色菜单 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PermissionAssignRoleMenuReqVO {
+    /// 菜单编号列表
+    pub menu_ids: Option<Vec<String>>,
+    /// 角色编号
+    pub role_id: String,
+}
 /// UserSaveReqVO，管理后台 - 用户创建/修改 Request VO
 #[derive(Debug, Deserialize, Validate, Default)]
 #[serde(rename_all = "camelCase")]
@@ -560,6 +569,12 @@ pub struct TenantPackageRespVo {
 #[serde(rename_all = "camelCase")]
 pub struct IdParams {
     pub id: String,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct RoleIdParams {
+    pub role_id: String,
 }
 
 #[derive(Debug, Deserialize, Validate)]

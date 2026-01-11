@@ -64,7 +64,7 @@ async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
         .into_iter()
         .collect::<Vec<_>>();
     // 1.3 获得菜单列表
-    let menu_ids = system_role_menu_service::get_role_menu_list_by_role_id(&role_ids).await?;
+    let menu_ids = system_role_menu_service::get_role_menu_list_by_role_ids(&role_ids).await?;
     let menu_list = system_menu_service::get_menu_list(Some(&menu_ids))
         .await?
         .into_iter()

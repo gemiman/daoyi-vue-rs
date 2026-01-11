@@ -55,12 +55,24 @@ pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResul
 
     Ok(())
 }
-pub async fn get_role_menu_list_by_role_id(role_ids: &Vec<String>) -> ApiResult<Vec<String>> {
+
+pub async fn get_role_menu_list_by_role_id(role_id: &str) -> ApiResult<Vec<String>> {
+    get_role_menu_list_by_role_ids(vec![role_id]).await
+}
+pub async fn get_role_menu_list_by_role_ids<I, S>(role_ids: I) -> ApiResult<Vec<String>>
+where
+    I: IntoIterator<Item = S>,
+    S: AsRef<str>,
+{
+    let role_ids: Vec<String> = role_ids
+        .into_iter()
+        .map(|s| s.as_ref().to_string())
+        .collect();
     if role_ids.is_empty() {
         return Ok(vec![]);
     }
     // 如果是管理员的情况下，获取全部菜单编号
-    if system_role_service::has_any_super_admin(role_ids).await? {
+    if system_role_service::has_any_super_admin(&role_ids).await? {
         return Ok(system_menu_service::get_menu_list(None)
             .await?
             .into_iter()
