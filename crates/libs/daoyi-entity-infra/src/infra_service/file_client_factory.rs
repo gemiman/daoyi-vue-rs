@@ -20,7 +20,7 @@ use tokio::io::AsyncWriteExt;
 pub trait FileClient: Send + Sync {
     /// Uploads content to the specified path.
     /// Returns the full URL of the uploaded file.
-    async fn upload(&self, content: &[u8], path: &str, content_type: &str) -> ApiResult<String>;
+    async fn upload(&self, content: Vec<u8>, path: &str, content_type: &str) -> ApiResult<String>;
 
     /// Deletes the file at the specified path.
     async fn delete(&self, path: &str) -> ApiResult<()>;
@@ -50,7 +50,7 @@ impl DbFileClient {
 
 #[async_trait::async_trait]
 impl FileClient for DbFileClient {
-    async fn upload(&self, content: &[u8], path: &str, _content_type: &str) -> ApiResult<String> {
+    async fn upload(&self, content: Vec<u8>, path: &str, _content_type: &str) -> ApiResult<String> {
         let db = database::get_db_async().await;
 
         // 删除旧的（如果存在）
@@ -59,7 +59,7 @@ impl FileClient for DbFileClient {
         let model = infra_file_content::ActiveModel {
             config_id: Set(self.config_id.clone()),
             path: Set(path.to_string()),
-            content: Set(content.to_vec()),
+            content: Set(content),
             ..Default::default()
         };
         model.insert(&db).await?;
@@ -80,7 +80,8 @@ impl FileClient for DbFileClient {
 
     async fn get_content(&self, path: &str) -> ApiResult<Vec<u8>> {
         let db = database::get_db_async().await;
-        let model = infra_file_content::Entity::find_perm().await
+        let model = infra_file_content::Entity::find_perm()
+            .await
             .filter(infra_file_content::Column::ConfigId.eq(&self.config_id))
             .filter(infra_file_content::Column::Path.eq(path))
             .one(&db)
@@ -104,7 +105,7 @@ impl LocalFileClient {
 
 #[async_trait::async_trait]
 impl FileClient for LocalFileClient {
-    async fn upload(&self, content: &[u8], path: &str, _content_type: &str) -> ApiResult<String> {
+    async fn upload(&self, content: Vec<u8>, path: &str, _content_type: &str) -> ApiResult<String> {
         let full_path = Path::new(&self.config.base_path).join(path);
 
         // Ensure parent directory exists
@@ -118,7 +119,7 @@ impl FileClient for LocalFileClient {
             .await
             .map_err(|e| ApiError::biz(format!("创建本地文件失败: {}", e)))?;
 
-        file.write_all(content)
+        file.write_all(&content)
             .await
             .map_err(|e| ApiError::biz(format!("写入本地文件失败: {}", e)))?;
 
@@ -182,12 +183,12 @@ impl S3FileClient {
 
 #[async_trait::async_trait]
 impl FileClient for S3FileClient {
-    async fn upload(&self, content: &[u8], path: &str, content_type: &str) -> ApiResult<String> {
+    async fn upload(&self, content: Vec<u8>, path: &str, content_type: &str) -> ApiResult<String> {
         self.client
             .put_object()
             .bucket(&self.config.bucket)
             .key(path)
-            .body(aws_sdk_s3::primitives::ByteStream::from(content.to_vec()))
+            .body(aws_sdk_s3::primitives::ByteStream::from(content))
             .content_type(content_type)
             .send()
             .await
@@ -293,8 +294,7 @@ impl FtpFileClient {
 
 #[async_trait::async_trait]
 impl FileClient for FtpFileClient {
-    async fn upload(&self, content: &[u8], path: &str, _content_type: &str) -> ApiResult<String> {
-        let content = content.to_vec();
+    async fn upload(&self, content: Vec<u8>, path: &str, _content_type: &str) -> ApiResult<String> {
         let path_str = path.to_string();
 
         let path_clone = path_str.clone();
@@ -357,7 +357,9 @@ impl SftpFileClient {
 
     async fn run_sync<F, R>(&self, f: F) -> ApiResult<R>
     where
-        F: FnOnce(&ssh2::Session, &ssh2::Sftp, &SftpFileClientConfig) -> ApiResult<R> + Send + 'static,
+        F: FnOnce(&ssh2::Session, &ssh2::Sftp, &SftpFileClientConfig) -> ApiResult<R>
+            + Send
+            + 'static,
         R: Send + 'static,
     {
         let config = self.config.clone();
@@ -387,8 +389,7 @@ impl SftpFileClient {
 
 #[async_trait::async_trait]
 impl FileClient for SftpFileClient {
-    async fn upload(&self, content: &[u8], path: &str, _content_type: &str) -> ApiResult<String> {
-        let content = content.to_vec();
+    async fn upload(&self, content: Vec<u8>, path: &str, _content_type: &str) -> ApiResult<String> {
         let path_str = path.to_string();
 
         let path_clone = path_str.clone();

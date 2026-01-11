@@ -44,8 +44,9 @@ pub async fn create_file(
 
     let filename = gen_filename(path.as_deref(), &name).await?;
 
+    let content_len = content.len() as i32;
     // Upload
-    let url = client.upload(&content, &filename, &content_type).await?;
+    let url = client.upload(content, &filename, &content_type).await?;
 
     // Save to DB
     let db = database::get_db_async().await;
@@ -56,7 +57,7 @@ pub async fn create_file(
         path: Set(filename),
         url: Set(url.clone()),
         r#type: Set(Some(content_type)),
-        size: Set(content.len() as i32),
+        size: Set(content_len),
         ..Default::default()
     };
     model.insert(&db).await?;

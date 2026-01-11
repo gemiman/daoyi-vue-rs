@@ -200,6 +200,6 @@ pub async fn test_file_config(id: &str) -> ApiResult<String> {
     let path = format!("test/{}.png", id_util::xid());
     get_file_client(id)
         .await?
-        .upload(&content, &path, "image/png")
+        .upload(content, &path, "image/png")
         .await
 }
