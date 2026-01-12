@@ -232,7 +232,80 @@ pub struct TenantRespVO {
     pub expire_time: DateTime,
     pub account_count: i32,
 }
-
+/// DictDataSaveReqVO，管理后台 - 字典数据创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictDataSaveReqVO {
+    /// 颜色类型,default、primary、success、info、warning、danger
+    pub color_type: Option<String>,
+    /// css 样式
+    pub css_class: Option<String>,
+    /// 字典类型
+    #[validate(length(max = 100, message = "字典类型类型长度不能超过 100 个字符"))]
+    pub dict_type: String,
+    /// 字典数据编号
+    pub id: String,
+    /// 字典标签
+    #[validate(length(max = 100, message = "字典标签长度不能超过100个字符"))]
+    pub label: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态,见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 字典值
+    #[validate(length(max = 100, message = "字典键值长度不能超过100个字符"))]
+    pub value: String,
+}
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictDataUpdateReqVO {
+    /// 颜色类型,default、primary、success、info、warning、danger
+    pub color_type: Option<String>,
+    /// css 样式
+    pub css_class: Option<String>,
+    /// 字典数据编号
+    pub id: String,
+    /// 字典标签
+    #[validate(length(max = 100, message = "字典标签长度不能超过100个字符"))]
+    pub label: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态,见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 字典值
+    #[validate(length(max = 100, message = "字典键值长度不能超过100个字符"))]
+    pub value: String,
+}
+/// DictDataRespVO，管理后台 - 字典数据信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictDataRespVO {
+    /// 颜色类型,default、primary、success、info、warning、danger
+    pub color_type: Option<String>,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// css 样式
+    pub css_class: Option<String>,
+    /// 字典类型
+    pub dict_type: String,
+    /// 字典数据编号
+    pub id: String,
+    /// 字典标签
+    pub label: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 显示顺序
+    pub sort: i32,
+    /// 状态,见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 字典值
+    pub value: String,
+}
 /// DictTypeSaveReqVO，管理后台 - 字典类型创建/修改 Request VO
 #[derive(Debug, Validate, Deserialize)]
 pub struct DictTypeSaveReqVO {
@@ -244,7 +317,6 @@ pub struct DictTypeSaveReqVO {
     /// 状态，参见 CommonStatusEnum 枚举类
     pub status: CommonStatusEnum,
     /// 字典类型
-    #[serde(rename = "type")]
     #[validate(length(max = 100, message = "字典类型类型长度不能超过 100 个字符"))]
     pub r#type: String,
 }
@@ -274,7 +346,6 @@ pub struct DictTypeSimpleRespVO {
     /// 字典名称
     pub name: String,
     /// 字典类型
-    #[serde(rename = "type")]
     pub r#type: String,
 }
 
@@ -294,7 +365,6 @@ pub struct DictTypeRespVO {
     /// 状态，参见 CommonStatusEnum 枚举类
     pub status: CommonStatusEnum,
     /// 字典类型
-    #[serde(rename = "type")]
     pub r#type: String,
 }
 /// 管理后台 - 字典类型分页列表 Request VO
@@ -312,6 +382,23 @@ pub struct DictTypePageReqVO {
     #[serde(default)]
     #[serde(with = "option_vec_datetime_format")]
     pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+
+/// 管理后台 - 字典类型分页列表 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct DictDataPageReqVO {
+    /// 字典标签
+    #[validate(length(max = 100, message = "字典标签长度不能超过100个字符"))]
+    pub label: Option<String>,
+    /// 字典类型，模糊匹配
+    #[validate(length(max = 100, message = "字典类型类型长度不能超过100个字符"))]
+    pub dict_type: Option<String>,
+    /// 状态（0正常 1停用）展示状态，参见 CommonStatusEnum 枚举类
+    pub status: Option<CommonStatusEnum>,
     #[serde(flatten)]
     #[validate(nested)]
     pub pagination: PaginationParams,
