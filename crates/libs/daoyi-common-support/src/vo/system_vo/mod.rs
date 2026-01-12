@@ -232,6 +232,52 @@ pub struct TenantRespVO {
     pub expire_time: DateTime,
     pub account_count: i32,
 }
+
+/// DictTypeSaveReqVO，管理后台 - 字典类型创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+pub struct DictTypeSaveReqVO {
+    /// 字典名称
+    #[validate(length(max = 100, message = "字典类型名称长度不能超过100个字符"))]
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 字典类型
+    #[serde(rename = "type")]
+    #[validate(length(max = 100, message = "字典类型类型长度不能超过 100 个字符"))]
+    pub r#type: String,
+}
+#[derive(Debug, Validate, Deserialize)]
+pub struct DictTypeUpdateReqVO {
+    /// 字典类型编号
+    pub id: String,
+    /// 字典名称
+    #[validate(length(max = 100, message = "字典类型名称长度不能超过100个字符"))]
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 字典类型
+    #[serde(rename = "type")]
+    #[validate(length(max = 100, message = "字典类型类型长度不能超过 100 个字符"))]
+    pub r#type: String,
+}
+
+/// DictTypeRespVO，管理后台 - 字典类型信息 Response VO
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictTypeSimpleRespVO {
+    /// 字典类型编号
+    pub id: String,
+    /// 字典名称
+    pub name: String,
+    /// 字典类型
+    #[serde(rename = "type")]
+    pub r#type: String,
+}
+
 /// DictTypeRespVO，管理后台 - 字典类型信息 Response VO
 #[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -23,3 +23,17 @@ pub async fn get_dict_data_list(
         .await?;
     Ok(list)
 }
+
+pub async fn get_dict_data_count_by_dict_type<I, S>(dict_types: I) -> ApiResult<u64>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<Value>,
+{
+    let db = database::get_db_async().await;
+    let count = SystemDictData::find_perm()
+        .await
+        .filter(system_dict_data::Column::DictType.is_in(dict_types))
+        .count(&db)
+        .await?;
+    Ok(count)
+}
