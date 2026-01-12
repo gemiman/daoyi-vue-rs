@@ -209,7 +209,7 @@ pub async fn delete_dept_list(ids: &Vec<String>) -> ApiResult<()> {
         }
     }
     // 批量删除部门
-    SystemDept::batch_delete_logical_by_id(&database::get_db_async().await, ids).await?;
+    SystemDept::delete_logical_by_ids(&database::get_db_async().await, ids).await?;
     Ok(())
 }
 

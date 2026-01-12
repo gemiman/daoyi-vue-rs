@@ -660,6 +660,7 @@ pub struct RoleIdParams {
 #[serde(rename_all = "camelCase")]
 pub struct IdsParams {
     #[serde(deserialize_with = "de_comma_separated")]
+    #[validate(length(min = 1, message = "ids不能为空"))]
     pub ids: Vec<String>,
 }
 

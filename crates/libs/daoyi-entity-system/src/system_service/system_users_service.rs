@@ -19,10 +19,7 @@ use std::collections::HashSet;
 
 pub async fn update_user_password(vo: UserUpdatePasswordReqVo) -> ApiResult<()> {
     // 1. 校验用户存在
-    let mut active_model = validate_user_exists(Some(&vo.id))
-        .await?
-        .ok_or_else(|| ApiError::biz("用户不存在"))?
-        .into_active_model();
+    let mut active_model = get_by_id(&vo.id).await?.into_active_model();
     // 2. 更新密码
     active_model.password = Set(hash_password(&vo.password).await?);
     active_model.update(&database::get_db_async().await).await?;
@@ -168,7 +165,10 @@ async fn validate_mobile_unique(id: Option<&str>, mobile: Option<&str>) -> ApiRe
     Ok(())
 }
 
-async fn validate_username_unique(id: Option<&str>, username: &str) -> ApiResult<()> {
+async fn validate_username_unique<T>(id: Option<&str>, username: T) -> ApiResult<()>
+where
+    T: Into<Value>,
+{
     let db = database::get_db_async().await;
     let option = SystemUsers::find_perm_with_tenant()
         .await
@@ -188,14 +188,18 @@ async fn validate_username_unique(id: Option<&str>, username: &str) -> ApiResult
     Ok(())
 }
 
-async fn validate_user_exists(id: Option<&str>) -> ApiResult<Option<system_users::Model>> {
+async fn validate_user_exists<S: Into<Value>>(
+    id: Option<S>,
+) -> ApiResult<Option<system_users::Model>> {
     if id.is_none() {
         return Ok(None);
     }
     let model = get_by_id(id.unwrap()).await?;
     Ok(Some(model))
 }
-pub async fn get_by_username(username: &str) -> ApiResult<Option<system_users::Model>> {
+pub async fn get_by_username<S: Into<Value>>(
+    username: S,
+) -> ApiResult<Option<system_users::Model>> {
     let db = database::get_db_async().await;
     let option = SystemUsers::find_perm_with_tenant()
         .await
@@ -205,7 +209,7 @@ pub async fn get_by_username(username: &str) -> ApiResult<Option<system_users::M
     Ok(option)
 }
 
-pub async fn get_by_id(id: &str) -> ApiResult<system_users::Model> {
+pub async fn get_by_id<S: Into<Value>>(id: S) -> ApiResult<system_users::Model> {
     let db = database::get_db_async().await;
     SystemUsers::find_by_id_perm_with_tenant(&db, id)
         .await?
@@ -302,4 +306,36 @@ pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<Page<UserRespVO>
     // 拼接数据
     let page = Page::from_pagination(&params.pagination, total, list);
     Ok(page)
+}
+
+#[transactional]
+pub async fn delete_user<S>(id: S) -> ApiResult<()>
+where
+    S: Into<Value> + Clone,
+{
+    // 1. 校验用户存在
+    get_by_id(id.clone()).await?;
+    // 2.1 删除用户
+    SystemUsers::delete_logical_by_id(&database::get_db_async().await, id.clone()).await?;
+    // 2.2 删除用户关联数据
+    system_user_role_service::delete_list_by_user_id(id.clone()).await?;
+    // 2.2 删除用户岗位
+    system_user_post_service::delete_by_user_id(id).await?;
+    Ok(())
+}
+
+#[transactional]
+pub async fn delete_user_list<I, S>(ids: I) -> ApiResult<()>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<Value> + Clone,
+{
+    let ids: Vec<S> = ids.into_iter().collect();
+    // 1. 批量删除用户
+    SystemUsers::delete_logical_by_ids(&database::get_db_async().await, ids.iter().cloned())
+        .await?;
+    // 2. 批量删除用户关联数据
+    system_user_role_service::delete_list_by_user_ids(ids.iter().cloned()).await?;
+    system_user_post_service::delete_by_user_ids(ids).await?;
+    Ok(())
 }

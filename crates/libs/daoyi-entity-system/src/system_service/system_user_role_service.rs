@@ -50,9 +50,11 @@ pub async fn assign_user_role(user_id: &str, role_ids: &Vec<String>) -> ApiResul
 
     // 6. 执行删除操作
     if !delete_role_ids.is_empty() {
-        SystemUserRole::delete_many()
+        SystemUserRole::update_many_auto()
+            .await
             .filter(system_user_role::Column::UserId.eq(user_id))
             .filter(system_user_role::Column::RoleId.is_in(delete_role_ids))
+            .col_expr(system_user_role::Column::Deleted, Expr::value(true))
             .exec(&db)
             .await?;
     }
@@ -94,6 +96,28 @@ pub async fn delete_list_by_role_id(role_id: &str) -> ApiResult<()> {
     SystemUserRole::update_many_auto()
         .await
         .filter(system_user_role::Column::RoleId.eq(role_id))
+        .col_expr(system_user_role::Column::Deleted, Expr::value(true))
+        .exec(&db)
+        .await?;
+    Ok(())
+}
+
+pub async fn delete_list_by_user_id<S>(user_id: S) -> ApiResult<()>
+where
+    S: Into<Value>,
+{
+    delete_list_by_user_ids(vec![user_id]).await
+}
+
+pub async fn delete_list_by_user_ids<I, S>(user_ids: I) -> ApiResult<()>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<Value>,
+{
+    let db = database::get_db_async().await;
+    SystemUserRole::update_many_auto()
+        .await
+        .filter(system_user_role::Column::UserId.is_in(user_ids))
         .col_expr(system_user_role::Column::Deleted, Expr::value(true))
         .exec(&db)
         .await?;

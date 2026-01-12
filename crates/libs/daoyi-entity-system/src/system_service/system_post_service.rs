@@ -99,7 +99,7 @@ pub async fn delete_post_list(ids: &Vec<String>) -> ApiResult<()> {
     // 校验存在
     try_join_all(ids.iter().map(|id| validate_post_exists(Some(id)))).await?;
     let db = database::get_db_async().await;
-    SystemPost::batch_delete_logical_by_id(&db, ids).await?;
+    SystemPost::delete_logical_by_ids(&db, ids).await?;
     Ok(())
 }
 

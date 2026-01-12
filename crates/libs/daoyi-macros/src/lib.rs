@@ -307,7 +307,7 @@ pub fn derive_active_model_behavior(input: TokenStream) -> TokenStream {
                     .await
             }
 
-            pub async fn batch_delete_logical_by_id<C, I, V>(db: &C, ids: I) -> Result<sea_orm::UpdateResult, sea_orm::DbErr>
+            pub async fn delete_logical_by_ids<C, I, V>(db: &C, ids: I) -> Result<sea_orm::UpdateResult, sea_orm::DbErr>
             where
                 C: sea_orm::ConnectionTrait,
                 I: IntoIterator<Item = V>,

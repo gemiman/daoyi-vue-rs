@@ -384,7 +384,7 @@ pub async fn delete_tenant_list(ids: &Vec<String>) -> ApiResult<()> {
     try_join_all(ids.iter().map(|id| validate_update_tenant(id))).await?;
     // 删除
     let db = database::get_db_async().await;
-    SystemTenant::batch_delete_logical_by_id(&db, ids).await?;
+    SystemTenant::delete_logical_by_ids(&db, ids).await?;
     Ok(())
 }
 

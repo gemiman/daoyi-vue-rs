@@ -150,7 +150,7 @@ pub async fn delete_file_config_list(ids: &Vec<String>) -> ApiResult<()> {
     }
     // 批量删除
     let ids = configs.iter().map(|m| m.id.as_str()).collect::<Vec<_>>();
-    InfraFileConfig::batch_delete_logical_by_id(&db, ids).await?;
+    InfraFileConfig::delete_logical_by_ids(&db, ids).await?;
     Ok(())
 }
 

@@ -1,5 +1,6 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_user_post;
+use crate::system_service::system_user_role_service::delete_list_by_user_ids;
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiResult;
 use sea_orm::Set;
@@ -44,12 +45,33 @@ pub async fn save_batch(user_id: &str, post_ids: &Vec<String>) -> ApiResult<()> 
 
     // 6. 执行删除操作
     if !delete_post_ids.is_empty() {
-        SystemUserPost::delete_many()
+        SystemUserPost::update_many_auto()
+            .await
             .filter(system_user_post::Column::UserId.eq(user_id))
             .filter(system_user_post::Column::PostId.is_in(delete_post_ids))
+            .col_expr(system_user_post::Column::Deleted, Expr::value(true))
             .exec(&db)
             .await?;
     }
 
+    Ok(())
+}
+
+pub async fn delete_by_user_id<S: Into<Value>>(user_id: S) -> ApiResult<()> {
+    delete_list_by_user_ids(vec![user_id]).await
+}
+
+pub async fn delete_by_user_ids<I, S>(user_ids: I) -> ApiResult<()>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<Value>,
+{
+    let db = database::get_db_async().await;
+    SystemUserPost::update_many_auto()
+        .await
+        .filter(system_user_post::Column::UserId.is_in(user_ids))
+        .col_expr(system_user_post::Column::Deleted, Expr::value(true))
+        .exec(&db)
+        .await?;
     Ok(())
 }

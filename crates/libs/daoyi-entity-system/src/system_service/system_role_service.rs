@@ -210,7 +210,7 @@ pub async fn delete_role_list(ids: &Vec<String>) -> ApiResult<()> {
     try_join_all(ids.iter().map(|id| validate_role_for_update(id))).await?;
     // 2.1 标记删除
     let db = database::get_db_async().await;
-    SystemRole::batch_delete_logical_by_id(&db, ids).await?;
+    SystemRole::delete_logical_by_ids(&db, ids).await?;
     // 2.2 删除相关数据
     try_join_all(ids.iter().map(|id| process_role_deleted(id))).await?;
     Ok(())

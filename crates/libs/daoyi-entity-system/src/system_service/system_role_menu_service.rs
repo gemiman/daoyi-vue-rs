@@ -49,9 +49,11 @@ pub async fn assign_role_menu(role_id: &str, menu_ids: &Vec<String>) -> ApiResul
 
     // 6. 执行删除操作
     if !delete_menu_ids.is_empty() {
-        SystemRoleMenu::delete_many()
+        SystemRoleMenu::update_many_auto()
+            .await
             .filter(system_role_menu::Column::RoleId.eq(role_id))
             .filter(system_role_menu::Column::MenuId.is_in(delete_menu_ids))
+            .col_expr(system_role_menu::Column::Deleted, Expr::value(true))
             .exec(&db)
             .await?;
     }
@@ -65,12 +67,9 @@ pub async fn get_role_menu_list_by_role_id(role_id: &str) -> ApiResult<Vec<Strin
 pub async fn get_role_menu_list_by_role_ids<I, S>(role_ids: I) -> ApiResult<Vec<String>>
 where
     I: IntoIterator<Item = S>,
-    S: AsRef<str>,
+    S: Into<String>,
 {
-    let role_ids: Vec<String> = role_ids
-        .into_iter()
-        .map(|s| s.as_ref().to_string())
-        .collect();
+    let role_ids: Vec<String> = role_ids.into_iter().map(|s| s.into()).collect();
     if role_ids.is_empty() {
         return Ok(vec![]);
     }

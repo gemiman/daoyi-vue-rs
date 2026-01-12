@@ -5,8 +5,8 @@ use daoyi_common_support::models::pagination::Page;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
-    IdParams, UserPageReqVO, UserRespVO, UserSaveReqVO, UserSimpleRespVo, UserUpdatePasswordReqVo,
-    UserUpdateReqVO,
+    IdParams, IdsParams, UserPageReqVO, UserRespVO, UserSaveReqVO, UserSimpleRespVo,
+    UserUpdatePasswordReqVo, UserUpdateReqVO,
 };
 use daoyi_entity_system::system_service::{system_dept_service, system_users_service};
 use std::collections::HashSet;
@@ -21,6 +21,22 @@ pub fn create_router() -> Router<AppState> {
         .route("/create", axum::routing::post(create_user))
         .route("/update", axum::routing::put(update_user))
         .route("/update-password", axum::routing::put(update_user_password))
+        .route("/delete", axum::routing::delete(delete_user))
+        .route("/delete-list", axum::routing::delete(delete_user_list))
+}
+
+#[debug_handler]
+async fn delete_user_list(
+    ValidQuery(IdsParams { ids }): ValidQuery<IdsParams>,
+) -> RestApiResult<bool> {
+    system_users_service::delete_user_list(ids).await?;
+    ApiResponse::success(true)
+}
+
+#[debug_handler]
+async fn delete_user(ValidQuery(IdParams { id }): ValidQuery<IdParams>) -> RestApiResult<bool> {
+    system_users_service::delete_user(&id).await?;
+    ApiResponse::success(true)
 }
 
 #[debug_handler]

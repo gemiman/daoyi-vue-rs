@@ -7,8 +7,8 @@ use daoyi_common_support::vo::infra_vo::{
     DbFileClientConfig, FtpFileClientConfig, LocalFileClientConfig, S3FileClientConfig,
     SftpFileClientConfig,
 };
-use sea_orm::prelude::Json;
 use sea_orm::prelude::async_trait;
+use sea_orm::prelude::{Expr, Json};
 use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
 use std::io::Write;
 use std::net::TcpStream;
@@ -70,9 +70,11 @@ impl FileClient for DbFileClient {
 
     async fn delete(&self, path: &str) -> ApiResult<()> {
         let db = database::get_db_async().await;
-        infra_file_content::Entity::delete_many()
+        infra_file_content::Entity::update_many_auto()
+            .await
             .filter(infra_file_content::Column::ConfigId.eq(&self.config_id))
             .filter(infra_file_content::Column::Path.eq(path))
+            .col_expr(infra_file_content::Column::Deleted, Expr::value(true))
             .exec(&db)
             .await?;
         Ok(())
