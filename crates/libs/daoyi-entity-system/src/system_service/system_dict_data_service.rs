@@ -11,7 +11,7 @@ pub async fn get_dict_data_list(
     dict_type: Option<&str>,
 ) -> ApiResult<Vec<system_dict_data::Model>> {
     let db = database::get_db_async().await;
-    let list = SystemDictData::find_perm_with_tenant()
+    let list = SystemDictData::find_perm()
         .await
         .filter(system_dict_data::Column::Status.eq(status))
         .apply_if(dict_type, |query, dict_type| {

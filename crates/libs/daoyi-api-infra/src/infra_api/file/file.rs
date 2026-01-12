@@ -6,7 +6,7 @@ use axum::{
 };
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::error::ApiError;
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::infra_vo::{
@@ -79,7 +79,7 @@ async fn delete_file_list(
 #[debug_handler]
 async fn get_file_page(
     ValidQuery(req): ValidQuery<FilePageReqVO>,
-) -> RestApiResult<Page<FileRespVO>> {
+) -> RestApiResult<PageResult<FileRespVO>> {
     let page = infra_file_service::get_file_page(&req).await?;
     ApiResponse::success(page)
 }

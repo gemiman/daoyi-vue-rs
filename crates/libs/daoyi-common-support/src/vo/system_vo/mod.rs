@@ -232,6 +232,44 @@ pub struct TenantRespVO {
     pub expire_time: DateTime,
     pub account_count: i32,
 }
+/// DictTypeRespVO，管理后台 - 字典类型信息 Response VO
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DictTypeRespVO {
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 字典类型编号
+    pub id: String,
+    /// 字典名称
+    pub name: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 字典类型
+    #[serde(rename = "type")]
+    pub r#type: String,
+}
+/// 管理后台 - 字典类型分页列表 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct DictTypePageReqVO {
+    /// 字典类型名称，模糊匹配
+    pub name: Option<String>,
+    /// 字典类型，模糊匹配
+    #[validate(length(max = 100, message = "字典类型类型长度不能超过100个字符"))]
+    pub r#type: Option<String>,
+    /// 状态（0正常 1停用）展示状态，参见 CommonStatusEnum 枚举类
+    pub status: Option<CommonStatusEnum>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]

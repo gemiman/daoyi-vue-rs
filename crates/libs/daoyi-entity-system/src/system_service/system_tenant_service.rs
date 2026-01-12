@@ -10,7 +10,7 @@ use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::enumeration::{CommonStatusEnum, ID_ROOT, RoleCodeEnum, RoleTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::FlexibleInt;
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::utils::collectors;
 use daoyi_common_support::vo::system_vo::TenantPageReqVo;
 use daoyi_common_support::vo::system_vo::{
@@ -349,7 +349,9 @@ pub async fn check_tenant_id(tenant_id: &str) -> ApiResult<TenantRespVO> {
     Ok(vo)
 }
 
-pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_tenant::Model>> {
+pub async fn get_tenant_page(
+    params: &TenantPageReqVo,
+) -> ApiResult<PageResult<system_tenant::Model>> {
     let db = database::get_db_async().await;
     let paginator = SystemTenant::find_perm()
         .await
@@ -372,7 +374,7 @@ pub async fn get_tenant_page(params: &TenantPageReqVo) -> ApiResult<Page<system_
         .paginate(&db, params.pagination.page_size);
     let total = paginator.num_items().await?;
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
-    let page = Page::from_pagination(&params.pagination, total, list);
+    let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
 }
 

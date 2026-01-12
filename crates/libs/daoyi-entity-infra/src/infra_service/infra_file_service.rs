@@ -1,7 +1,7 @@
 use crate::infra_entity::{infra_file, prelude::*};
 use crate::infra_service::infra_file_config_service::{get_file_client, get_master_file_client};
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::vo::infra_vo::{
     FileCreateReqVO, FilePageReqVO, FilePresignedUrlRespVO, FileRespVO,
 };
@@ -135,7 +135,7 @@ pub async fn presign_put_url(
     })
 }
 
-pub async fn get_file_page(params: &FilePageReqVO) -> ApiResult<Page<FileRespVO>> {
+pub async fn get_file_page(params: &FilePageReqVO) -> ApiResult<PageResult<FileRespVO>> {
     let db = database::get_db_async().await;
     let paginator = InfraFile::find_perm_with_tenant()
         .await
@@ -152,22 +152,12 @@ pub async fn get_file_page(params: &FilePageReqVO) -> ApiResult<Page<FileRespVO>
         .paginate(&db, params.pagination.page_size);
 
     let total = paginator.num_items().await?;
-    let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
-
-    let vos = list
+    let list = paginator
+        .fetch_page(params.pagination.page_no - 1)
+        .await?
         .into_iter()
-        .map(|m| FileRespVO {
-            id: m.id,
-            config_id: m.config_id,
-            name: m.name,
-            path: m.path,
-            url: m.url,
-            r#type: m.r#type,
-            size: m.size,
-            create_time: m.create_time,
-        })
+        .map(|m| m.into())
         .collect();
-
-    let page = Page::from_pagination(&params.pagination, total, vos);
+    let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
 }

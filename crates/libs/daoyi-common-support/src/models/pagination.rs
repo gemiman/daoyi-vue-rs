@@ -26,7 +26,7 @@ fn default_size() -> u64 {
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Page<T> {
+pub struct PageResult<T> {
     page_no: u64,
     page_size: u64,
     total: u64,
@@ -34,9 +34,9 @@ pub struct Page<T> {
     total_page: u64,
 }
 
-impl<T> Page<T> {
+impl<T> PageResult<T> {
     pub fn new(page_no: u64, page_size: u64, total: u64, list: Vec<T>) -> Self {
-        Page {
+        PageResult {
             page_no,
             page_size,
             total,
@@ -49,9 +49,9 @@ impl<T> Page<T> {
         }
     }
     pub fn from_pagination(pagination: &PaginationParams, total: u64, list: Vec<T>) -> Self {
-        Page::new(pagination.page_no, pagination.page_size, total, list)
+        PageResult::new(pagination.page_no, pagination.page_size, total, list)
     }
     pub fn empty(pagination: &PaginationParams) -> Self {
-        Page::new(pagination.page_no, pagination.page_size, 0, vec![])
+        PageResult::new(pagination.page_no, pagination.page_size, 0, vec![])
     }
 }

@@ -4,7 +4,7 @@ use crate::system_service::system_tenant_service;
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::vo::system_vo::{
     TenantPackagePageReqVO, TenantPackageSaveReqVo, TenantPackageUpdateReqVo,
 };
@@ -58,7 +58,7 @@ pub async fn get_tenant_package_list_by_status(
 
 pub async fn get_tenant_package_page(
     params: &TenantPackagePageReqVO,
-) -> ApiResult<Page<system_tenant_package::Model>> {
+) -> ApiResult<PageResult<system_tenant_package::Model>> {
     let db = database::get_db_async().await;
     let paginator = SystemTenantPackage::find_perm()
         .await
@@ -80,7 +80,7 @@ pub async fn get_tenant_package_page(
         .paginate(&db, params.pagination.page_size);
     let total = paginator.num_items().await?;
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
-    let page = Page::from_pagination(&params.pagination, total, list);
+    let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
 }
 

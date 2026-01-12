@@ -1,7 +1,7 @@
 use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
@@ -47,7 +47,7 @@ async fn get_tenant_package(
 #[debug_handler]
 async fn get_tenant_package_page(
     ValidQuery(params): ValidQuery<TenantPackagePageReqVO>,
-) -> RestApiResult<Page<system_tenant_package::Model>> {
+) -> RestApiResult<PageResult<system_tenant_package::Model>> {
     ApiResponse::success(system_tenant_package_service::get_tenant_package_page(&params).await?)
 }
 

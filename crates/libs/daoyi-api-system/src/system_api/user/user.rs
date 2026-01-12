@@ -1,7 +1,7 @@
 use axum::{Router, debug_handler};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
@@ -72,7 +72,7 @@ async fn get_user(ValidQuery(IdParams { id }): ValidQuery<IdParams>) -> RestApiR
 #[debug_handler]
 async fn get_user_page(
     ValidQuery(params): ValidQuery<UserPageReqVO>,
-) -> RestApiResult<Page<UserRespVO>> {
+) -> RestApiResult<PageResult<UserRespVO>> {
     ApiResponse::success(system_users_service::get_user_page(&params).await?)
 }
 

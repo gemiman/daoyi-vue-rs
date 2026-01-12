@@ -3,7 +3,7 @@ use crate::infra_entity::prelude::*;
 use crate::infra_service::file_client_factory::{FileClient, create_file_client};
 use daoyi_common_support::enumeration::FileStorageEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::serde::validate_and_parse;
 use daoyi_common_support::vo::infra_vo::{
     DbFileClientConfig, FileConfigPageReqVO, FileConfigSaveReqVo, FileConfigUpdateReqVo,
@@ -16,7 +16,7 @@ use sea_orm::*;
 
 pub async fn get_file_config_page(
     params: &FileConfigPageReqVO,
-) -> ApiResult<Page<infra_file_config::Model>> {
+) -> ApiResult<PageResult<infra_file_config::Model>> {
     let db = database::get_db_async().await;
     let paginator = InfraFileConfig::find_perm_with_tenant()
         .await
@@ -36,7 +36,7 @@ pub async fn get_file_config_page(
         .paginate(&db, params.pagination.page_size);
     let total = paginator.num_items().await?;
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
-    let page = Page::from_pagination(&params.pagination, total, list);
+    let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
 }
 

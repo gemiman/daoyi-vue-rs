@@ -1,7 +1,7 @@
 use axum::{Router, debug_handler};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
@@ -63,6 +63,6 @@ async fn get_simple_role_list() -> RestApiResult<Vec<RoleRespVO>> {
 #[debug_handler]
 async fn get_role_page(
     ValidQuery(params): ValidQuery<RolePageReqVO>,
-) -> RestApiResult<Page<system_role::Model>> {
+) -> RestApiResult<PageResult<system_role::Model>> {
     ApiResponse::success(system_role_service::get_role_page(&params).await?)
 }

@@ -1,6 +1,6 @@
-use axum::{debug_handler, routing, Router};
+use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::infra_vo::{
@@ -78,6 +78,6 @@ async fn create_file_config(
 #[debug_handler]
 async fn get_file_config_page(
     ValidQuery(params): ValidQuery<FileConfigPageReqVO>,
-) -> RestApiResult<Page<infra_file_config::Model>> {
+) -> RestApiResult<PageResult<infra_file_config::Model>> {
     ApiResponse::success(infra_file_config_service::get_file_config_page(&params).await?)
 }

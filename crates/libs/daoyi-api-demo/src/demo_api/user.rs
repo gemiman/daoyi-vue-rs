@@ -4,7 +4,7 @@ use daoyi_common_support::app::AppState;
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::Gender;
 use daoyi_common_support::error::ApiError;
-use daoyi_common_support::models::pagination::{Page, PaginationParams};
+use daoyi_common_support::models::pagination::{PageResult, PaginationParams};
 use daoyi_common_support::password::hash_password;
 use daoyi_common_support::request::path::Path;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
@@ -102,7 +102,7 @@ async fn find_page(
         keyword,
         pagination,
     }): ValidQuery<UserQueryParams>,
-) -> RestApiResult<Page<sys_user::Model>> {
+) -> RestApiResult<PageResult<sys_user::Model>> {
     let db = database::get_db_async().await;
     let paginator = SysUser::find()
         .apply_if(keyword.as_ref(), |query, keyword| {
@@ -116,7 +116,7 @@ async fn find_page(
         .paginate(&db, pagination.page_size);
     let total = paginator.num_items().await?;
     let users = paginator.fetch_page(pagination.page_no - 1).await?;
-    let page = Page::from_pagination(&pagination, total, users);
+    let page = PageResult::from_pagination(&pagination, total, users);
     Ok(ApiResponse::ok(Some(page)))
 }
 

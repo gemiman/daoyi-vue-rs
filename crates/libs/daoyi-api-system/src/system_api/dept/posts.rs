@@ -1,7 +1,7 @@
 use axum::{Router, debug_handler};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
@@ -71,6 +71,6 @@ async fn get_simple_post_list() -> RestApiResult<Vec<PostSimpleRespVo>> {
 #[debug_handler]
 async fn get_post_page(
     ValidQuery(params): ValidQuery<PostPageReqVO>,
-) -> RestApiResult<Page<system_post::Model>> {
+) -> RestApiResult<PageResult<system_post::Model>> {
     ApiResponse::success(system_post_service::get_post_page(&params).await?)
 }

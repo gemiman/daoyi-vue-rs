@@ -7,7 +7,7 @@ use crate::system_service::{
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::password::hash_password;
 use daoyi_common_support::vo::system_vo::{
     UserPageReqVO, UserRespVO, UserSaveReqVO, UserUpdatePasswordReqVo, UserUpdateReqVO,
@@ -242,7 +242,7 @@ async fn get_dept_condition(dept_id: Option<&str>) -> ApiResult<Option<HashSet<S
     Ok(Some(dept_ids))
 }
 
-pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<Page<UserRespVO>> {
+pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<PageResult<UserRespVO>> {
     let db = database::get_db_async().await;
     // 获得用户分页列表
     // 如果有角色编号，查询角色对应的用户编号
@@ -255,7 +255,7 @@ pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<Page<UserRespVO>
     if let Some(user_ids) = &user_ids
         && user_ids.is_empty()
     {
-        return Ok(Page::empty(&params.pagination));
+        return Ok(PageResult::empty(&params.pagination));
     }
     let dept_ids = get_dept_condition(params.dept_id.as_deref()).await?;
     // 分页查询
@@ -285,7 +285,7 @@ pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<Page<UserRespVO>
     let total = paginator.num_items().await?;
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
     if list.is_empty() {
-        return Ok(Page::empty(&params.pagination));
+        return Ok(PageResult::empty(&params.pagination));
     }
     let dept_ids = list
         .iter()
@@ -304,7 +304,7 @@ pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<Page<UserRespVO>
         })
         .collect();
     // 拼接数据
-    let page = Page::from_pagination(&params.pagination, total, list);
+    let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
 }
 

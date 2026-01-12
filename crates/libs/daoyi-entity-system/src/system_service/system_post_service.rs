@@ -3,7 +3,7 @@ use crate::system_entity::system_post;
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::models::pagination::Page;
+use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::vo::system_vo::{PostPageReqVO, PostSaveReqVO, PostUpdateReqVo};
 use futures::future::try_join_all;
 use sea_orm::entity::prelude::*;
@@ -61,7 +61,7 @@ pub async fn get_post_list(
     Ok(list)
 }
 
-pub async fn get_post_page(params: &PostPageReqVO) -> ApiResult<Page<system_post::Model>> {
+pub async fn get_post_page(params: &PostPageReqVO) -> ApiResult<PageResult<system_post::Model>> {
     let db = database::get_db_async().await;
     let paginator = SystemPost::find_perm_with_tenant()
         .await
@@ -78,7 +78,7 @@ pub async fn get_post_page(params: &PostPageReqVO) -> ApiResult<Page<system_post
         .paginate(&db, params.pagination.page_size);
     let total = paginator.num_items().await?;
     let list = paginator.fetch_page(params.pagination.page_no - 1).await?;
-    let page = Page::from_pagination(&params.pagination, total, list);
+    let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
 }
 

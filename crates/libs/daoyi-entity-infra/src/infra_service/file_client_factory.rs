@@ -9,7 +9,7 @@ use daoyi_common_support::vo::infra_vo::{
 };
 use sea_orm::prelude::async_trait;
 use sea_orm::prelude::{Expr, Json};
-use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, QueryFilter, Set};
+use sea_orm::{ActiveModelTrait, ColumnTrait, QueryFilter, Set};
 use std::io::Write;
 use std::net::TcpStream;
 use std::path::Path;
