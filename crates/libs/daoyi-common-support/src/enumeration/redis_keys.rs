@@ -3,7 +3,7 @@
 pub enum RedisKey {
     CheckToken,
     CheckTenantId,
-    RoleById
+    RoleById,
 }
 
 impl RedisKey {

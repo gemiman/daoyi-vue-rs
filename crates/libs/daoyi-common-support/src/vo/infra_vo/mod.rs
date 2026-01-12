@@ -200,7 +200,6 @@ pub struct FilePresignedUrlRespVO {
     pub url: String,
 }
 
-
 #[derive(Debug, Deserialize, Validate)]
 pub struct PresignedUrlReq {
     pub name: String,

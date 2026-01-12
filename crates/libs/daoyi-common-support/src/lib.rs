@@ -1,6 +1,7 @@
 pub mod app;
 pub mod auth;
 pub mod configs;
+pub mod context;
 pub mod database;
 pub mod enumeration;
 pub mod error;
@@ -14,6 +15,5 @@ pub mod request;
 pub mod response;
 pub mod serde;
 pub mod server;
-pub mod context;
-pub mod vo;
 pub mod utils;
+pub mod vo;

@@ -1,8 +1,8 @@
 use axum::Router;
 use daoyi_common_support::app::AppState;
 
-pub mod user;
 pub mod auth;
+pub mod user;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()

@@ -2,6 +2,7 @@ use crate::app::AppState;
 use crate::auth::Principal;
 use crate::configs::ServerConfig;
 use crate::error::ApiError;
+use crate::id_util;
 use crate::middlewares::simple_auth_layer;
 use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::RestApiResult;
@@ -14,7 +15,6 @@ use tower_http::cors::{self, CorsLayer};
 use tower_http::normalize_path::NormalizePathLayer;
 use tower_http::timeout::TimeoutLayer;
 use tower_http::trace::TraceLayer;
-use crate::id_util;
 
 pub struct Server {
     config: &'static ServerConfig,

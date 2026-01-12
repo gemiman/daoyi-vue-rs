@@ -4,7 +4,7 @@ use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::vo::system_vo::{
     TenantPackageRespVo, TenantPackageSaveReqVo, TenantPackageUpdateReqVo,
 };
-use daoyi_macros::{daoyi_model, DaoyiActiveModelBehavior};
+use daoyi_macros::{DaoyiActiveModelBehavior, daoyi_model};
 use sea_orm::entity::prelude::*;
 use sea_orm::{Set, Unchanged};
 use serde::{Deserialize, Serialize};

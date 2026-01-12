@@ -1,4 +1,4 @@
-use axum::{debug_handler, routing, Router};
+use axum::{Router, debug_handler, routing};
 use daoyi_common_support::app::AppState;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::models::pagination::Page;
