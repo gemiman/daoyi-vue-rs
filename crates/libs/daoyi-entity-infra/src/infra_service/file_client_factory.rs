@@ -301,10 +301,9 @@ impl FileClient for FtpFileClient {
     async fn upload(&self, content: Vec<u8>, path: &str, _content_type: &str) -> ApiResult<String> {
         let path_str = path.to_string();
 
-        let path_clone = path_str.clone();
         self.run_sync(move |ftp, config| {
             let base_path = &config.base_path;
-            let full_path = format!("{}/{}", base_path.trim_end_matches('/'), path_clone);
+            let full_path = format!("{}/{}", base_path.trim_end_matches('/'), path_str);
             if let Some(parent) = Path::new(&full_path).parent() {
                 let parent_str = parent.to_string_lossy();
                 let _ = ftp.mkdir(&parent_str);
@@ -312,11 +311,9 @@ impl FileClient for FtpFileClient {
 
             ftp.put_file(&full_path, &mut &content[..])
                 .map_err(|e| ApiError::biz(format!("FTP 上传失败: {}", e)))?;
-            Ok(())
+            Ok(format!("{}/{}", config.domain, path_str))
         })
-        .await?;
-
-        Ok(format!("{}/{}", self.config.domain, path_str))
+        .await
     }
 
     async fn delete(&self, path: &str) -> ApiResult<()> {
@@ -396,10 +393,9 @@ impl FileClient for SftpFileClient {
     async fn upload(&self, content: Vec<u8>, path: &str, _content_type: &str) -> ApiResult<String> {
         let path_str = path.to_string();
 
-        let path_clone = path_str.clone();
         self.run_sync(move |_sess, sftp, config| {
             let base_path = &config.base_path;
-            let full_path = Path::new(&base_path).join(&path_clone);
+            let full_path = Path::new(&base_path).join(&path_str);
 
             if let Some(parent) = full_path.parent() {
                 let _ = sftp.mkdir(parent, 0o755);
@@ -412,11 +408,9 @@ impl FileClient for SftpFileClient {
             file.write_all(&content)
                 .map_err(|e| ApiError::biz(format!("SFTP 写入文件失败: {}", e)))?;
 
-            Ok(())
+            Ok(format!("{}/{}", config.domain, path_str))
         })
-        .await?;
-
-        Ok(format!("{}/{}", self.config.domain, path_str))
+        .await
     }
 
     async fn delete(&self, path: &str) -> ApiResult<()> {
@@ -452,14 +446,14 @@ impl FileClient for SftpFileClient {
 // ================== Factory ==================
 
 pub async fn create_file_client(
-    config_id: String,
+    config_id: &str,
     storage: &FileStorageEnum,
     config: &Json,
 ) -> ApiResult<Box<dyn FileClient>> {
     match storage {
         FileStorageEnum::DB => {
             let config = validate_and_parse::<DbFileClientConfig>(config)?;
-            Ok(Box::new(DbFileClient::new(config_id, config)))
+            Ok(Box::new(DbFileClient::new(config_id.to_string(), config)))
         }
         FileStorageEnum::LOCAL => {
             let config = validate_and_parse::<LocalFileClientConfig>(config)?;

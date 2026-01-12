@@ -178,7 +178,7 @@ pub async fn get_master_file_client() -> ApiResult<(Box<dyn FileClient>, String)
         .await?
         .ok_or_else(|| ApiError::biz("主文件配置不存在，请先设置主配置"))?;
     let client = create_file_client(
-        master_config.id.clone(),
+        &master_config.id,
         &master_config.storage,
         &master_config.config,
     )
@@ -188,7 +188,7 @@ pub async fn get_master_file_client() -> ApiResult<(Box<dyn FileClient>, String)
 
 pub async fn get_file_client(id: &str) -> ApiResult<Box<dyn FileClient>> {
     let config = get_file_config(id).await?;
-    let client = create_file_client(String::from(id), &config.storage, &config.config).await?;
+    let client = create_file_client(id, &config.storage, &config.config).await?;
     Ok(client)
 }
 

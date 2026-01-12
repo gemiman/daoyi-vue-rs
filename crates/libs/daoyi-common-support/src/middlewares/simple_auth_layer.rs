@@ -58,11 +58,12 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                 // token为空，返回错误信息
                 return Err(ApiError::unauthenticated("No Authorization header").into_response());
             }
-            let mut token_tenant_id = None;
+            let mut token_tenant_id: Option<Arc<String>> = None;
             if let Some(token) = token {
                 let token_info = auth::check_token(token).await?;
-                token_tenant_id = Some(token_info.tenant_id);
-                context.tenant_id = token_tenant_id.clone().map(Arc::new);
+                let t_id = Arc::new(token_info.tenant_id);
+                token_tenant_id = Some(t_id.clone());
+                context.tenant_id = Some(t_id);
                 context.token = Some(Arc::new(String::from(token)));
                 context.login_id = Some(Arc::new(String::from(token_info.user_id)));
             };
@@ -83,7 +84,7 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                 && !is_ignored_tenant
             {
                 if let Some(token_tenant_id) = token_tenant_id {
-                    if token_tenant_id != tenant_id {
+                    if token_tenant_id.as_str() != tenant_id {
                         return Err(
                             ApiError::unauthenticated("Token tenant id mismatch").into_response()
                         );

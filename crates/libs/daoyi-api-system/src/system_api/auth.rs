@@ -28,20 +28,20 @@ pub fn create_router() -> Router<AppState> {
 #[debug_handler]
 async fn get_permission_info() -> RestApiResult<AuthPermissionInfoRespVO> {
     let mut vo = AuthPermissionInfoRespVO::default();
-    let login_user_id = HttpRequestContext::get_login_id();
+    let login_user_id = HttpRequestContext::get_login_id_arc();
     if login_user_id.is_none() {
         return ApiResponse::success(vo);
     }
     let login_user_id = login_user_id.unwrap();
     // 1.1 获得用户信息
-    let user = system_users_service::get_by_id(&login_user_id).await;
+    let user = system_users_service::get_by_id(login_user_id.as_str()).await;
     if user.is_err() {
         return ApiResponse::success(vo);
     }
     vo.user = user?.into();
     // 1.2 获得角色列表
     let role_ids =
-        system_user_role_service::get_user_role_id_list_by_user_id(&login_user_id).await?;
+        system_user_role_service::get_user_role_id_list_by_user_id(login_user_id.as_str()).await?;
     if role_ids.is_empty() {
         return ApiResponse::success(vo);
     }
