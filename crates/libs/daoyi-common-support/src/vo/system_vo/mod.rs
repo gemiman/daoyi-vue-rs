@@ -1,4 +1,6 @@
-use crate::enumeration::{CommonStatusEnum, DataScopeEnum, MenuTypeEnum, RoleTypeEnum, SexEnum};
+use crate::enumeration::{
+    CommonStatusEnum, DataScopeEnum, MenuTypeEnum, NoticeTypeEnum, RoleTypeEnum, SexEnum,
+};
 use crate::models::FlexibleInt;
 use crate::models::pagination::PaginationParams;
 use crate::request::validation;
@@ -985,4 +987,62 @@ pub struct RoleUpdateReqVO {
     pub sort: FlexibleInt<i32>,
     /// 状态
     pub status: CommonStatusEnum,
+}
+
+/// 管理后台 - 通知公告分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct NoticePageReqVO {
+    /// 通知公告名称，模糊匹配
+    pub title: Option<String>,
+    /// 状态（0正常 1停用） 展示状态，参见 CommonStatusEnum 枚举类
+    pub status: Option<CommonStatusEnum>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+/// NoticeRespVO，管理后台 - 通知公告信息 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NoticeRespVO {
+    /// 公告内容
+    pub content: String,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 通知公告序号
+    pub id: String,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 公告标题
+    pub title: String,
+    /// 公告类型
+    pub r#type: NoticeTypeEnum,
+}
+/// NoticeSaveReqVO，管理后台 - 通知公告创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+pub struct NoticeSaveReqVO {
+    /// 公告内容
+    pub content: String,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 公告标题
+    #[validate(length(max = 50, message = "公告标题不能超过50个字符"))]
+    pub title: String,
+    /// 公告类型
+    pub r#type: NoticeTypeEnum,
+}
+#[derive(Debug, Validate, Deserialize)]
+pub struct NoticeUpdateReqVO {
+    /// 公告内容
+    pub content: String,
+    /// 岗位公告编号
+    pub id: String,
+    /// 状态，参见 CommonStatusEnum 枚举类
+    pub status: CommonStatusEnum,
+    /// 公告标题
+    #[validate(length(max = 50, message = "公告标题不能超过50个字符"))]
+    pub title: String,
+    /// 公告类型
+    pub r#type: NoticeTypeEnum,
 }

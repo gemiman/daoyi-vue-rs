@@ -510,3 +510,36 @@ COMMENT ON COLUMN system.system_post.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_post.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_post.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_post IS '岗位信息表';
+
+
+-- ----------------------------
+-- Table structure for system.system_notice
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_notice;
+CREATE TABLE system.system_notice
+(
+    id          varchar(32) NOT NULL primary key,
+    title       varchar(50) NOT NULL,
+    content     text        NOT NULL,
+    type        varchar(1)  NOT NULL,
+    status      varchar(1)  NOT NULL DEFAULT '0',
+    creator     varchar(64) NULL     DEFAULT '',
+    create_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(64) NULL     DEFAULT '',
+    update_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean     NOT NULL DEFAULT false,
+    tenant_id   varchar(32) NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_notice.id IS '公告ID';
+COMMENT ON COLUMN system.system_notice.title IS '公告标题';
+COMMENT ON COLUMN system.system_notice.content IS '公告内容';
+COMMENT ON COLUMN system.system_notice.type IS '公告类型（1通知 2公告）';
+COMMENT ON COLUMN system.system_notice.status IS '公告状态（0正常 1关闭）';
+COMMENT ON COLUMN system.system_notice.creator IS '创建者';
+COMMENT ON COLUMN system.system_notice.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_notice.updater IS '更新者';
+COMMENT ON COLUMN system.system_notice.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_notice.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_notice.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_notice IS '通知公告表';

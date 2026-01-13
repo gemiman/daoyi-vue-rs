@@ -75,6 +75,26 @@ pub enum CommonStatusEnum {
     #[sea_orm(string_value = "1")]
     Disable,
 }
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum NoticeTypeEnum {
+    #[sea_orm(string_value = "1")]
+    NOTICE,
+    #[sea_orm(string_value = "2")]
+    ANNOUNCEMENT,
+}
+
 #[derive(
     Debug,
     Clone,

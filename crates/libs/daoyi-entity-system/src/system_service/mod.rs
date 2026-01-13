@@ -3,6 +3,7 @@ pub mod system_dept_service;
 pub mod system_dict_data_service;
 pub mod system_dict_type_service;
 pub mod system_menu_service;
+pub mod system_notice_service;
 pub mod system_post_service;
 pub mod system_role_menu_service;
 pub mod system_role_service;
