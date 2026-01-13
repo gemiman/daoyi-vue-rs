@@ -68,12 +68,15 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             };
             // 此时 token 为 Option<String>
             let token = token.as_deref();
-            if token.is_none() && !auth_config.is_ignored_auth(url) {
+            let is_ignored_auth_url = auth_config.is_ignored_auth(url);
+            if token.is_none() && !is_ignored_auth_url {
                 // token为空，返回错误信息
                 return Err(ApiError::unauthenticated("No Authorization token").into_response());
             }
             let mut token_tenant_id: Option<Arc<String>> = None;
-            if let Some(token) = token {
+            if let Some(token) = token
+                && !is_ignored_auth_url
+            {
                 let token_info = auth::check_token(token).await?;
                 let t_id = Arc::new(token_info.tenant_id);
                 token_tenant_id = Some(t_id.clone());
