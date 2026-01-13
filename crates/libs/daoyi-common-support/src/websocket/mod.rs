@@ -1,4 +1,4 @@
-use crate::enumeration::WEBSOCKET_REDIS_CHANNEL;
+use crate::enumeration::{UserTypeEnum, WEBSOCKET_REDIS_CHANNEL};
 use async_trait::async_trait;
 use axum::extract::ws::Message;
 use serde::{Deserialize, Serialize};
@@ -21,7 +21,7 @@ pub struct JsonWebSocketMessage {
 pub struct WebSocketSession {
     pub id: String,
     pub user_id: Option<String>,
-    pub user_type: Option<i32>,
+    pub user_type: Option<UserTypeEnum>,
     pub tenant_id: Option<String>,
     sender: mpsc::UnboundedSender<Message>,
 }
@@ -30,7 +30,7 @@ impl WebSocketSession {
     pub fn new(
         id: String,
         user_id: Option<String>,
-        user_type: Option<i32>,
+        user_type: Option<UserTypeEnum>,
         tenant_id: Option<String>,
         sender: mpsc::UnboundedSender<Message>,
     ) -> Self {
@@ -72,7 +72,7 @@ pub trait WebSocketMessageListener: Send + Sync {
 #[serde(rename_all = "camelCase")]
 pub struct RedisWebSocketMessage {
     pub session_id: Option<String>,
-    pub user_type: Option<i32>,
+    pub user_type: Option<UserTypeEnum>,
     pub user_id: Option<String>,
     pub message_type: String,
     /// Redis 广播时内容保持 Value 即可，发送给客户端前会转为 String
@@ -141,7 +141,7 @@ impl WebSocketSessionManager {
 
     pub async fn get_session_list_by_user_type(
         &self,
-        user_type: i32,
+        user_type: UserTypeEnum,
     ) -> Vec<Arc<WebSocketSession>> {
         self.sessions
             .read()
@@ -154,7 +154,7 @@ impl WebSocketSessionManager {
 
     pub async fn get_session_list_by_user(
         &self,
-        user_type: i32,
+        user_type: UserTypeEnum,
         user_id: &str,
     ) -> Vec<Arc<WebSocketSession>> {
         self.sessions
@@ -225,7 +225,7 @@ impl WebSocketMessageSender {
 
     pub async fn send_by_user<T: Serialize>(
         &self,
-        user_type: i32,
+        user_type: UserTypeEnum,
         user_id: &str,
         msg_type: &str,
         content: T,
@@ -242,7 +242,7 @@ impl WebSocketMessageSender {
 
     pub async fn send_by_user_type<T: Serialize>(
         &self,
-        user_type: i32,
+        user_type: UserTypeEnum,
         msg_type: &str,
         content: T,
     ) {

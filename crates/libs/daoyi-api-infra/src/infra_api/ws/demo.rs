@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use daoyi_common_support::enumeration::UserTypeEnum;
 use daoyi_common_support::websocket::{
     WebSocketMessageListener, WebSocketMessageSender, WebSocketSession,
 };
@@ -38,7 +39,12 @@ impl WebSocketMessageListener for DemoWebSocketMessageListener {
                     single: true,
                 };
                 self.sender
-                    .send_by_user(1, &to_user_id, "demo-message-receive", to_message)
+                    .send_by_user(
+                        UserTypeEnum::Admin,
+                        &to_user_id,
+                        "demo-message-receive",
+                        to_message,
+                    )
                     .await;
             } else {
                 let to_message = DemoReceiveMessage {
@@ -47,7 +53,7 @@ impl WebSocketMessageListener for DemoWebSocketMessageListener {
                     single: false,
                 };
                 self.sender
-                    .send_by_user_type(1, "demo-message-receive", to_message)
+                    .send_by_user_type(UserTypeEnum::Admin, "demo-message-receive", to_message)
                     .await;
             }
         }

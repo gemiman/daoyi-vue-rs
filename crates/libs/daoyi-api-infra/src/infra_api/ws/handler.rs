@@ -1,4 +1,5 @@
 use axum::extract::ws::{Message, WebSocket};
+use daoyi_common_support::enumeration::UserTypeEnum;
 use daoyi_common_support::vo::system_vo::AuthLoginRespVO;
 use daoyi_common_support::websocket::{WebSocketSession, WebSocketSessionManager};
 use futures::{SinkExt, StreamExt};
@@ -28,7 +29,7 @@ pub async fn handle_socket(
     let session = Arc::new(WebSocketSession::new(
         session_id.clone(),
         Some(user.user_id.clone()),
-        Some(1), // UserType: Admin
+        Some(UserTypeEnum::Admin), // UserType: Admin
         Some(user.tenant_id),
         tx,
     ));

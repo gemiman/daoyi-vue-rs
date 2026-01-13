@@ -1,3 +1,4 @@
+use daoyi_common_support::enumeration::UserTypeEnum;
 use daoyi_common_support::websocket::WebSocketMessageSender;
 use serde::Serialize;
 use std::sync::Arc;
@@ -18,7 +19,7 @@ impl WebSocketSenderApi {
     #[allow(dead_code)]
     pub async fn send<T: Serialize>(
         &self,
-        user_type: i32,
+        user_type: UserTypeEnum,
         user_id: &str,
         msg_type: &str,
         content: T,
@@ -32,7 +33,7 @@ impl WebSocketSenderApi {
     #[allow(dead_code)]
     pub async fn send_all_by_user_type<T: Serialize>(
         &self,
-        user_type: i32,
+        user_type: UserTypeEnum,
         msg_type: &str,
         content: T,
     ) {

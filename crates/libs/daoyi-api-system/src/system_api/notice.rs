@@ -1,5 +1,7 @@
+use axum::extract::State;
 use axum::{Router, debug_handler};
 use daoyi_common_support::app::AppState;
+use daoyi_common_support::enumeration::UserTypeEnum;
 use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
@@ -20,9 +22,29 @@ pub fn create_router() -> Router<AppState> {
 }
 
 #[debug_handler]
-async fn push(ValidQuery(IdParams { id }): ValidQuery<IdParams>) -> RestApiResult<bool> {
-    tracing::info!("假装推送成功:{id}");
-    ApiResponse::success(true)
+async fn push(
+    State(AppState { ws_sender, .. }): State<AppState>,
+    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
+) -> RestApiResult<bool> {
+    // 1. 获取通知详情
+    let notice = system_notice_service::get_notice(&id).await?;
+
+    if let Some(notice_do) = notice {
+        // 2. 通过 websocket 推送给在线的管理员用户
+        // 对标 Java: webSocketSenderApi.sendObject(UserTypeEnum.ADMIN.getValue(), "notice-push", notice);
+        ws_sender
+            .send_by_user_type(
+                UserTypeEnum::Admin,
+                "notice-push",
+                NoticeRespVO::from(notice_do),
+            )
+            .await;
+        ApiResponse::success(true)
+    } else {
+        // ApiResponse::err 返回的是 Self，而 RestApiResult<bool> 实际上是 Result<ApiResponse<bool>, ApiError>
+        // 查看 RestApiResult 的定义。
+        Ok(ApiResponse::err("公告不存在"))
+    }
 }
 
 #[debug_handler]
