@@ -8,6 +8,7 @@ use serde::{Deserialize, Serialize};
 /// 菜单编号 - 根节点
 /// 部门编号 - 根节点
 pub const ID_ROOT: &str = "0";
+pub const WEBSOCKET_REDIS_CHANNEL: &str = "daoyi.websocket.redis.channel";
 
 #[derive(
     Debug,

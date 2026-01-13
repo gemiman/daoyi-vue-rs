@@ -208,6 +208,16 @@ where
     Ok(())
 }
 
+pub async fn publish<V>(channel: &str, value: V) -> ApiResult<()>
+where
+    V: ToRedisArgs + Send + Sync + 'static,
+{
+    let pool = get_pool()?;
+    let mut conn = pool.get().await?;
+    let _: () = conn.publish(channel, value).await?;
+    Ok(())
+}
+
 /// 获取Redis的原始连接
 ///
 /// # 返回值

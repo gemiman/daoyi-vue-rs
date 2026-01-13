@@ -54,7 +54,8 @@ strum_macros = { version = "0.27.2" }
 serde_qs = "0.15.0"
 futures = { version = "0.3.31" }
 syn = { version = "2.0.114", features = ["full", "extra-traits"] }
-quote = "1.0.43"
+quote = { version = "1.0.43" }
+async-trait = { version = "0.1.89" }
 # S3
 aws-config = "1.8.12"
 aws-sdk-s3 = "1.119.0"

@@ -34,7 +34,7 @@ auth:
     - /admin-api/system/tenant/get-id-by-name
   tenant_ignored_urls:
     - /
-    - /infra/ws
+    - "**/ws"
     - /admin-api/system/oauth2/check-token
     - /admin-api/system/tenant/**
     - /admin-api/system/tenant-package/**
