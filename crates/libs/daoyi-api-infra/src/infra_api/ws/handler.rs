@@ -4,7 +4,6 @@ use daoyi_common_support::websocket::{WebSocketSession, WebSocketSessionManager}
 use futures::{SinkExt, StreamExt};
 use std::sync::Arc;
 use tokio::sync::mpsc;
-use tracing::{error, info};
 
 pub async fn handle_socket(
     socket: WebSocket,
@@ -19,7 +18,7 @@ pub async fn handle_socket(
     let send_task = tokio::spawn(async move {
         while let Some(msg) = rx.recv().await {
             if let Err(e) = sender.send(msg).await {
-                error!("WebSocket send error: {}", e);
+                tracing::error!("WebSocket send error: {}", e);
                 break;
             }
         }
@@ -35,9 +34,10 @@ pub async fn handle_socket(
     ));
 
     manager.add_session(session.clone()).await;
-    info!(
+    tracing::info!(
         "WebSocket connection established: {} for user: {}",
-        session_id, user.user_id
+        session_id,
+        user.user_id
     );
 
     // 接收循环
@@ -58,5 +58,5 @@ pub async fn handle_socket(
     // 清理
     manager.remove_session(&session_id).await;
     send_task.abort();
-    info!("WebSocket connection closed: {}", session_id);
+    tracing::info!("WebSocket connection closed: {}", session_id);
 }
