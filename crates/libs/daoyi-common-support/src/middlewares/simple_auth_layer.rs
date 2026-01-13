@@ -54,9 +54,23 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                     Ok(token)
                 })
                 .transpose()?;
+            // 如果 Header 中没有 Token，尝试从 URL Query 参数获取 (适配 WebSocket)
+            let token = if token.is_none() {
+                if let Some(query) = request.uri().query() {
+                    serde_qs::from_str::<std::collections::HashMap<String, String>>(query)
+                        .ok()
+                        .and_then(|params| params.get("token").cloned())
+                } else {
+                    None
+                }
+            } else {
+                token.map(String::from)
+            };
+            // 此时 token 为 Option<String>
+            let token = token.as_deref();
             if token.is_none() && !auth_config.is_ignored_auth(url) {
                 // token为空，返回错误信息
-                return Err(ApiError::unauthenticated("No Authorization header").into_response());
+                return Err(ApiError::unauthenticated("No Authorization token").into_response());
             }
             let mut token_tenant_id: Option<Arc<String>> = None;
             if let Some(token) = token {
