@@ -16,6 +16,7 @@ pub struct Model {
     pub id: String,
     pub user_id: String,
     pub access_token: String,
+    pub refresh_token: String,
     #[serde(with = "daoyi_common_support::serde::datetime_format")]
     pub expires_time: DateTime,
 }
@@ -29,6 +30,7 @@ impl From<Model> for AuthLoginRespVO {
             tenant_id: value.tenant_id,
             user_id: value.user_id,
             access_token: value.access_token,
+            refresh_token: value.refresh_token,
             expires_time: value.expires_time,
         }
     }

@@ -74,6 +74,7 @@ CREATE TABLE system.system_access_token
     id           varchar(32)  NOT NULL primary key,
     user_id      varchar(32)  NOT NULL,
     access_token varchar(255) NOT NULL,
+    refresh_token varchar(255) NOT NULL,
     expires_time timestamp    NOT NULL,
     creator      varchar(32)  NULL     DEFAULT '',
     create_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -84,10 +85,12 @@ CREATE TABLE system.system_access_token
 );
 
 CREATE INDEX idx_system_access_token_01 ON system.system_access_token (access_token);
+CREATE INDEX idx_system_refresh_token_01 ON system.system_access_token (refresh_token);
 
 COMMENT ON COLUMN system.system_access_token.id IS '编号';
 COMMENT ON COLUMN system.system_access_token.user_id IS '用户编号';
 COMMENT ON COLUMN system.system_access_token.access_token IS '访问令牌';
+COMMENT ON COLUMN system.system_access_token.refresh_token IS '刷新令牌';
 COMMENT ON COLUMN system.system_access_token.expires_time IS '过期时间';
 COMMENT ON COLUMN system.system_access_token.creator IS '创建者';
 COMMENT ON COLUMN system.system_access_token.create_time IS '创建时间';

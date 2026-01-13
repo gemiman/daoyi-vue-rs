@@ -216,6 +216,7 @@ pub struct AuthLoginRespVO {
     pub tenant_id: String,
     pub user_id: String,
     pub access_token: String,
+    pub refresh_token: String,
     #[serde(with = "datetime_format")]
     pub expires_time: DateTime,
 }

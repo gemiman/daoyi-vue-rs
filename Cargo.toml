@@ -23,13 +23,13 @@ daoyi-api-system = { version = "0.1.0", path = "./crates/libs/daoyi-api-system" 
 daoyi-entity-infra = { version = "0.1.0", path = "./crates/libs/daoyi-entity-infra" }
 daoyi-api-infra = { version = "0.1.0", path = "./crates/libs/daoyi-api-infra" }
 axum = { version = "0.8.8", features = ["macros"] }
-tokio = { version = "1.48.0", features = ["full"] }
+tokio = { version = "1.49.0", features = ["full"] }
 tracing = { version = "0.1.44", features = ["async-await"] }
 tracing-subscriber = { version = "0.3.22", features = ["env-filter", "chrono"] }
 tracing-appender = { version = "0.2.4" }
 config = { version = "0.15.19", features = ["yaml"] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.148"
+serde_json = "1.0.149"
 anyhow = { version = "1.0.100" }
 merge = { version = "0.2.0" }
 sea-orm = { version = "1.1.19", features = ["with-chrono", "debug-print", "sqlx-postgres", "with-rust_decimal", "runtime-tokio"] }
@@ -42,25 +42,25 @@ validator = { version = "0.20.0", features = ["derive"] }
 axum-valid = { version = "0.24.0", features = ["full_validator"] }
 regex = "1.12.2"
 idgenerator = "2.0.0"
-bcrypt = "0.17.1"
+bcrypt = "0.18.0"
 wax = { version = "0.6.0" }
 humantime = { version = "2.3.0" }
 nacos-sdk = { version = "0.5.3", features = ["default"] }
 redis = { version = "1.0.2", features = ["tokio-comp"] }
-deadpool-redis = { version = "0.22.0" }
+deadpool-redis = { version = "0.22.1" }
 reqwest = { version = "0.13.1", features = ["json", "query"] }
 strum = { version = "0.27.2" }
 strum_macros = { version = "0.27.2" }
 serde_qs = "0.15.0"
 futures = { version = "0.3.31" }
-syn = { version = "2.0.112", features = ["full", "extra-traits"] }
-quote = "1.0.42"
+syn = { version = "2.0.114", features = ["full", "extra-traits"] }
+quote = "1.0.43"
 # S3
 aws-config = "1.8.12"
 aws-sdk-s3 = "1.119.0"
 aws-credential-types = "1.2.11"
 # FTP
-suppaftp = "7.0.7"
+suppaftp = "7.1.0"
 # SFTP
 ssh2 = "0.9.5"
 # Utils

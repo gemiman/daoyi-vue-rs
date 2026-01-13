@@ -27,6 +27,7 @@ auth:
   ignored_urls:
     - /
     - "**/login"
+    - "**/ws"
     - /admin-api/system/oauth2/check-token
     - /admin-api/system/tenant/check-tenant-id
     - /admin-api/system/dict-data/simple-list
@@ -34,6 +35,7 @@ auth:
     - /admin-api/system/tenant/get-id-by-name
   tenant_ignored_urls:
     - /
+    - "**/ws"
     - /admin-api/system/oauth2/check-token
     - /admin-api/system/tenant/**
     - /admin-api/system/tenant-package/**

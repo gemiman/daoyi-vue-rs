@@ -10,9 +10,20 @@ use sea_orm::Set;
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 
+pub async fn get_refresh_token(token: &str) -> ApiResult<system_access_token::Model> {
+    let db = database::get_db_async().await;
+    let option = SystemAccessToken::find_perm()
+        .await
+        .filter(system_access_token::Column::RefreshToken.eq(token))
+        .one(&db)
+        .await?
+        .ok_or_else(|| ApiError::biz("Token不存在"))?;
+    Ok(option)
+}
+
 pub async fn get_access_token(token: &str) -> ApiResult<system_access_token::Model> {
     let db = database::get_db_async().await;
-    let option = SystemAccessToken::find_perm_with_tenant()
+    let option = SystemAccessToken::find_perm()
         .await
         .filter(system_access_token::Column::AccessToken.eq(token))
         .one(&db)
@@ -51,6 +62,12 @@ pub async fn create_token_after_login_success(
             break token;
         }
     };
+    let refresh_token = loop {
+        let token = id_util::xid();
+        if let Err(_) = get_refresh_token(&token).await {
+            break token;
+        }
+    };
     let mut context = HttpRequestContext::new();
     context.token = Some(Arc::new(access_token.clone()));
     context.login_id = Some(Arc::new(String::from(login_id)));
@@ -62,6 +79,7 @@ pub async fn create_token_after_login_success(
         let mut active_model = system_access_token::ActiveModel::new();
         active_model.user_id = Set(String::from(login_id));
         active_model.access_token = Set(access_token);
+        active_model.refresh_token = Set(refresh_token);
         active_model.expires_time = Set(Local::now().naive_local() + token_expiration);
         let model = active_model.insert(&db).await?;
         Ok(model.into())
