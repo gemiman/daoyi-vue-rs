@@ -335,7 +335,6 @@ pub struct DictTypeUpdateReqVO {
     /// 状态，参见 CommonStatusEnum 枚举类
     pub status: CommonStatusEnum,
     /// 字典类型
-    #[serde(rename = "type")]
     #[validate(length(max = 100, message = "字典类型类型长度不能超过 100 个字符"))]
     pub r#type: String,
 }

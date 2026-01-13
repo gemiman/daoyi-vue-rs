@@ -10,9 +10,9 @@ use tracing::info;
 
 /// JSON 格式的 WebSocket 消息帧
 #[derive(Debug, Serialize, Deserialize, Clone)]
+#[serde(rename_all = "camelCase")]
 pub struct JsonWebSocketMessage {
-    #[serde(rename = "type")]
-    pub msg_type: String,
+    pub r#type: String,
     /// 消息内容：注意这里为了对标前端 JSON.parse(jsonMessage.content)，必须是字符串
     pub content: String,
 }
@@ -52,7 +52,7 @@ impl WebSocketSession {
     pub async fn send_json<T: Serialize>(&self, msg_type: &str, content: T) -> anyhow::Result<()> {
         let content_json = serde_json::to_string(&content)?;
         let msg = JsonWebSocketMessage {
-            msg_type: msg_type.to_string(),
+            r#type: msg_type.to_string(),
             content: content_json,
         };
         let text = serde_json::to_string(&msg)?;
@@ -124,13 +124,13 @@ impl WebSocketSessionManager {
 
         if let Ok(msg) = serde_json::from_str::<JsonWebSocketMessage>(text) {
             let listeners = self.listeners.read().await;
-            if let Some(listener) = listeners.get(&msg.msg_type) {
+            if let Some(listener) = listeners.get(&msg.r#type) {
                 // 将 content 字符串解析回 Value 传给 listener
                 if let Ok(content_value) = serde_json::from_str::<Value>(&msg.content) {
                     listener.on_message(session, content_value).await;
                 }
             } else {
-                info!("No listener found for message type: {}", msg.msg_type);
+                info!("No listener found for message type: {}", msg.r#type);
             }
         }
     }

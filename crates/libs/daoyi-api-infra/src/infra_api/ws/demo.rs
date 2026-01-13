@@ -8,15 +8,15 @@ use serde_json::Value;
 use std::sync::Arc;
 
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DemoSendMessage {
-    #[serde(rename = "toUserId")]
     pub to_user_id: Option<String>,
     pub text: String,
 }
 
 #[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
 pub struct DemoReceiveMessage {
-    #[serde(rename = "fromUserId")]
     pub from_user_id: Option<String>,
     pub text: String,
     pub single: bool,
