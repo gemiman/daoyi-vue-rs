@@ -1,5 +1,6 @@
 use axum::{Router, debug_handler};
 use daoyi_common_support::app::AppState;
+use daoyi_common_support::enumeration::UserTypeEnum;
 use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
@@ -7,7 +8,7 @@ use daoyi_common_support::vo::system_vo::{
     IdParams, IdsParams, NotifyTemplatePageReqVO, NotifyTemplateRespVo, NotifyTemplateSaveReqVO,
     NotifyTemplateSendReqVO, NotifyTemplateUpdateReqVO,
 };
-use daoyi_entity_system::system_service::system_notify_template_service;
+use daoyi_entity_system::system_service::{notify_send_service, system_notify_template_service};
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -25,7 +26,22 @@ pub fn create_router() -> Router<AppState> {
 
 #[debug_handler]
 async fn send_notify(ValidJson(vo): ValidJson<NotifyTemplateSendReqVO>) -> RestApiResult<String> {
-    todo!("send_notify")
+    let result = if UserTypeEnum::Member == vo.user_type {
+        notify_send_service::send_single_notify_to_member(
+            &vo.user_id,
+            &vo.template_code,
+            &vo.template_params,
+        )
+        .await?
+    } else {
+        notify_send_service::send_single_notify_to_admin(
+            &vo.user_id,
+            &vo.template_code,
+            &vo.template_params,
+        )
+        .await?
+    };
+    ApiResponse::success(result)
 }
 
 #[debug_handler]

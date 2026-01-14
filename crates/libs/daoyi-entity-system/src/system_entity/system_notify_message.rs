@@ -8,14 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[daoyi_model]
 #[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    DeriveEntityModel,
-    Eq,
-    Serialize,
-    Deserialize,
-    DaoyiActiveModelBehavior,
+    Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, DaoyiActiveModelBehavior,
 )]
 #[sea_orm(schema_name = "system", table_name = "system_notify_message")]
 #[serde(rename_all = "camelCase")]
@@ -30,7 +23,7 @@ pub struct Model {
     pub template_content: String,
     pub template_type: NotifyTemplateTypeEnum,
     #[sea_orm(column_type = "JsonBinary")]
-    pub template_params: Option<Json>,
+    pub template_params: Json,
     pub read_status: bool,
     pub read_time: Option<DateTime>,
 }

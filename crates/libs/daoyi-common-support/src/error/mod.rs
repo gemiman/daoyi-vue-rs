@@ -36,6 +36,8 @@ pub enum ApiError {
     Redis(#[from] deadpool_redis::redis::RedisError),
     #[error("RedisPool错误：{0}")]
     RedisPool(#[from] deadpool_redis::PoolError),
+    #[error("Str Fmt 错误：{0}")]
+    FmtError(#[from] strfmt::FmtError),
 }
 
 impl From<ValidRejection<ApiError>> for ApiError {
@@ -113,7 +115,7 @@ impl ApiError {
             NotFound => StatusCode::NOT_FOUND,
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Internal(_) | Database(_) | Bcrypt(_) | Glob(_) | SerdeJson(_) | Redis(_)
-            | RedisPool(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            | RedisPool(_) | FmtError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Query(_) | Path(_) | Json(_) => StatusCode::BAD_REQUEST,
             Unauthenticated(_) => StatusCode::UNAUTHORIZED,
             Biz(_) | Validation(_) => StatusCode::OK,

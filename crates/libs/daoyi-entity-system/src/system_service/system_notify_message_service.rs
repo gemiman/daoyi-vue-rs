@@ -1,5 +1,5 @@
 use crate::system_entity::prelude::*;
-use crate::system_entity::system_notify_message;
+use crate::system_entity::{system_notify_message, system_notify_template};
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::UserTypeEnum;
 use daoyi_common_support::error::ApiResult;
@@ -9,7 +9,8 @@ use daoyi_common_support::vo::system_vo::{
 };
 use sea_orm::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
-use sea_orm::{QueryOrder, QuerySelect, QueryTrait};
+use sea_orm::{QueryOrder, QuerySelect, QueryTrait, Set};
+use std::collections::HashMap;
 
 pub async fn get_notify_message(id: &str) -> ApiResult<Option<system_notify_message::Model>> {
     Ok(
@@ -147,4 +148,27 @@ pub async fn get_unread_notify_message_count(
         .filter(system_notify_message::Column::UserType.eq(user_type))
         .count(&database::get_db_async().await)
         .await?)
+}
+
+pub async fn create_notify_message(
+    user_id: String,
+    user_type: UserTypeEnum,
+    template: system_notify_template::Model,
+    template_content: String,
+    template_params: HashMap<String, String>,
+) -> ApiResult<system_notify_message::Model> {
+    let active_model = system_notify_message::ActiveModel {
+        user_id: Set(user_id),
+        user_type: Set(user_type),
+        template_id: Set(template.id),
+        template_code: Set(template.code),
+        template_type: Set(template.r#type),
+        template_nickname: Set(template.nickname),
+        template_content: Set(template_content),
+        template_params: Set(serde_json::to_value(template_params)?),
+        read_status: Set(false),
+        ..Default::default()
+    };
+    let model = active_model.insert(&database::get_db_async().await).await?;
+    Ok(model)
 }

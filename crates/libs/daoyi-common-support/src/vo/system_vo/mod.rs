@@ -1151,7 +1151,7 @@ pub struct NotifyTemplateSendReqVO {
     /// 模板编码
     pub template_code: String,
     /// 模板参数
-    pub template_params: Option<HashMap<String, Option<serde_json::Value>>>,
+    pub template_params: Option<HashMap<String, String>>,
     /// 用户id
     pub user_id: String,
     /// 用户类型
@@ -1181,7 +1181,7 @@ pub struct NotifyMessageRespVo {
     /// 模版发送人名称
     pub template_nickname: String,
     /// 模版参数
-    pub template_params: Option<Json>,
+    pub template_params: Json,
     /// 模版类型
     pub template_type: NotifyTemplateTypeEnum,
     /// 用户编号
