@@ -632,3 +632,42 @@ COMMENT ON COLUMN system.system_notify_message.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_notify_message.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_notify_message.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_notify_message IS '站内信消息表';
+
+
+-- ----------------------------
+-- Table structure for system.system_mail_account
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_mail_account;
+CREATE TABLE system.system_mail_account
+(
+    id                 varchar(32)  NOT NULL primary key,
+    mail               varchar(255) NOT NULL,
+    username           varchar(255) NOT NULL,
+    password_plaintext varchar(255) NOT NULL,
+    host               varchar(255) NOT NULL,
+    port               int4         NOT NULL,
+    ssl_enable         bool         NOT NULL DEFAULT false,
+    starttls_enable    bool         NOT NULL DEFAULT false,
+    creator            varchar(64)  NULL     DEFAULT '',
+    create_time        timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater            varchar(64)  NULL     DEFAULT '',
+    update_time        timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted            boolean      NOT NULL DEFAULT false,
+    tenant_id          varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_mail_account.id IS '主键';
+COMMENT ON COLUMN system.system_mail_account.mail IS '邮箱';
+COMMENT ON COLUMN system.system_mail_account.username IS '用户名';
+COMMENT ON COLUMN system.system_mail_account.password_plaintext IS '密码';
+COMMENT ON COLUMN system.system_mail_account.host IS 'SMTP 服务器域名';
+COMMENT ON COLUMN system.system_mail_account.port IS 'SMTP 服务器端口';
+COMMENT ON COLUMN system.system_mail_account.ssl_enable IS '是否开启 SSL';
+COMMENT ON COLUMN system.system_mail_account.starttls_enable IS '是否开启 STARTTLS';
+COMMENT ON COLUMN system.system_mail_account.creator IS '创建者';
+COMMENT ON COLUMN system.system_mail_account.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_mail_account.updater IS '更新者';
+COMMENT ON COLUMN system.system_mail_account.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_mail_account.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_mail_account.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_mail_account IS '邮箱账号表';

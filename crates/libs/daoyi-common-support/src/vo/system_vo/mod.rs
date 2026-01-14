@@ -1225,3 +1225,91 @@ pub struct NotifyMessageMyPageReqVO {
     #[validate(nested)]
     pub pagination: PaginationParams,
 }
+
+/// MailAccountSaveReqVO，管理后台 - 邮箱账号创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailAccountSaveReqVO {
+    /// SMTP 服务器域名
+    pub host: String,
+    /// 邮箱
+    #[validate(email(message = "必须是 Email 格式"))]
+    pub mail: String,
+    /// 密码
+    pub password: String,
+    /// SMTP 服务器端口
+    pub port: i32,
+    /// 是否开启 ssl
+    pub ssl_enable: bool,
+    /// 是否开启 starttls
+    pub starttls_enable: bool,
+    /// 用户名
+    pub username: String,
+}
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailAccountUpdateReqVO {
+    /// SMTP 服务器域名
+    pub host: String,
+    /// 编号
+    pub id: String,
+    /// 邮箱
+    #[validate(email(message = "必须是 Email 格式"))]
+    pub mail: String,
+    /// 密码
+    pub password: String,
+    /// SMTP 服务器端口
+    pub port: i32,
+    /// 是否开启 ssl
+    pub ssl_enable: bool,
+    /// 是否开启 starttls
+    pub starttls_enable: bool,
+    /// 用户名
+    pub username: String,
+}
+/// MailAccountRespVO，管理后台 - 邮箱账号 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailAccountRespVO {
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// SMTP 服务器域名
+    pub host: String,
+    /// 编号
+    pub id: String,
+    /// 邮箱
+    pub mail: String,
+    /// 密码
+    pub password: String,
+    /// SMTP 服务器端口
+    pub port: i32,
+    /// 是否开启 ssl
+    pub ssl_enable: bool,
+    /// 是否开启 starttls
+    pub starttls_enable: bool,
+    /// 用户名
+    pub username: String,
+}
+
+/// 管理后台 - 邮箱账号分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct MailAccountPageReqVO {
+    /// 邮箱
+    pub mail: Option<String>,
+    /// 用户名
+    pub username: Option<String>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+
+/// MailAccountSimpleRespVO，管理后台 - 邮箱账号的精简 Response VO
+#[derive(Debug, Serialize)]
+pub struct MailAccountSimpleRespVO {
+    /// 邮箱编号
+    pub id: String,
+    /// 邮箱
+    pub mail: String,
+}

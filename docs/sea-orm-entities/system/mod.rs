@@ -6,6 +6,7 @@ pub mod system_access_token;
 pub mod system_dept;
 pub mod system_dict_data;
 pub mod system_dict_type;
+pub mod system_mail_account;
 pub mod system_menu;
 pub mod system_notice;
 pub mod system_notify_message;
