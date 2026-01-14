@@ -64,7 +64,7 @@ pub async fn get_my_notify_message_page(
         .apply_if(params.read_status, |query, val| {
             query.filter(system_notify_message::Column::ReadStatus.eq(val))
         })
-        .filter(system_notify_message::Column::UserType.eq(user_id))
+        .filter(system_notify_message::Column::UserId.eq(user_id))
         .filter(system_notify_message::Column::UserType.eq(user_type))
         .apply_if(params.create_time.as_ref(), |query, val| {
             query.filter(system_notify_message::Column::CreateTime.between(val[0], val[1]))
