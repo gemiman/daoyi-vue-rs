@@ -9,7 +9,6 @@ use daoyi_common_support::vo::system_vo::{
 };
 use sea_orm::prelude::*;
 use sea_orm::{QueryOrder, QueryTrait};
-use std::collections::HashMap;
 
 async fn validate_notify_template_code_duplicate(id: Option<&str>, code: &str) -> ApiResult<()> {
     if let Some(model) = get_notify_template_by_code(code).await? {
@@ -111,11 +110,4 @@ pub async fn get_notify_template_page(
         .collect();
     let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
-}
-
-pub async fn format_notify_template_content(
-    content: &str,
-    params: &HashMap<String, String>,
-) -> ApiResult<String> {
-    Ok(strfmt::strfmt(content, params)?)
 }

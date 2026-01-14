@@ -1313,3 +1313,119 @@ pub struct MailAccountSimpleRespVO {
     /// 邮箱
     pub mail: String,
 }
+
+/// MailTemplateSaveReqVO，管理后台 - 邮件模版创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailTemplateSaveReqVO {
+    /// 发送的邮箱账号编号
+    pub account_id: String,
+    /// 模版编号
+    pub code: String,
+    /// 内容
+    pub content: String,
+    /// 模版名称
+    pub name: String,
+    /// 发送人名称
+    pub nickname: Option<String>,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 标题
+    pub title: String,
+}
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailTemplateUpdateReqVO {
+    /// 发送的邮箱账号编号
+    pub account_id: String,
+    /// 模版编号
+    pub code: String,
+    /// 内容
+    pub content: String,
+    /// 编号
+    pub id: String,
+    /// 模版名称
+    pub name: String,
+    /// 发送人名称
+    pub nickname: Option<String>,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 标题
+    pub title: String,
+}
+/// MailTemplateRespVO，管理后台 - 邮件末班 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailTemplateRespVO {
+    /// 发送的邮箱账号编号
+    pub account_id: String,
+    /// 模版编号
+    pub code: String,
+    /// 内容
+    pub content: String,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 编号
+    pub id: String,
+    /// 模版名称
+    pub name: String,
+    /// 发送人名称
+    pub nickname: Option<String>,
+    /// 参数数组
+    pub params: Vec<String>,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 标题
+    pub title: String,
+}
+/// 管理后台 - 邮件模版分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct MailTemplatePageReqVO {
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: Option<CommonStatusEnum>,
+    /// 标识，模糊匹配
+    pub code: Option<String>,
+    /// 名称，模糊匹配
+    pub name: Option<String>,
+    /// 账号编号
+    pub account_id: Option<String>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+/// MailTemplateSimpleRespVO，管理后台 - 邮件模版的精简 Response VO
+#[derive(Debug, Serialize, Deserialize)]
+pub struct MailTemplateSimpleRespVO {
+    /// 模版编号
+    pub id: String,
+    /// 模版名字
+    pub name: String,
+}
+/// MailTemplateSendReqVO，管理后台 - 邮件发送 Req VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailTemplateSendReqVO {
+    /// 密送邮箱
+    pub bcc_mails: Vec<String>,
+    /// 抄送邮箱
+    pub cc_mails: Vec<String>,
+    /// 模板编码
+    pub template_code: String,
+    /// 模板参数
+    pub template_params: Option<HashMap<String, String>>,
+    /// 接收邮箱
+    #[validate(length(min = 1, message = "接收邮箱不能为空"))]
+    pub to_mails: Vec<String>,
+}

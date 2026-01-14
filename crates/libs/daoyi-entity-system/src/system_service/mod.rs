@@ -1,3 +1,4 @@
+pub mod mail_send_service;
 pub mod notify_send_service;
 pub mod system_access_token_service;
 pub mod system_dept_service;
