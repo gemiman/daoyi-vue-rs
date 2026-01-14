@@ -4,19 +4,22 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(schema_name = "system", table_name = "system_notify_template")]
+#[sea_orm(schema_name = "system", table_name = "system_notify_message")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub name: String,
-    pub code: String,
-    pub nickname: String,
-    pub content: String,
-    pub r#type: String,
-    pub params: Option<Vec<String>>,
-    pub status: String,
-    pub remark: Option<String>,
+    pub user_id: String,
+    pub user_type: String,
+    pub template_id: String,
+    pub template_code: String,
+    pub template_nickname: String,
+    pub template_content: String,
+    pub template_type: String,
+    #[sea_orm(column_type = "JsonBinary")]
+    pub template_params: Json,
+    pub read_status: bool,
+    pub read_time: Option<DateTime>,
     pub creator: Option<String>,
     pub create_time: DateTime,
     pub updater: Option<String>,

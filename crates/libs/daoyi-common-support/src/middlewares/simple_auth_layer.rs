@@ -1,6 +1,7 @@
 use crate::auth;
 use crate::configs::AppConfig;
 use crate::context::HttpRequestContext;
+use crate::enumeration::{APP_API, UserTypeEnum};
 use crate::error::ApiError;
 use axum::body::Body;
 use axum::http::{Request, Response};
@@ -34,6 +35,12 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             // Check if tenant is enabled
             let auth_config = AppConfig::get().auth();
             let url = request.uri().path();
+            let user_type = if url.starts_with(APP_API) {
+                UserTypeEnum::Member
+            } else {
+                UserTypeEnum::Admin
+            };
+            context.user_type = Some(user_type);
             let headers = request.headers();
             let is_ignored_tenant = auth_config.is_ignored_tenant(url);
             context.ignore_tenant = Some(is_ignored_tenant);

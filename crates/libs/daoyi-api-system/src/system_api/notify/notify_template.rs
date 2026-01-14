@@ -5,7 +5,7 @@ use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
     IdParams, IdsParams, NotifyTemplatePageReqVO, NotifyTemplateRespVo, NotifyTemplateSaveReqVO,
-    NotifyTemplateUpdateReqVO,
+    NotifyTemplateSendReqVO, NotifyTemplateUpdateReqVO,
 };
 use daoyi_entity_system::system_service::system_notify_template_service;
 
@@ -24,7 +24,7 @@ pub fn create_router() -> Router<AppState> {
 }
 
 #[debug_handler]
-async fn send_notify() -> RestApiResult<String> {
+async fn send_notify(ValidJson(vo): ValidJson<NotifyTemplateSendReqVO>) -> RestApiResult<String> {
     todo!("send_notify")
 }
 

@@ -20,7 +20,7 @@ fn default_page() -> u64 {
     DEFAULT_PAGE
 }
 
-fn default_size() -> u64 {
+pub fn default_size() -> u64 {
     DEFAULT_SIZE
 }
 

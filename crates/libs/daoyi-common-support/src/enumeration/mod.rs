@@ -10,6 +10,9 @@ use serde::{Deserialize, Serialize};
 pub const ID_ROOT: &str = "0";
 pub const WEBSOCKET_REDIS_CHANNEL: &str = "daoyi.websocket.redis.channel";
 
+pub const ADMIN_API: &str = "/admin-api";
+pub const APP_API: &str = "/app-api";
+
 #[derive(
     Debug,
     Clone,

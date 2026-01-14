@@ -5,6 +5,7 @@
 //! 注意：在实际应用中，建议通过框架的请求扩展（如 Axum 的 Extension）
 //! 来传递上下文，而不是使用 thread_local。这里提供的是一个简单的实现。
 
+use crate::enumeration::UserTypeEnum;
 use std::future::Future;
 use std::sync::Arc;
 
@@ -32,6 +33,9 @@ pub struct HttpRequestContext {
     /// 登录 ID | Login ID
     pub login_id: Option<Arc<String>>,
 
+    /// 用户类型 | User Type
+    pub user_type: Option<UserTypeEnum>,
+
     /// 是否忽略租户
     pub ignore_tenant: Option<bool>,
 }
@@ -42,6 +46,7 @@ pub struct HttpRequestContextBuilder {
     token: Option<Arc<String>>,
     tenant_id: Option<Arc<String>>,
     login_id: Option<Arc<String>>,
+    user_type: Option<UserTypeEnum>,
     ignore_tenant: Option<bool>,
 }
 
@@ -69,6 +74,12 @@ impl HttpRequestContextBuilder {
         self
     }
 
+    /// 设置用户类型
+    pub fn user_type(mut self, user_type: UserTypeEnum) -> Self {
+        self.user_type = Some(user_type);
+        self
+    }
+
     /// 设置是否忽略租户
     pub fn ignore_tenant(mut self, ignore_tenant: bool) -> Self {
         self.ignore_tenant = Some(ignore_tenant);
@@ -81,6 +92,7 @@ impl HttpRequestContextBuilder {
             token: self.token,
             tenant_id: self.tenant_id,
             login_id: self.login_id,
+            user_type: self.user_type,
             ignore_tenant: self.ignore_tenant,
         }
     }
@@ -94,6 +106,7 @@ impl HttpRequestContext {
             token: None,
             tenant_id: None,
             login_id: None,
+            user_type: None,
             ignore_tenant: None,
         }
     }
@@ -164,6 +177,12 @@ impl HttpRequestContext {
         CONTEXT
             .try_with(|c| c.ignore_tenant.unwrap_or(false))
             .unwrap_or(false)
+    }
+
+    pub fn get_user_type() -> UserTypeEnum {
+        CONTEXT
+            .try_with(|c| c.user_type.unwrap_or(UserTypeEnum::Admin))
+            .unwrap_or(UserTypeEnum::Admin)
     }
 }
 

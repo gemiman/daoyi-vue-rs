@@ -71,7 +71,7 @@ async fn get_tenant_simple_list() -> RestApiResult<Vec<TenantRespVO>> {
     let list = system_tenant_service::get_tenant_list_by_status(Some(CommonStatusEnum::Enable))
         .await?
         .into_iter()
-        .map(|model| model.into())
+        .map(Into::into)
         .collect();
     ApiResponse::success(list)
 }

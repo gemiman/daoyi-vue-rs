@@ -3,13 +3,15 @@ use crate::enumeration::{
     RoleTypeEnum, SexEnum, UserTypeEnum,
 };
 use crate::models::FlexibleInt;
+use crate::models::pagination;
 use crate::models::pagination::PaginationParams;
 use crate::request::validation;
 use crate::serde::datetime_format;
 use crate::serde::de_comma_separated;
+use crate::serde::deserialize_numer;
 use crate::serde::option_datetime_format;
 use crate::serde::option_vec_datetime_format;
-use sea_orm::prelude::DateTime;
+use sea_orm::prelude::{DateTime, Json};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use validator::Validate;
@@ -800,6 +802,17 @@ pub struct TenantPageReqVo {
     pub pagination: PaginationParams,
 }
 
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct UnreadNotifyMessageListReqVO {
+    #[validate(range(min = 1, max = 100, message = "分页大小必须在1~100之间"))]
+    #[serde(
+        default = "pagination::default_size",
+        deserialize_with = "deserialize_numer"
+    )]
+    pub size: u64,
+}
+
 /// TenantPackageRespVO，管理后台 - 租户套餐 Response VO
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -1134,7 +1147,7 @@ pub struct NotifyTemplatePageReqVO {
 /// NotifyTemplateSendReqVO，管理后台 - 站内信模板的发送 Request VO
 #[derive(Debug, Validate, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct NotifyTemplateSendReqVo {
+pub struct NotifyTemplateSendReqVO {
     /// 模板编码
     pub template_code: String,
     /// 模板参数
@@ -1143,4 +1156,72 @@ pub struct NotifyTemplateSendReqVo {
     pub user_id: String,
     /// 用户类型
     pub user_type: UserTypeEnum,
+}
+
+/// NotifyMessageRespVO，管理后台 - 站内信 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyMessageRespVo {
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// ID
+    pub id: String,
+    /// 是否已读
+    pub read_status: bool,
+    /// 阅读时间
+    #[serde(with = "option_datetime_format")]
+    pub read_time: Option<DateTime>,
+    /// 模板编码
+    pub template_code: String,
+    /// 模版内容
+    pub template_content: String,
+    /// 模版编号
+    pub template_id: String,
+    /// 模版发送人名称
+    pub template_nickname: String,
+    /// 模版参数
+    pub template_params: Option<Json>,
+    /// 模版类型
+    pub template_type: NotifyTemplateTypeEnum,
+    /// 用户编号
+    pub user_id: String,
+    /// 用户类型，参见 UserTypeEnum 枚举
+    pub user_type: UserTypeEnum,
+}
+
+/// 管理后台 - 站内信模版分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyMessagePageReqVO {
+    /// 用户编号
+    pub user_id: Option<String>,
+    /// 用户类型
+    pub user_type: Option<UserTypeEnum>,
+    /// 模板编码
+    pub template_code: Option<String>,
+    /// 模版类型
+    pub template_type: Option<NotifyTemplateTypeEnum>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+
+/// 管理后台 - 站内信模版分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyMessageMyPageReqVO {
+    /// 是否已读
+    pub read_status: Option<bool>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
 }

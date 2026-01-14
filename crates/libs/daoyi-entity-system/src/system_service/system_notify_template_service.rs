@@ -106,7 +106,7 @@ pub async fn get_notify_template_page(
         .fetch_page(params.pagination.page_no - 1)
         .await?
         .into_iter()
-        .map(|item| item.into())
+        .map(Into::into)
         .collect();
     let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
