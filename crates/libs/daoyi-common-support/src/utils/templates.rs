@@ -13,7 +13,7 @@ pub fn parse_template_content_params(content: &str) -> Vec<String> {
         .collect()
 }
 
-pub async fn format_notify_template_content(
+pub async fn format_template_content(
     content: &str,
     params: &HashMap<String, String>,
 ) -> ApiResult<String> {

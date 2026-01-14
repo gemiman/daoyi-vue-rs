@@ -51,7 +51,7 @@ pub async fn init_logger() {
 
     let mut log_level =
         std::env::var("RUST_LOG").unwrap_or_else(|_| log_config.level().to_string());
-    log_level.push_str(",nacos=warn,h2=warn,hyper=warn,tower=warn");
+    log_level.push_str(",nacos=warn,h2=warn,hyper=warn,tower=warn,lettre=warn,rustls=warn");
 
     tracing_subscriber::registry()
         .with(EnvFilter::new(log_level))

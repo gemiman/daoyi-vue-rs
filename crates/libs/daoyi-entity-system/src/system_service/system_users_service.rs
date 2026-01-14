@@ -213,7 +213,7 @@ pub async fn get_by_id<S: Into<Value>>(id: S) -> ApiResult<system_users::Model> 
     let db = database::get_db_async().await;
     SystemUsers::find_by_id_perm_with_tenant(&db, id)
         .await?
-        .ok_or(ApiError::biz("用户不存在"))
+        .ok_or_else(|| ApiError::biz("用户不存在"))
 }
 
 pub async fn get_user_list_by_status(

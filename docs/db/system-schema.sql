@@ -725,7 +725,9 @@ CREATE TABLE system.system_mail_log
     id                varchar(32)    NOT NULL primary key,
     user_id           varchar(32)    NULL     DEFAULT NULL,
     user_type         varchar(1)     NULL     DEFAULT NULL,
-    to_mail           varchar(255)   NOT NULL,
+    to_mails    varchar(255)[] NOT NULL DEFAULT '{}',
+    cc_mails    varchar(255)[] NULL     DEFAULT '{}',
+    bcc_mails   varchar(255)[] NULL     DEFAULT '{}',
     account_id        varchar(32)    NOT NULL,
     from_mail         varchar(255)   NOT NULL,
     template_id       varchar(32)    NOT NULL,
@@ -734,7 +736,7 @@ CREATE TABLE system.system_mail_log
     template_title    varchar(255)   NOT NULL,
     template_content  varchar(10240) NOT NULL,
     template_params   jsonb          NOT NULL,
-    send_status       varchar(1)     NOT NULL DEFAULT '0',
+    send_status varchar(10)    NOT NULL DEFAULT '0',
     send_time         timestamp      NULL     DEFAULT NULL,
     send_message_id   varchar(255)   NULL     DEFAULT NULL,
     send_exception    varchar(4096)  NULL     DEFAULT NULL,
@@ -749,7 +751,9 @@ CREATE TABLE system.system_mail_log
 COMMENT ON COLUMN system.system_mail_log.id IS '编号';
 COMMENT ON COLUMN system.system_mail_log.user_id IS '用户编号';
 COMMENT ON COLUMN system.system_mail_log.user_type IS '用户类型';
-COMMENT ON COLUMN system.system_mail_log.to_mail IS '接收邮箱地址';
+COMMENT ON COLUMN system.system_mail_log.to_mails IS '接收邮箱地址';
+COMMENT ON COLUMN system.system_mail_log.cc_mails IS '抄送邮箱地址';
+COMMENT ON COLUMN system.system_mail_log.bcc_mails IS '密送邮箱地址';
 COMMENT ON COLUMN system.system_mail_log.account_id IS '邮箱账号编号';
 COMMENT ON COLUMN system.system_mail_log.from_mail IS '发送邮箱地址';
 COMMENT ON COLUMN system.system_mail_log.template_id IS '模板编号';

@@ -2,7 +2,7 @@ use crate::system_entity::system_notify_template;
 use crate::system_service::{system_notify_message_service, system_notify_template_service};
 use daoyi_common_support::enumeration::{CommonStatusEnum, UserTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
-use daoyi_common_support::utils::templates::format_notify_template_content;
+use daoyi_common_support::utils::templates::format_template_content;
 use std::collections::HashMap;
 
 pub async fn send_single_notify_to_member(
@@ -43,7 +43,7 @@ pub async fn send_single_notify(
     // 校验参数
     let template_params = validate_template_params(&template, template_params).await?;
     // 发送站内信
-    let content = format_notify_template_content(&template.content, &template_params).await?;
+    let content = format_template_content(&template.content, &template_params).await?;
     Ok(system_notify_message_service::create_notify_message(
         String::from(user_id),
         user_type,

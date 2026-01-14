@@ -6,6 +6,7 @@ use daoyi_common_support::vo::system_vo::{
     MailTemplateRespVO, MailTemplateSaveReqVO, MailTemplateSimpleRespVO, MailTemplateUpdateReqVO,
 };
 use daoyi_macros::{DaoyiActiveModelBehavior, daoyi_model};
+use itertools::Itertools;
 use sea_orm::entity::prelude::*;
 use sea_orm::{Set, Unchanged};
 use serde::{Deserialize, Serialize};
@@ -35,7 +36,13 @@ pub enum Relation {}
 
 impl From<MailTemplateSaveReqVO> for ActiveModel {
     fn from(value: MailTemplateSaveReqVO) -> Self {
-        let params = parse_template_content_params(&value.content);
+        let params1 = parse_template_content_params(&value.title);
+        let params2 = parse_template_content_params(&value.content);
+        let params = params1
+            .into_iter()
+            .chain(params2.into_iter())
+            .unique()
+            .collect::<Vec<_>>();
         Self {
             account_id: Set(value.account_id),
             code: Set(value.code),
@@ -53,7 +60,13 @@ impl From<MailTemplateSaveReqVO> for ActiveModel {
 
 impl From<MailTemplateUpdateReqVO> for ActiveModel {
     fn from(value: MailTemplateUpdateReqVO) -> Self {
-        let params = parse_template_content_params(&value.content);
+        let params1 = parse_template_content_params(&value.title);
+        let params2 = parse_template_content_params(&value.content);
+        let params = params1
+            .into_iter()
+            .chain(params2.into_iter())
+            .unique()
+            .collect::<Vec<_>>();
         Self {
             id: Unchanged(value.id),
             account_id: Set(value.account_id),

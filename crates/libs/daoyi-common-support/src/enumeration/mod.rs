@@ -272,3 +272,26 @@ pub enum FileStorageEnum {
     #[sea_orm(string_value = "20")]
     S3,
 }
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum MailSendStatusEnum {
+    #[sea_orm(string_value = "0")]
+    INIT,
+    #[sea_orm(string_value = "10")]
+    SUCCESS,
+    #[sea_orm(string_value = "20")]
+    FAILURE,
+    #[sea_orm(string_value = "30")]
+    IGNORE,
+}
