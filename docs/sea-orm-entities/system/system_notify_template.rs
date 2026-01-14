@@ -4,15 +4,19 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
-#[sea_orm(schema_name = "system", table_name = "system_access_token")]
+#[sea_orm(schema_name = "system", table_name = "system_notify_template")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
-    pub user_id: String,
-    pub access_token: String,
-    pub refresh_token: String,
-    pub expires_time: DateTime,
+    pub name: String,
+    pub code: String,
+    pub nickname: String,
+    pub content: String,
+    pub r#type: String,
+    pub params: Option<String>,
+    pub status: String,
+    pub remark: Option<String>,
     pub creator: Option<String>,
     pub create_time: DateTime,
     pub updater: Option<String>,

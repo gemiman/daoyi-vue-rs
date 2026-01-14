@@ -89,6 +89,25 @@ pub enum CommonStatusEnum {
     DaoyiStringOrNumberSerde,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum NotifyTemplateTypeEnum {
+    #[sea_orm(string_value = "1")]
+    NotificationMessage,
+    #[sea_orm(string_value = "2")]
+    SystemMessage,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum UserTypeEnum {
     #[sea_orm(string_value = "1")]
     Member,

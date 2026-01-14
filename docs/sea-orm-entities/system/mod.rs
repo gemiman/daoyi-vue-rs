@@ -8,6 +8,7 @@ pub mod system_dict_data;
 pub mod system_dict_type;
 pub mod system_menu;
 pub mod system_notice;
+pub mod system_notify_template;
 pub mod system_post;
 pub mod system_role;
 pub mod system_role_menu;

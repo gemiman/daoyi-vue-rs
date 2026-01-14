@@ -546,3 +546,44 @@ COMMENT ON COLUMN system.system_notice.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_notice.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_notice.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_notice IS '通知公告表';
+
+
+-- ----------------------------
+-- Table structure for system.system_notify_template
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_notify_template;
+CREATE TABLE system.system_notify_template
+(
+    id          varchar(32)    NOT NULL primary key,
+    name        varchar(63)    NOT NULL,
+    code        varchar(64)    NOT NULL,
+    nickname    varchar(255)   NOT NULL,
+    content     varchar(1024)  NOT NULL,
+    type        varchar(1)     NOT NULL,
+    params      varchar(255)[] NULL     DEFAULT '{}',
+    status      varchar(1)     NOT NULL DEFAULT '0',
+    remark      varchar(255)   NULL     DEFAULT NULL,
+    creator     varchar(64)    NULL     DEFAULT '',
+    create_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(64)    NULL     DEFAULT '',
+    update_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean        NOT NULL DEFAULT false,
+    tenant_id   varchar(32)    NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_notify_template.id IS '主键';
+COMMENT ON COLUMN system.system_notify_template.name IS '模板名称';
+COMMENT ON COLUMN system.system_notify_template.code IS '模版编码';
+COMMENT ON COLUMN system.system_notify_template.nickname IS '发送人名称';
+COMMENT ON COLUMN system.system_notify_template.content IS '模版内容';
+COMMENT ON COLUMN system.system_notify_template.type IS '类型';
+COMMENT ON COLUMN system.system_notify_template.params IS '参数数组';
+COMMENT ON COLUMN system.system_notify_template.status IS '状态';
+COMMENT ON COLUMN system.system_notify_template.remark IS '备注';
+COMMENT ON COLUMN system.system_notify_template.creator IS '创建者';
+COMMENT ON COLUMN system.system_notify_template.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_notify_template.updater IS '更新者';
+COMMENT ON COLUMN system.system_notify_template.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_notify_template.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_notify_template.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_notify_template IS '站内信模板表';

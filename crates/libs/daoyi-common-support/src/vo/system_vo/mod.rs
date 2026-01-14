@@ -1,5 +1,6 @@
 use crate::enumeration::{
-    CommonStatusEnum, DataScopeEnum, MenuTypeEnum, NoticeTypeEnum, RoleTypeEnum, SexEnum,
+    CommonStatusEnum, DataScopeEnum, MenuTypeEnum, NoticeTypeEnum, NotifyTemplateTypeEnum,
+    RoleTypeEnum, SexEnum, UserTypeEnum,
 };
 use crate::models::FlexibleInt;
 use crate::models::pagination::PaginationParams;
@@ -10,6 +11,7 @@ use crate::serde::option_datetime_format;
 use crate::serde::option_vec_datetime_format;
 use sea_orm::prelude::DateTime;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use validator::Validate;
 
 /// PermissionAssignUserRoleReqVO，管理后台 - 赋予用户角色 Request VO
@@ -1045,4 +1047,100 @@ pub struct NoticeUpdateReqVO {
     pub title: String,
     /// 公告类型
     pub r#type: NoticeTypeEnum,
+}
+
+/// NotifyTemplateSaveReqVO，管理后台 - 站内信模版创建/修改 Request VO
+#[derive(Debug, Validate, Deserialize)]
+pub struct NotifyTemplateSaveReqVO {
+    /// 模版编码
+    pub code: String,
+    /// 模版内容
+    pub content: String,
+    /// 模版名称
+    pub name: String,
+    /// 发送人名称
+    pub nickname: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 模版类型，对应 system_notify_template_type 字典
+    pub r#type: NotifyTemplateTypeEnum,
+}
+#[derive(Debug, Validate, Deserialize)]
+pub struct NotifyTemplateUpdateReqVO {
+    /// 模版编码
+    pub code: String,
+    /// 模版内容
+    pub content: String,
+    /// ID
+    pub id: String,
+    /// 模版名称
+    pub name: String,
+    /// 发送人名称
+    pub nickname: String,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 模版类型，对应 system_notify_template_type 字典
+    pub r#type: NotifyTemplateTypeEnum,
+}
+/// NotifyTemplateRespVO，管理后台 - 站内信模版 Response VO
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyTemplateRespVo {
+    /// 模版编码
+    pub code: String,
+    /// 模版内容
+    pub content: String,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// ID
+    pub id: String,
+    /// 模版名称
+    pub name: String,
+    /// 发送人名称
+    pub nickname: String,
+    /// 参数数组
+    pub params: Vec<String>,
+    /// 备注
+    pub remark: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: CommonStatusEnum,
+    /// 模版类型，对应 system_notify_template_type 字典
+    pub r#type: NotifyTemplateTypeEnum,
+}
+
+/// 管理后台 - 站内信模版分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyTemplatePageReqVO {
+    /// 模版编码
+    pub code: Option<String>,
+    /// 模版名称
+    pub name: Option<String>,
+    /// 状态（0正常 1停用） 展示状态，参见 CommonStatusEnum 枚举类
+    pub status: Option<CommonStatusEnum>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+/// NotifyTemplateSendReqVO，管理后台 - 站内信模板的发送 Request VO
+#[derive(Debug, Validate, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct NotifyTemplateSendReqVo {
+    /// 模板编码
+    pub template_code: String,
+    /// 模板参数
+    pub template_params: Option<HashMap<String, Option<serde_json::Value>>>,
+    /// 用户id
+    pub user_id: String,
+    /// 用户类型
+    pub user_type: UserTypeEnum,
 }
