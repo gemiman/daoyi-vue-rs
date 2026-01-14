@@ -714,3 +714,58 @@ COMMENT ON COLUMN system.system_mail_template.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_mail_template.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_mail_template.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_mail_template IS '邮件模版表';
+
+
+-- ----------------------------
+-- Table structure for system.system_mail_log
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_mail_log;
+CREATE TABLE system.system_mail_log
+(
+    id                varchar(32)    NOT NULL primary key,
+    user_id           varchar(32)    NULL     DEFAULT NULL,
+    user_type         varchar(1)     NULL     DEFAULT NULL,
+    to_mail           varchar(255)   NOT NULL,
+    account_id        varchar(32)    NOT NULL,
+    from_mail         varchar(255)   NOT NULL,
+    template_id       varchar(32)    NOT NULL,
+    template_code     varchar(63)    NOT NULL,
+    template_nickname varchar(255)   NULL     DEFAULT NULL,
+    template_title    varchar(255)   NOT NULL,
+    template_content  varchar(10240) NOT NULL,
+    template_params   jsonb          NOT NULL,
+    send_status       varchar(1)     NOT NULL DEFAULT '0',
+    send_time         timestamp      NULL     DEFAULT NULL,
+    send_message_id   varchar(255)   NULL     DEFAULT NULL,
+    send_exception    varchar(4096)  NULL     DEFAULT NULL,
+    creator           varchar(32)    NULL     DEFAULT '',
+    create_time       timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater           varchar(32)    NULL     DEFAULT '',
+    update_time       timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted           boolean        NOT NULL DEFAULT false,
+    tenant_id         varchar(32)    NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_mail_log.id IS '编号';
+COMMENT ON COLUMN system.system_mail_log.user_id IS '用户编号';
+COMMENT ON COLUMN system.system_mail_log.user_type IS '用户类型';
+COMMENT ON COLUMN system.system_mail_log.to_mail IS '接收邮箱地址';
+COMMENT ON COLUMN system.system_mail_log.account_id IS '邮箱账号编号';
+COMMENT ON COLUMN system.system_mail_log.from_mail IS '发送邮箱地址';
+COMMENT ON COLUMN system.system_mail_log.template_id IS '模板编号';
+COMMENT ON COLUMN system.system_mail_log.template_code IS '模板编码';
+COMMENT ON COLUMN system.system_mail_log.template_nickname IS '模版发送人名称';
+COMMENT ON COLUMN system.system_mail_log.template_title IS '邮件标题';
+COMMENT ON COLUMN system.system_mail_log.template_content IS '邮件内容';
+COMMENT ON COLUMN system.system_mail_log.template_params IS '邮件参数';
+COMMENT ON COLUMN system.system_mail_log.send_status IS '发送状态';
+COMMENT ON COLUMN system.system_mail_log.send_time IS '发送时间';
+COMMENT ON COLUMN system.system_mail_log.send_message_id IS '发送返回的消息 ID';
+COMMENT ON COLUMN system.system_mail_log.send_exception IS '发送异常';
+COMMENT ON COLUMN system.system_mail_log.creator IS '创建者';
+COMMENT ON COLUMN system.system_mail_log.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_mail_log.updater IS '更新者';
+COMMENT ON COLUMN system.system_mail_log.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_mail_log.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_mail_log.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_mail_log IS '邮件日志表';
