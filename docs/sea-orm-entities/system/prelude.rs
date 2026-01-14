@@ -5,6 +5,7 @@ pub use super::system_dept::Entity as SystemDept;
 pub use super::system_dict_data::Entity as SystemDictData;
 pub use super::system_dict_type::Entity as SystemDictType;
 pub use super::system_mail_account::Entity as SystemMailAccount;
+pub use super::system_mail_template::Entity as SystemMailTemplate;
 pub use super::system_menu::Entity as SystemMenu;
 pub use super::system_notice::Entity as SystemNotice;
 pub use super::system_notify_message::Entity as SystemNotifyMessage;

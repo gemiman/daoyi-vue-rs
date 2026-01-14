@@ -671,3 +671,46 @@ COMMENT ON COLUMN system.system_mail_account.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_mail_account.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_mail_account.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_mail_account IS '邮箱账号表';
+
+
+-- ----------------------------
+-- Table structure for system.system_mail_template
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_mail_template;
+CREATE TABLE system.system_mail_template
+(
+    id          varchar(32)    NOT NULL primary key,
+    name        varchar(63)    NOT NULL,
+    code        varchar(63)    NOT NULL,
+    account_id  varchar(32)    NOT NULL,
+    nickname    varchar(255)   NULL     DEFAULT NULL,
+    title       varchar(255)   NOT NULL,
+    content     varchar(10240) NOT NULL,
+    params      varchar(255)[] NOT NULL,
+    status      varchar(1)     NOT NULL,
+    remark      varchar(255)   NULL     DEFAULT NULL,
+    creator     varchar(32)    NULL     DEFAULT '',
+    create_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(32)    NULL     DEFAULT '',
+    update_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean        NOT NULL DEFAULT false,
+    tenant_id   varchar(32)    NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_mail_template.id IS '编号';
+COMMENT ON COLUMN system.system_mail_template.name IS '模板名称';
+COMMENT ON COLUMN system.system_mail_template.code IS '模板编码';
+COMMENT ON COLUMN system.system_mail_template.account_id IS '发送的邮箱账号编号';
+COMMENT ON COLUMN system.system_mail_template.nickname IS '发送人名称';
+COMMENT ON COLUMN system.system_mail_template.title IS '模板标题';
+COMMENT ON COLUMN system.system_mail_template.content IS '模板内容';
+COMMENT ON COLUMN system.system_mail_template.params IS '参数数组';
+COMMENT ON COLUMN system.system_mail_template.status IS '开启状态';
+COMMENT ON COLUMN system.system_mail_template.remark IS '备注';
+COMMENT ON COLUMN system.system_mail_template.creator IS '创建者';
+COMMENT ON COLUMN system.system_mail_template.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_mail_template.updater IS '更新者';
+COMMENT ON COLUMN system.system_mail_template.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_mail_template.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_mail_template.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_mail_template IS '邮件模版表';
