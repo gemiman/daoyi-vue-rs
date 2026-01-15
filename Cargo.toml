@@ -46,8 +46,7 @@ bcrypt = "0.18.0"
 wax = { version = "0.6.0" }
 humantime = { version = "2.3.0" }
 nacos-sdk = { version = "0.5.3", features = ["default"] }
-redis = { version = "1.0.2", features = ["tokio-comp"] }
-deadpool-redis = { version = "0.22.1" }
+redis = { version = "1.0.2", features = ["tokio-comp", "connection-manager", "streams"] }
 reqwest = { version = "0.13.1", features = ["json", "query"] }
 strum = { version = "0.27.2" }
 strum_macros = { version = "0.27.2" }

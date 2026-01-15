@@ -1,13 +1,16 @@
 mod auth_config;
 pub mod database_config;
 pub mod log_config;
+pub mod mail_server_config;
 pub mod nacos_config;
 pub mod redis_config;
 pub mod server_config;
+pub mod ws_config;
 
 use crate::configs::nacos_config::NacosConfig;
 use crate::configs::redis_config::RedisConfig;
-use anyhow::{anyhow, Context};
+use crate::configs::ws_config::WsConfig;
+use anyhow::{Context, anyhow};
 pub use auth_config::AuthConfig;
 use config::{Config, FileFormat};
 pub use database_config::DatabaseConfig;
@@ -27,6 +30,9 @@ static DEFAULT_DATABASE_CONFIG: LazyLock<DatabaseConfig> =
 static DEFAULT_AUTH_CONFIG: LazyLock<AuthConfig> = LazyLock::new(|| AuthConfig::default());
 static DEFAULT_NACOS_CONFIG: LazyLock<NacosConfig> = LazyLock::new(|| NacosConfig::default());
 static DEFAULT_REDIS_CONFIG: LazyLock<RedisConfig> = LazyLock::new(|| RedisConfig::default());
+static DEFAULT_WS_CONFIG: LazyLock<WsConfig> = LazyLock::new(|| WsConfig::default());
+static DEFAULT_MAIL_SERVER_CONFIG: LazyLock<mail_server_config::MailServerConfig> =
+    LazyLock::new(|| mail_server_config::MailServerConfig::default());
 
 #[derive(Debug, Deserialize, Merge, Default)]
 pub struct AppConfig {
@@ -46,6 +52,10 @@ pub struct AppConfig {
     nacos: Option<NacosConfig>,
     #[merge(strategy = merge::option::recurse)]
     redis: Option<RedisConfig>,
+    #[merge(strategy = merge::option::recurse)]
+    ws: Option<WsConfig>,
+    #[merge(strategy = merge::option::recurse)]
+    mail_server: Option<mail_server_config::MailServerConfig>,
 }
 
 impl AppConfig {
@@ -70,8 +80,16 @@ impl AppConfig {
     pub fn nacos(&self) -> &NacosConfig {
         self.nacos.as_ref().unwrap_or(&DEFAULT_NACOS_CONFIG)
     }
+    pub fn ws(&self) -> &WsConfig {
+        self.ws.as_ref().unwrap_or(&DEFAULT_WS_CONFIG)
+    }
     pub fn redis(&self) -> &RedisConfig {
         self.redis.as_ref().unwrap_or(&DEFAULT_REDIS_CONFIG)
+    }
+    pub fn mail_server(&self) -> &mail_server_config::MailServerConfig {
+        self.mail_server
+            .as_ref()
+            .unwrap_or(&DEFAULT_MAIL_SERVER_CONFIG)
     }
     pub async fn load(app_name: &str) -> anyhow::Result<()> {
         let app_config = APP_CONFIG.get();

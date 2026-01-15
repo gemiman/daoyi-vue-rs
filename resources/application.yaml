@@ -38,6 +38,7 @@ auth:
     - /admin-api/system/oauth2/check-token
     - /admin-api/system/tenant/**
     - /admin-api/system/tenant-package/**
+    - /admin-api/system/mail-account/send-mail-by-server
   header_key_token: Authorization
   header_key_tenant: tenant-id
   token_expiration: 100000h
@@ -57,3 +58,8 @@ nacos:
   group: DEFAULT_GROUP
   auth_username: nacos
   auth_password: nacos
+ws:
+  enable: true
+mail_server:
+  enable: true
+  send_mail_url: http://127.0.0.1:48001/admin-api/system/mail-account/send-mail-by-server

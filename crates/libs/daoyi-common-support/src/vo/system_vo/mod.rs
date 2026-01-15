@@ -13,7 +13,7 @@ use crate::serde::option_datetime_format;
 use crate::serde::option_vec_datetime_format;
 use sea_orm::prelude::{DateTime, Json};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use validator::Validate;
 
 /// PermissionAssignUserRoleReqVO，管理后台 - 赋予用户角色 Request VO
@@ -1268,7 +1268,7 @@ pub struct MailAccountUpdateReqVO {
     pub username: String,
 }
 /// MailAccountRespVO，管理后台 - 邮箱账号 Response VO
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct MailAccountRespVO {
     /// 创建时间
@@ -1428,4 +1428,17 @@ pub struct MailTemplateSendReqVO {
     /// 接收邮箱
     #[validate(length(min = 1, message = "接收邮箱不能为空"))]
     pub to_mails: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Debug, Validate)]
+pub struct MailSendMessage {
+    pub log_id: Option<String>,
+    #[validate(nested)]
+    pub account: MailAccountRespVO,
+    pub nickname: Option<String>,
+    pub to_mails: HashSet<String>,
+    pub cc_mails: HashSet<String>,
+    pub bcc_mails: HashSet<String>,
+    pub title: String,
+    pub content: String,
 }

@@ -33,9 +33,7 @@ pub enum ApiError {
     #[error("serde_json错误：{0}")]
     SerdeJson(#[from] serde_json::Error),
     #[error("Redis错误：{0}")]
-    Redis(#[from] deadpool_redis::redis::RedisError),
-    #[error("RedisPool错误：{0}")]
-    RedisPool(#[from] deadpool_redis::PoolError),
+    Redis(#[from] redis::RedisError),
     #[error("Str Fmt 错误：{0}")]
     FmtError(#[from] strfmt::FmtError),
 }
@@ -115,7 +113,7 @@ impl ApiError {
             NotFound => StatusCode::NOT_FOUND,
             MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,
             Internal(_) | Database(_) | Bcrypt(_) | Glob(_) | SerdeJson(_) | Redis(_)
-            | RedisPool(_) | FmtError(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            | FmtError(_) => StatusCode::INTERNAL_SERVER_ERROR,
             Query(_) | Path(_) | Json(_) => StatusCode::BAD_REQUEST,
             Unauthenticated(_) => StatusCode::UNAUTHORIZED,
             Biz(_) | Validation(_) => StatusCode::OK,

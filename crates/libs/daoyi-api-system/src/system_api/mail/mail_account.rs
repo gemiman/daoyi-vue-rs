@@ -5,9 +5,9 @@ use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
     IdParams, IdsParams, MailAccountPageReqVO, MailAccountRespVO, MailAccountSaveReqVO,
-    MailAccountUpdateReqVO,
+    MailAccountUpdateReqVO, MailSendMessage,
 };
-use daoyi_entity_system::system_service::system_mail_account_service;
+use daoyi_entity_system::system_service::{mail_send_service, system_mail_account_service};
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -28,6 +28,17 @@ pub fn create_router() -> Router<AppState> {
             "/simple-list",
             axum::routing::get(get_simple_mail_account_list),
         )
+        .route(
+            "/send-mail-by-server",
+            axum::routing::post(send_mail_by_server),
+        )
+}
+
+#[debug_handler]
+async fn send_mail_by_server(
+    ValidJson(msg): ValidJson<MailSendMessage>,
+) -> RestApiResult<Option<String>> {
+    ApiResponse::success(mail_send_service::do_send_mail(msg).await?)
 }
 
 #[debug_handler]

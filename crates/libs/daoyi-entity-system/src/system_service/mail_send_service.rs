@@ -6,13 +6,13 @@ use crate::system_service::{
 use daoyi_common_support::enumeration::{CommonStatusEnum, MailSendStatusEnum, UserTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::utils::templates;
-use lettre::message::header;
-use lettre::transport::smtp::authentication::Credentials;
-use lettre::transport::smtp::client::Tls;
-use lettre::transport::smtp::client::TlsParameters;
-use lettre::{AsyncSmtpTransport, AsyncTransport, Message, Tokio1Executor};
+use daoyi_common_support::{mail_server, redis_utils};
+
+use daoyi_common_support::context::HttpRequestContext;
+use daoyi_common_support::enumeration::redis_keys::MAIL_SEND_STREAM_KEY;
+use daoyi_common_support::vo::MqMsgBody;
+use daoyi_common_support::vo::system_vo::MailSendMessage;
 use std::collections::{HashMap, HashSet};
-use tracing::{error, info};
 
 pub async fn send_single_mail_to_admin(
     user_id: &str,
@@ -136,24 +136,36 @@ pub async fn send_single_mail(
     .id;
 
     if is_send {
-        // 4. 发送 MQ 消息，异步执行发送短信 (这里使用 tokio::spawn 模拟异步发送)
-        let log_id = log_id.clone();
-        tokio::spawn(async move {
-            if let Err(e) = do_send_mail(
-                &log_id,
-                &account,
-                &template.nickname,
-                &to_mail_set,
-                &cc_mail_set,
-                &bcc_mail_set,
-                &title,
-                &content,
-            )
-            .await
-            {
-                error!("邮件发送失败，log_id: {}, error: {}", log_id, e);
+        // 4. 发送 MQ 消息，异步执行发送邮件 (基于 Redis Stream)
+        let message = MailSendMessage {
+            log_id: Some(log_id.clone()),
+            account: account.into(),
+            nickname: template.nickname,
+            to_mails: to_mail_set,
+            cc_mails: cc_mail_set,
+            bcc_mails: bcc_mail_set,
+            title,
+            content,
+        };
+
+        let mq_msg = MqMsgBody::new(MAIL_SEND_STREAM_KEY, message)
+            .with_token(HttpRequestContext::get_token().as_deref().unwrap_or(""));
+        match redis_utils::send_mq_msg(&mq_msg).await {
+            Ok(msg_id) => {
+                tracing::info!(
+                    "发送邮件消息到Redis Stream成功，log_id: {}, msg_id: {}",
+                    log_id,
+                    msg_id
+                );
             }
-        });
+            Err(e) => {
+                tracing::error!(
+                    "发送邮件消息到Redis Stream失败，log_id: {}, error: {}",
+                    log_id,
+                    e
+                );
+            }
+        }
     }
 
     Ok(log_id)
@@ -179,110 +191,35 @@ async fn validate_params(
     }
 }
 
-async fn do_send_mail(
-    log_id: &str,
-    account: &system_mail_account::Model,
-    nickname: &Option<String>,
-    to_mails: &HashSet<String>,
-    cc_mails: &HashSet<String>,
-    bcc_mails: &HashSet<String>,
-    title: &str,
-    content: &str,
-) -> ApiResult<()> {
-    // 构造发送者
-    let from_mailbox = if let Some(nick) = nickname {
-        format!("{} <{}>", nick, account.mail)
-            .parse::<lettre::message::Mailbox>()
-            .map_err(|e| ApiError::biz(format!("发送者格式错误: {}", e)))?
-    } else {
-        account
-            .mail
-            .parse::<lettre::message::Mailbox>()
-            .map_err(|e| ApiError::biz(format!("发送者邮箱格式错误: {}", e)))?
-    };
-
-    let mut builder = Message::builder()
-        .from(from_mailbox)
-        .subject(title)
-        .header(header::ContentType::TEXT_HTML);
-
-    for to in to_mails {
-        let to_mailbox = to
-            .parse::<lettre::message::Mailbox>()
-            .map_err(|e| ApiError::biz(format!("收件人格式错误: {}", e)))?;
-        builder = builder.to(to_mailbox);
-    }
-    for cc in cc_mails {
-        let cc_mailbox = cc
-            .parse::<lettre::message::Mailbox>()
-            .map_err(|e| ApiError::biz(format!("抄送人格式错误: {}", e)))?;
-        builder = builder.cc(cc_mailbox);
-    }
-    for bcc in bcc_mails {
-        let bcc_mailbox = bcc
-            .parse::<lettre::message::Mailbox>()
-            .map_err(|e| ApiError::biz(format!("密送人格式错误: {}", e)))?;
-        builder = builder.bcc(bcc_mailbox);
-    }
-
-    let email = builder
-        .body(content.to_string())
-        .map_err(|e| ApiError::biz(format!("邮件构建失败: {}", e)))?;
-
-    // 构造 Transport
-    let creds = Credentials::new(account.username.clone(), account.password_plaintext.clone());
-
-    let mut transport_builder = AsyncSmtpTransport::<Tokio1Executor>::relay(&account.host)
-        .map_err(|e| ApiError::biz(format!("SMTP Host 错误: {}", e)))?
-        .port(account.port as u16)
-        .credentials(creds);
-
-    if account.ssl_enable {
-        transport_builder = transport_builder.tls(Tls::Wrapper(
-            TlsParameters::new(account.host.clone())
-                .map_err(|e| ApiError::biz(format!("TLS 配置错误: {}", e)))?,
-        ));
-    } else if account.starttls_enable {
-        transport_builder = transport_builder.tls(Tls::Required(
-            TlsParameters::new(account.host.clone())
-                .map_err(|e| ApiError::biz(format!("TLS 配置错误: {}", e)))?,
-        ));
-    } else {
-        transport_builder = transport_builder.tls(Tls::None);
-    }
-
-    let mailer = transport_builder.build();
-
+pub async fn do_send_mail(msg: MailSendMessage) -> ApiResult<Option<String>> {
+    let log_id = msg.log_id.clone();
+    let result = mail_server::send_mail(msg).await;
     // 发送
-    match mailer.send(email).await {
-        Ok(resp) => {
-            info!("邮件发送成功: {:?}", resp);
-            // 更新日志为成功 "1"
-            let msg_id = resp
-                .message()
-                .map(|s| s.to_string())
-                .collect::<Vec<String>>()
-                .join(" ");
-            system_mail_log_service::update_mail_log_send_result(
-                log_id,
-                MailSendStatusEnum::SUCCESS,
-                Some(msg_id),
-                None,
-            )
-            .await?;
+    match result {
+        Ok(msg_id) => {
+            tracing::info!("{log_id:?} 邮件发送成功: {msg_id:?}");
+            if let Some(log_id) = log_id.as_deref() {
+                system_mail_log_service::update_mail_log_send_result(
+                    log_id,
+                    MailSendStatusEnum::SUCCESS,
+                    Some(msg_id),
+                    None,
+                )
+                .await?;
+            }
         }
         Err(e) => {
-            error!("邮件发送失败: {:?}", e);
-            // 更新日志为失败 "2"
-            system_mail_log_service::update_mail_log_send_result(
-                log_id,
-                MailSendStatusEnum::FAILURE,
-                None,
-                Some(e.to_string()),
-            )
-            .await?;
+            tracing::error!("{log_id:?} 邮件发送失败: {e:?}");
+            if let Some(log_id) = log_id.as_deref() {
+                system_mail_log_service::update_mail_log_send_result(
+                    log_id,
+                    MailSendStatusEnum::FAILURE,
+                    None,
+                    Some(e.to_string()),
+                )
+                .await?;
+            }
         }
     }
-
-    Ok(())
+    Ok(log_id)
 }

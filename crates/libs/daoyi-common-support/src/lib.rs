@@ -7,6 +7,7 @@ pub mod enumeration;
 pub mod error;
 pub mod id_util;
 pub mod logger;
+pub mod mail_server;
 pub mod middlewares;
 pub mod models;
 pub mod password;

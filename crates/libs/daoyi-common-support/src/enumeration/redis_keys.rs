@@ -1,3 +1,5 @@
+pub const MAIL_SEND_STREAM_KEY: &str = "system:mail:send:stream";
+pub const MAIL_SEND_GROUP_NAME: &str = "system:mail:send:group";
 #[derive(Debug, strum_macros::Display, strum_macros::EnumString)]
 #[strum(serialize_all = "snake_case")]
 pub enum RedisKey {
