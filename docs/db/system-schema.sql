@@ -20,9 +20,9 @@ CREATE TABLE system.system_users
     post_ids    varchar(255)[] NULL     DEFAULT NULL,
     email       varchar(128)   NULL     DEFAULT '',
     mobile      varchar(128)   NULL     DEFAULT '',
-    sex         varchar(1)     NULL     DEFAULT '0',
+    sex    varchar(32) NULL     DEFAULT '0',
     avatar      varchar(512)   NULL     DEFAULT '',
-    status      varchar(1)     NOT NULL DEFAULT '0',
+    status varchar(32) NOT NULL DEFAULT '0',
     login_ip    varchar(128)   NULL     DEFAULT '',
     login_date  timestamp      NULL     DEFAULT NULL,
     creator     varchar(32)    NULL     DEFAULT '',
@@ -60,7 +60,7 @@ INSERT INTO system.system_users (id, username, password, nickname, remark, dept_
 VALUES ('0'::varchar(32), 'admin'::varchar(30),
         '$2b$04$oVX9LhAfLryctEw7L5iAk.R1XFXnW8Pq1KLi9MBvOA47nXisTnKKu'::varchar(100), '系统管理员'::varchar(256),
         '系统管理员，默认初始化，密码：Aa123456'::varchar(500), '0'::varchar(32), '{0}', 'gemiman@vip.qq.com'::varchar(50),
-        '17621038080'::varchar(11), '1'::varchar(1), DEFAULT, '0'::varchar(1), '0.0.0.0'::varchar(50),
+        '17621038080'::varchar(11), '1'::varchar(32), DEFAULT, '0'::varchar(32), '0.0.0.0'::varchar(50),
         '2025-12-26 12:16:02.000000'::timestamp, '0'::varchar(64), '2025-12-26 12:16:12.000000'::timestamp,
         '0'::varchar(64), '2025-12-26 12:16:18.000000'::timestamp, false::boolean, '0'::varchar(32));
 commit;
@@ -112,7 +112,7 @@ CREATE TABLE system.system_tenant
     contact_user_id varchar(32)    NULL     DEFAULT NULL,
     contact_name    varchar(128)   NOT NULL,
     contact_mobile  varchar(128)   NULL     DEFAULT NULL,
-    status          varchar(1)     NOT NULL DEFAULT '0',
+    status varchar(32) NOT NULL DEFAULT '0',
     websites        varchar(256)[] NULL     DEFAULT '{}',
     package_id      varchar(32)    NOT NULL,
     expire_time     timestamp      NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE system.system_dict_data
     label       varchar(100) NOT NULL DEFAULT '',
     value       varchar(100) NOT NULL DEFAULT '',
     dict_type   varchar(100) NOT NULL DEFAULT '',
-    status      varchar(1)   NOT NULL DEFAULT '0',
+    status varchar(32) NOT NULL DEFAULT '0',
     color_type  varchar(100) NULL     DEFAULT '',
     css_class   varchar(100) NULL     DEFAULT '',
     remark      varchar(500) NULL     DEFAULT NULL,
@@ -200,7 +200,7 @@ CREATE TABLE system.system_dict_type
     id           varchar(32)  NOT NULL primary key,
     name         varchar(100) NOT NULL DEFAULT '',
     type         varchar(100) NOT NULL DEFAULT '',
-    status       varchar(1)   NOT NULL DEFAULT '0',
+    status varchar(32) NOT NULL DEFAULT '0',
     remark       varchar(500) NULL     DEFAULT NULL,
     deleted_time timestamp    NULL     DEFAULT NULL,
     creator      varchar(32)  NULL     DEFAULT '',
@@ -266,10 +266,10 @@ CREATE TABLE system.system_role
     name        varchar(30)  NOT NULL,
     code        varchar(100) NOT NULL,
     sort        int4         NOT NULL,
-    data_scope  varchar(1)   NOT NULL DEFAULT '1',
+    data_scope  varchar(32)  NOT NULL DEFAULT '1',
     data_scope_dept_ids varchar(32)[] NOT NULL DEFAULT '{}',
-    status      varchar(1)   NOT NULL,
-    type        varchar(1)   NOT NULL,
+    status      varchar(32)  NOT NULL,
+    type        varchar(32)  NOT NULL,
     remark      varchar(500) NULL     DEFAULT NULL,
     creator     varchar(64)  NULL     DEFAULT '',
     create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -335,14 +335,14 @@ CREATE TABLE system.system_menu
     id             varchar(32)  NOT NULL primary key,
     name           varchar(50)  NOT NULL,
     permission     varchar(100) NOT NULL DEFAULT '',
-    type           varchar(1)   NOT NULL,
+    type   varchar(32) NOT NULL,
     sort           int4         NOT NULL DEFAULT 0,
     parent_id      varchar(32)  NOT NULL DEFAULT '0',
     path           varchar(200) NULL     DEFAULT '',
     icon           varchar(100) NULL     DEFAULT '#',
     component      varchar(255) NULL     DEFAULT NULL,
     component_name varchar(255) NULL     DEFAULT NULL,
-    status         varchar(1)   NOT NULL DEFAULT '0',
+    status varchar(32) NOT NULL DEFAULT '0',
     visible        bool         NOT NULL DEFAULT true,
     keep_alive     bool         NOT NULL DEFAULT true,
     always_show    bool         NOT NULL DEFAULT true,
@@ -387,7 +387,7 @@ CREATE TABLE system.system_tenant_package
 (
     id          varchar(32)   NOT NULL primary key,
     name        varchar(30)   NOT NULL,
-    status      varchar(1)    NOT NULL DEFAULT '0',
+    status varchar(32) NOT NULL DEFAULT '0',
     remark      varchar(256)  NULL     DEFAULT '',
     menu_ids    varchar(32)[] NOT NULL DEFAULT '{}',
     creator     varchar(64)   NULL     DEFAULT '',
@@ -454,7 +454,7 @@ CREATE TABLE system.system_dept
     leader_user_id varchar(32) NULL     DEFAULT NULL,
     phone          varchar(32) NULL     DEFAULT NULL,
     email          varchar(50) NULL     DEFAULT NULL,
-    status         varchar(1)  NOT NULL,
+    status varchar(32) NOT NULL,
     creator        varchar(64) NULL     DEFAULT '',
     create_time    timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updater        varchar(64) NULL     DEFAULT '',
@@ -490,7 +490,7 @@ CREATE TABLE system.system_post
     code        varchar(64)  NOT NULL,
     name        varchar(50)  NOT NULL,
     sort        int4         NOT NULL,
-    status      varchar(1)   NOT NULL,
+    status varchar(32) NOT NULL,
     remark      varchar(500) NULL     DEFAULT NULL,
     creator     varchar(64)  NULL     DEFAULT '',
     create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -524,8 +524,8 @@ CREATE TABLE system.system_notice
     id          varchar(32) NOT NULL primary key,
     title       varchar(50) NOT NULL,
     content     text        NOT NULL,
-    type        varchar(1)  NOT NULL,
-    status      varchar(1)  NOT NULL DEFAULT '0',
+    type   varchar(32) NOT NULL,
+    status varchar(32) NOT NULL DEFAULT '0',
     creator     varchar(64) NULL     DEFAULT '',
     create_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updater     varchar(64) NULL     DEFAULT '',
@@ -559,9 +559,9 @@ CREATE TABLE system.system_notify_template
     code        varchar(64)    NOT NULL,
     nickname    varchar(255)   NOT NULL,
     content     varchar(1024)  NOT NULL,
-    type        varchar(1)     NOT NULL,
+    type   varchar(32) NOT NULL,
     params      varchar(255)[] NULL     DEFAULT '{}',
-    status      varchar(1)     NOT NULL DEFAULT '0',
+    status varchar(32) NOT NULL DEFAULT '0',
     remark      varchar(255)   NULL     DEFAULT NULL,
     creator     varchar(64)    NULL     DEFAULT '',
     create_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -597,12 +597,12 @@ CREATE TABLE system.system_notify_message
 (
     id                varchar(32)   NOT NULL primary key,
     user_id           varchar(32)   NOT NULL,
-    user_type         varchar(1)    NOT NULL,
+    user_type     varchar(32) NOT NULL,
     template_id       varchar(32)   NOT NULL,
     template_code     varchar(64)   NOT NULL,
     template_nickname varchar(63)   NOT NULL,
     template_content  varchar(1024) NOT NULL,
-    template_type     varchar(1)    NOT NULL,
+    template_type varchar(32) NOT NULL,
     template_params   jsonb         NOT NULL,
     read_status       bool          NOT NULL,
     read_time         timestamp     NULL     DEFAULT NULL,
@@ -687,7 +687,7 @@ CREATE TABLE system.system_mail_template
     title       varchar(255)   NOT NULL,
     content     varchar(10240) NOT NULL,
     params      varchar(255)[] NOT NULL,
-    status      varchar(1)     NOT NULL,
+    status varchar(32) NOT NULL,
     remark      varchar(255)   NULL     DEFAULT NULL,
     creator     varchar(32)    NULL     DEFAULT '',
     create_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -724,7 +724,7 @@ CREATE TABLE system.system_mail_log
 (
     id                varchar(32)    NOT NULL primary key,
     user_id           varchar(32)    NULL     DEFAULT NULL,
-    user_type         varchar(1)     NULL     DEFAULT NULL,
+    user_type   varchar(32)    NULL     DEFAULT NULL,
     to_mails    varchar(255)[] NOT NULL DEFAULT '{}',
     cc_mails    varchar(255)[] NULL     DEFAULT '{}',
     bcc_mails   varchar(255)[] NULL     DEFAULT '{}',
@@ -773,3 +773,194 @@ COMMENT ON COLUMN system.system_mail_log.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_mail_log.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_mail_log.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_mail_log IS '邮件日志表';
+
+
+-- ----------------------------
+-- Table structure for system.system_sms_channel
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_sms_channel;
+CREATE TABLE system.system_sms_channel
+(
+    id           varchar(32)  NOT NULL primary key,
+    signature    varchar(12)  NOT NULL,
+    code         varchar(63)  NOT NULL,
+    status       varchar(32)  NOT NULL,
+    remark       varchar(255) NULL     DEFAULT NULL,
+    api_key      varchar(128) NOT NULL,
+    api_secret   varchar(128) NULL     DEFAULT NULL,
+    callback_url varchar(255) NULL     DEFAULT NULL,
+    creator      varchar(32)  NULL     DEFAULT '',
+    create_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater      varchar(32)  NULL     DEFAULT '',
+    update_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted      boolean      NOT NULL DEFAULT false,
+    tenant_id    varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_sms_channel.id IS '编号';
+COMMENT ON COLUMN system.system_sms_channel.signature IS '短信签名';
+COMMENT ON COLUMN system.system_sms_channel.code IS '渠道编码';
+COMMENT ON COLUMN system.system_sms_channel.status IS '开启状态';
+COMMENT ON COLUMN system.system_sms_channel.remark IS '备注';
+COMMENT ON COLUMN system.system_sms_channel.api_key IS '短信 API 的账号';
+COMMENT ON COLUMN system.system_sms_channel.api_secret IS '短信 API 的秘钥';
+COMMENT ON COLUMN system.system_sms_channel.callback_url IS '短信发送回调 URL';
+COMMENT ON COLUMN system.system_sms_channel.creator IS '创建者';
+COMMENT ON COLUMN system.system_sms_channel.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_sms_channel.updater IS '更新者';
+COMMENT ON COLUMN system.system_sms_channel.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_sms_channel.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_sms_channel.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_sms_channel IS '短信渠道';
+
+
+-- ----------------------------
+-- Table structure for system.system_sms_code
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_sms_code;
+CREATE TABLE system.system_sms_code
+(
+    id          varchar(32)  NOT NULL primary key,
+    mobile      varchar(32)  NOT NULL,
+    code        varchar(32)  NOT NULL,
+    create_ip   varchar(32)  NOT NULL,
+    scene       varchar(32)  NOT NULL,
+    today_index int2         NOT NULL,
+    used        boolean      NOT NULL default false,
+    used_time   timestamp    NULL     DEFAULT NULL,
+    used_ip     varchar(255) NULL     DEFAULT NULL,
+    creator     varchar(32)  NULL     DEFAULT '',
+    create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(32)  NULL     DEFAULT '',
+    update_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean      NOT NULL DEFAULT false,
+    tenant_id   varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_sms_code.id IS '编号';
+COMMENT ON COLUMN system.system_sms_code.mobile IS '手机号';
+COMMENT ON COLUMN system.system_sms_code.code IS '验证码';
+COMMENT ON COLUMN system.system_sms_code.create_ip IS '创建 IP';
+COMMENT ON COLUMN system.system_sms_code.scene IS '发送场景';
+COMMENT ON COLUMN system.system_sms_code.today_index IS '今日发送的第几条';
+COMMENT ON COLUMN system.system_sms_code.used IS '是否使用';
+COMMENT ON COLUMN system.system_sms_code.used_time IS '使用时间';
+COMMENT ON COLUMN system.system_sms_code.used_ip IS '使用 IP';
+COMMENT ON COLUMN system.system_sms_code.creator IS '创建者';
+COMMENT ON COLUMN system.system_sms_code.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_sms_code.updater IS '更新者';
+COMMENT ON COLUMN system.system_sms_code.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_sms_code.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_sms_code.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_sms_code IS '手机验证码';
+
+
+-- ----------------------------
+-- Table structure for system.system_sms_log
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_sms_log;
+CREATE TABLE system.system_sms_log
+(
+    id               varchar(32)  NOT NULL primary key,
+    channel_id       varchar(32)  NOT NULL,
+    channel_code     varchar(63)  NOT NULL,
+    template_id      varchar(32)  NOT NULL,
+    template_code    varchar(63)  NOT NULL,
+    template_type    varchar(32)  NOT NULL,
+    template_content varchar(255) NOT NULL,
+    template_params  jsonb        NOT NULL,
+    api_template_id  varchar(63)  NOT NULL,
+    mobile           varchar(11)  NOT NULL,
+    user_id          varchar(32)  NULL     DEFAULT NULL,
+    user_type        varchar(32)  NULL     DEFAULT NULL,
+    send_status      boolean      NOT NULL DEFAULT false,
+    send_time        timestamp    NULL     DEFAULT NULL,
+    api_send_code    varchar(63)  NULL     DEFAULT NULL,
+    api_send_msg     varchar(255) NULL     DEFAULT NULL,
+    api_request_id   varchar(255) NULL     DEFAULT NULL,
+    api_serial_no    varchar(255) NULL     DEFAULT NULL,
+    receive_status   boolean      NOT NULL DEFAULT false,
+    receive_time     timestamp    NULL     DEFAULT NULL,
+    api_receive_code varchar(63)  NULL     DEFAULT NULL,
+    api_receive_msg  varchar(255) NULL     DEFAULT NULL,
+    creator          varchar(32)  NULL     DEFAULT '',
+    create_time      timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater          varchar(32)  NULL     DEFAULT '',
+    update_time      timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted          boolean      NOT NULL DEFAULT false,
+    tenant_id        varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_sms_log.id IS '编号';
+COMMENT ON COLUMN system.system_sms_log.channel_id IS '短信渠道编号';
+COMMENT ON COLUMN system.system_sms_log.channel_code IS '短信渠道编码';
+COMMENT ON COLUMN system.system_sms_log.template_id IS '模板编号';
+COMMENT ON COLUMN system.system_sms_log.template_code IS '模板编码';
+COMMENT ON COLUMN system.system_sms_log.template_type IS '短信类型';
+COMMENT ON COLUMN system.system_sms_log.template_content IS '短信内容';
+COMMENT ON COLUMN system.system_sms_log.template_params IS '短信参数';
+COMMENT ON COLUMN system.system_sms_log.api_template_id IS '短信 API 的模板编号';
+COMMENT ON COLUMN system.system_sms_log.mobile IS '手机号';
+COMMENT ON COLUMN system.system_sms_log.user_id IS '用户编号';
+COMMENT ON COLUMN system.system_sms_log.user_type IS '用户类型';
+COMMENT ON COLUMN system.system_sms_log.send_status IS '发送状态';
+COMMENT ON COLUMN system.system_sms_log.send_time IS '发送时间';
+COMMENT ON COLUMN system.system_sms_log.api_send_code IS '短信 API 发送结果的编码';
+COMMENT ON COLUMN system.system_sms_log.api_send_msg IS '短信 API 发送失败的提示';
+COMMENT ON COLUMN system.system_sms_log.api_request_id IS '短信 API 发送返回的唯一请求 ID';
+COMMENT ON COLUMN system.system_sms_log.api_serial_no IS '短信 API 发送返回的序号';
+COMMENT ON COLUMN system.system_sms_log.receive_status IS '接收状态';
+COMMENT ON COLUMN system.system_sms_log.receive_time IS '接收时间';
+COMMENT ON COLUMN system.system_sms_log.api_receive_code IS 'API 接收结果的编码';
+COMMENT ON COLUMN system.system_sms_log.api_receive_msg IS 'API 接收结果的说明';
+COMMENT ON COLUMN system.system_sms_log.creator IS '创建者';
+COMMENT ON COLUMN system.system_sms_log.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_sms_log.updater IS '更新者';
+COMMENT ON COLUMN system.system_sms_log.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_sms_log.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_sms_log.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_sms_log IS '短信日志';
+
+-- ----------------------------
+-- Table structure for system.system_sms_template
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_sms_template;
+CREATE TABLE system.system_sms_template
+(
+    id              varchar(32)  NOT NULL primary key,
+    type            varchar(32)  NOT NULL,
+    status          varchar(32)  NOT NULL,
+    code            varchar(63)  NOT NULL,
+    name            varchar(63)  NOT NULL,
+    content         varchar(255) NOT NULL,
+    params          varchar(255) NOT NULL,
+    remark          varchar(255) NULL     DEFAULT NULL,
+    api_template_id varchar(63)  NOT NULL,
+    channel_id      varchar(32)  NOT NULL,
+    channel_code    varchar(63)  NOT NULL,
+    creator         varchar(32)  NULL     DEFAULT '',
+    create_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater         varchar(32)  NULL     DEFAULT '',
+    update_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         boolean      NOT NULL DEFAULT false,
+    tenant_id       varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_sms_template.id IS '编号';
+COMMENT ON COLUMN system.system_sms_template.type IS '模板类型';
+COMMENT ON COLUMN system.system_sms_template.status IS '开启状态';
+COMMENT ON COLUMN system.system_sms_template.code IS '模板编码';
+COMMENT ON COLUMN system.system_sms_template.name IS '模板名称';
+COMMENT ON COLUMN system.system_sms_template.content IS '模板内容';
+COMMENT ON COLUMN system.system_sms_template.params IS '参数数组';
+COMMENT ON COLUMN system.system_sms_template.remark IS '备注';
+COMMENT ON COLUMN system.system_sms_template.api_template_id IS '短信 API 的模板编号';
+COMMENT ON COLUMN system.system_sms_template.channel_id IS '短信渠道编号';
+COMMENT ON COLUMN system.system_sms_template.channel_code IS '短信渠道编码';
+COMMENT ON COLUMN system.system_sms_template.creator IS '创建者';
+COMMENT ON COLUMN system.system_sms_template.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_sms_template.updater IS '更新者';
+COMMENT ON COLUMN system.system_sms_template.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_sms_template.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_sms_template.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_sms_template IS '短信模板';
