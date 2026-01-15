@@ -128,6 +128,7 @@ pub async fn send_single_mail(
         &bcc_mail_set,
         &account,
         &template,
+        &title,
         &content,
         &template_params,
         is_send,

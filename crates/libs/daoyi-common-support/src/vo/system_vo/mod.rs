@@ -1,6 +1,6 @@
 use crate::enumeration::{
-    CommonStatusEnum, DataScopeEnum, MenuTypeEnum, NoticeTypeEnum, NotifyTemplateTypeEnum,
-    RoleTypeEnum, SexEnum, UserTypeEnum,
+    CommonStatusEnum, DataScopeEnum, MailSendStatusEnum, MenuTypeEnum, NoticeTypeEnum,
+    NotifyTemplateTypeEnum, RoleTypeEnum, SexEnum, UserTypeEnum,
 };
 use crate::models::FlexibleInt;
 use crate::models::pagination;
@@ -1441,4 +1441,75 @@ pub struct MailSendMessage {
     pub bcc_mails: HashSet<String>,
     pub title: String,
     pub content: String,
+}
+
+/// MailLogRespVO，管理后台 - 邮件日志 Response VO
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MailLogRespVO {
+    /// 邮箱账号编号
+    pub account_id: String,
+    /// 密送邮箱地址
+    pub bcc_mails: Vec<String>,
+    /// 抄送邮箱地址
+    pub cc_mails: Vec<String>,
+    /// 创建时间
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+    /// 发送邮箱地址
+    pub from_mail: String,
+    /// 编号
+    pub id: String,
+    /// 发送异常
+    pub send_exception: Option<String>,
+    /// 发送返回的消息 ID
+    pub send_message_id: Option<String>,
+    /// 发送状态，参见 MailSendStatusEnum 枚举
+    pub send_status: MailSendStatusEnum,
+    /// 发送时间
+    #[serde(with = "option_datetime_format")]
+    pub send_time: Option<DateTime>,
+    /// 模板编码
+    pub template_code: String,
+    /// 邮件内容
+    pub template_content: String,
+    /// 模板编号
+    pub template_id: String,
+    /// 模版发送人名称
+    pub template_nickname: Option<String>,
+    /// 邮件参数
+    pub template_params: Json,
+    /// 邮件标题
+    pub template_title: String,
+    /// 接收邮箱地址
+    pub to_mails: Vec<String>,
+    /// 用户编号
+    pub user_id: String,
+    /// 用户类型，参见 UserTypeEnum 枚举
+    pub user_type: UserTypeEnum,
+}
+
+/// 管理后台 - 邮箱日志分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct MailLogPageReqVO {
+    /// 用户编号
+    pub user_id: Option<String>,
+    /// 用户类型，参见 UserTypeEnum 枚举
+    pub user_type: Option<UserTypeEnum>,
+    /// 接收邮箱地址，模糊匹配
+    pub to_mail: Option<String>,
+    /// 邮箱账号编号
+    pub account_id: Option<String>,
+    /// 模板编号
+    pub template_id: Option<String>,
+    /// 发送状态，参见 MailSendStatusEnum 枚举
+    pub send_status: Option<MailSendStatusEnum>,
+    /// 发送时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub send_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
 }
