@@ -6,19 +6,18 @@ use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::vo::system_vo::{
     SmsTemplatePageReqVO, SmsTemplateRespVO, SmsTemplateSaveReqVO, SmsTemplateUpdateReqVO,
 };
+use sea_orm::QueryTrait;
 use sea_orm::prelude::*;
-use sea_orm::{QueryTrait, Set};
 
 pub async fn create_sms_template(vo: SmsTemplateSaveReqVO) -> ApiResult<String> {
     let db = database::get_db_async().await;
 
     // Check Channel
-    let channel = super::system_sms_channel_service::get_sms_channel(&vo.channel_id)
+    super::system_sms_channel_service::get_sms_channel(&vo.channel_id)
         .await?
         .ok_or_else(|| ApiError::biz("短信渠道不存在"))?;
 
-    let mut active_model: system_sms_template::ActiveModel = vo.into();
-    active_model.channel_code = Set(channel.code);
+    let active_model: system_sms_template::ActiveModel = vo.into();
 
     let result = active_model.insert(&db).await?;
     Ok(result.id)
@@ -29,14 +28,13 @@ pub async fn update_sms_template(vo: SmsTemplateUpdateReqVO) -> ApiResult<()> {
     validate_sms_template_exists(&vo.id).await?;
 
     // Check Channel
-    let channel = super::system_sms_channel_service::get_sms_channel(&vo.channel_id)
+    super::system_sms_channel_service::get_sms_channel(&vo.channel_id)
         .await?
         .ok_or_else(|| ApiError::biz("短信渠道不存在"))?;
 
     // 更新
     let db = database::get_db_async().await;
-    let mut active_model: system_sms_template::ActiveModel = vo.into();
-    active_model.channel_code = Set(channel.code);
+    let active_model: system_sms_template::ActiveModel = vo.into();
 
     active_model.update(&db).await?;
     Ok(())
@@ -113,4 +111,24 @@ pub async fn get_sms_template_page(
         .collect();
     let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
+}
+
+pub async fn get_sms_template_count_by_channel_id(channel_id: &str) -> ApiResult<u64> {
+    let db = database::get_db_async().await;
+    let count = SystemSmsTemplate::find_perm_with_tenant()
+        .await
+        .filter(system_sms_template::Column::ChannelId.eq(channel_id))
+        .count(&db)
+        .await?;
+    Ok(count)
+}
+
+pub async fn get_sms_template_count_by_channel_ids(channel_ids: &Vec<String>) -> ApiResult<u64> {
+    let db = database::get_db_async().await;
+    let count = SystemSmsTemplate::find_perm_with_tenant()
+        .await
+        .filter(system_sms_template::Column::ChannelId.is_in(channel_ids))
+        .count(&db)
+        .await?;
+    Ok(count)
 }

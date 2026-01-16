@@ -1,8 +1,7 @@
 use crate::enumeration::{
     CommonStatusEnum, DataScopeEnum, MailSendStatusEnum, MenuTypeEnum, NoticeTypeEnum,
-    NotifyTemplateTypeEnum, RoleTypeEnum, SexEnum, UserTypeEnum,
+    NotifyTemplateTypeEnum, RoleTypeEnum, SexEnum, SmsChannelEnum, UserTypeEnum,
 };
-pub mod sms_vo;
 use crate::models::FlexibleInt;
 use crate::models::pagination;
 use crate::models::pagination::PaginationParams;
@@ -12,9 +11,9 @@ use crate::serde::de_comma_separated;
 use crate::serde::deserialize_numer;
 use crate::serde::option_datetime_format;
 use crate::serde::option_vec_datetime_format;
+use chrono::NaiveDateTime;
 use sea_orm::prelude::{DateTime, Json};
 use serde::{Deserialize, Serialize};
-pub use sms_vo::*;
 use std::collections::{HashMap, HashSet};
 use validator::Validate;
 
@@ -1514,4 +1513,137 @@ pub struct MailLogPageReqVO {
     #[serde(flatten)]
     #[validate(nested)]
     pub pagination: PaginationParams,
+}
+
+/// 管理后台 - 短信渠道分页 Request VO
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsChannelPageReqVO {
+    /// 短信签名，模糊匹配
+    pub signature: Option<String>,
+    /// 状态，参见 CommonStatusEnum 枚举
+    pub status: Option<CommonStatusEnum>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsChannelSaveReqVO {
+    pub signature: String,
+    pub code: SmsChannelEnum,
+    pub status: CommonStatusEnum,
+    pub remark: Option<String>,
+    pub api_key: String,
+    pub api_secret: Option<String>,
+    #[validate(url(message = "回调 URL 格式不正确"))]
+    pub callback_url: Option<String>,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsChannelUpdateReqVO {
+    pub id: String,
+    pub signature: String,
+    pub code: SmsChannelEnum,
+    pub status: CommonStatusEnum,
+    pub remark: Option<String>,
+    pub api_key: String,
+    pub api_secret: Option<String>,
+    #[validate(url(message = "回调 URL 格式不正确"))]
+    pub callback_url: Option<String>,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsChannelRespVO {
+    pub id: String,
+    pub signature: String,
+    pub code: SmsChannelEnum,
+    pub status: CommonStatusEnum,
+    pub remark: Option<String>,
+    pub api_key: String,
+    pub api_secret: Option<String>,
+    pub callback_url: Option<String>,
+    #[serde(with = "datetime_format")]
+    pub create_time: NaiveDateTime,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsChannelSimpleRespVO {
+    pub id: String,
+    pub signature: String,
+    pub code: SmsChannelEnum,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsTemplatePageReqVO {
+    pub r#type: Option<i32>, // 0: 验证码, 1: 通知, 2: 营销. Using i32 or Enum. Java uses Integer.
+    pub status: Option<CommonStatusEnum>,
+    pub code: Option<String>,
+    pub content: Option<String>,
+    pub api_template_id: Option<String>,
+    pub channel_id: Option<String>,
+    #[serde(flatten)]
+    pub pagination: PaginationParams,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsTemplateSaveReqVO {
+    pub r#type: i32,
+    pub status: CommonStatusEnum,
+    pub code: String,
+    pub name: String,
+    pub content: String,
+    pub remark: Option<String>,
+    pub api_template_id: String,
+    pub channel_id: String,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsTemplateUpdateReqVO {
+    pub id: String,
+    pub r#type: i32,
+    pub status: CommonStatusEnum,
+    pub code: String,
+    pub name: String,
+    pub content: String,
+    pub remark: Option<String>,
+    pub api_template_id: String,
+    pub channel_id: String,
+}
+
+#[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsTemplateRespVO {
+    pub id: String,
+    pub r#type: i32,
+    pub status: CommonStatusEnum,
+    pub code: String,
+    pub name: String,
+    pub content: String,
+    pub params: Vec<String>,
+    pub remark: Option<String>,
+    pub api_template_id: String,
+    pub channel_id: String,
+    pub channel_code: String,
+    #[serde(with = "datetime_format")]
+    pub create_time: NaiveDateTime,
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsTemplateSendReqVO {
+    pub mobile: String,
+    pub template_code: String,
+    pub template_params: HashMap<String, String>,
 }

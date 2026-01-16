@@ -295,3 +295,28 @@ pub enum MailSendStatusEnum {
     #[sea_orm(string_value = "30")]
     IGNORE,
 }
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum SmsChannelEnum {
+    #[sea_orm(string_value = "0")]
+    DebugDingTalk,
+    #[sea_orm(string_value = "1")]
+    Aliyun,
+    #[sea_orm(string_value = "2")]
+    Tencent,
+    #[sea_orm(string_value = "3")]
+    Huawei,
+    #[sea_orm(string_value = "4")]
+    Qiniu,
+}

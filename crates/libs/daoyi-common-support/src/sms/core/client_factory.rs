@@ -1,10 +1,10 @@
+use crate::enumeration::SmsChannelEnum;
 use crate::sms::core::client::{SmsClient, SmsClientFactory};
 use crate::sms::core::client_impl::aliyun::AliyunSmsClient;
 use crate::sms::core::client_impl::debug_ding_talk::DebugDingTalkSmsClient;
 use crate::sms::core::client_impl::huawei::HuaweiSmsClient;
 use crate::sms::core::client_impl::qiniu::QiniuSmsClient;
 use crate::sms::core::client_impl::tencent::TencentSmsClient;
-use crate::sms::core::enums::SmsChannelEnum;
 use crate::sms::core::property::SmsChannelProperties;
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
@@ -29,20 +29,18 @@ impl SmsClientFactoryImpl {
     }
 
     fn create_sms_client(&self, properties: &SmsChannelProperties) -> Arc<dyn SmsClient> {
-        let channel_enum = properties.get_enum().expect("Unknown channel code");
-        match channel_enum {
+        match properties.code {
             SmsChannelEnum::Aliyun => Arc::new(AliyunSmsClient::new(properties.clone())),
             SmsChannelEnum::Tencent => Arc::new(TencentSmsClient::new(properties.clone())),
             SmsChannelEnum::Huawei => Arc::new(HuaweiSmsClient::new(properties.clone())),
             SmsChannelEnum::Qiniu => Arc::new(QiniuSmsClient::new(properties.clone())),
             SmsChannelEnum::DebugDingTalk => {
                 Arc::new(DebugDingTalkSmsClient::new(properties.clone()))
-            }
-            // Stub for others to avoid panic for now, falling back to Debug
-            // _ => {
-            //     println!("Warning: Channel {:?} not implemented, using DebugDingTalk", channel_enum);
-            //     Arc::new(DebugDingTalkSmsClient::new(properties.clone()))
-            // }
+            } // Stub for others to avoid panic for now, falling back to Debug
+              // _ => {
+              //     println!("Warning: Channel {:?} not implemented, using DebugDingTalk", channel_enum);
+              //     Arc::new(DebugDingTalkSmsClient::new(properties.clone()))
+              // }
         }
     }
 }

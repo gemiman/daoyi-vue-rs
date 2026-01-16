@@ -20,8 +20,6 @@ pub fn create_template_router() -> Router<AppState> {
         .route("/send-sms", routing::post(send_sms))
 }
 
-// ==================== SmsTemplate Handlers ====================
-
 async fn create_sms_template(Json(req): Json<SmsTemplateSaveReqVO>) -> RestApiResult<String> {
     let id = system_sms_template_service::create_sms_template(req).await?;
     ApiResponse::success(id)
