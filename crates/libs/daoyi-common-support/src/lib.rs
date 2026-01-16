@@ -16,6 +16,7 @@ pub mod request;
 pub mod response;
 pub mod serde;
 pub mod server;
+pub mod sms;
 pub mod utils;
 pub mod vo;
 pub mod websocket;

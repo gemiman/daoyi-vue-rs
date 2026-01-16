@@ -2,6 +2,7 @@ use crate::enumeration::{
     CommonStatusEnum, DataScopeEnum, MailSendStatusEnum, MenuTypeEnum, NoticeTypeEnum,
     NotifyTemplateTypeEnum, RoleTypeEnum, SexEnum, UserTypeEnum,
 };
+pub mod sms_vo;
 use crate::models::FlexibleInt;
 use crate::models::pagination;
 use crate::models::pagination::PaginationParams;
@@ -13,6 +14,7 @@ use crate::serde::option_datetime_format;
 use crate::serde::option_vec_datetime_format;
 use sea_orm::prelude::{DateTime, Json};
 use serde::{Deserialize, Serialize};
+pub use sms_vo::*;
 use std::collections::{HashMap, HashSet};
 use validator::Validate;
 
