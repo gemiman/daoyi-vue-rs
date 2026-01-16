@@ -14,7 +14,7 @@ pub struct Model {
     pub code: String,
     pub name: String,
     pub content: String,
-    pub params: String,
+    pub params: Vec<String>,
     pub remark: Option<String>,
     pub api_template_id: String,
     pub channel_id: String,

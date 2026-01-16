@@ -1,6 +1,7 @@
 use crate::enumeration::{
     CommonStatusEnum, DataScopeEnum, MailSendStatusEnum, MenuTypeEnum, NoticeTypeEnum,
-    NotifyTemplateTypeEnum, RoleTypeEnum, SexEnum, SmsChannelEnum, UserTypeEnum,
+    NotifyTemplateTypeEnum, RoleTypeEnum, SexEnum, SmsChannelEnum, SmsTemplateTypeEnum,
+    UserTypeEnum,
 };
 use crate::models::FlexibleInt;
 use crate::models::pagination;
@@ -9,6 +10,7 @@ use crate::request::validation;
 use crate::serde::datetime_format;
 use crate::serde::de_comma_separated;
 use crate::serde::deserialize_numer;
+use crate::serde::empty_string_as_none;
 use crate::serde::option_datetime_format;
 use crate::serde::option_vec_datetime_format;
 use chrono::NaiveDateTime;
@@ -1540,7 +1542,8 @@ pub struct SmsChannelSaveReqVO {
     pub status: CommonStatusEnum,
     pub remark: Option<String>,
     pub api_key: String,
-    pub api_secret: Option<String>,
+    pub api_secret: String,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     #[validate(url(message = "回调 URL 格式不正确"))]
     pub callback_url: Option<String>,
 }
@@ -1554,7 +1557,8 @@ pub struct SmsChannelUpdateReqVO {
     pub status: CommonStatusEnum,
     pub remark: Option<String>,
     pub api_key: String,
-    pub api_secret: Option<String>,
+    pub api_secret: String,
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     #[validate(url(message = "回调 URL 格式不正确"))]
     pub callback_url: Option<String>,
 }
@@ -1568,7 +1572,7 @@ pub struct SmsChannelRespVO {
     pub status: CommonStatusEnum,
     pub remark: Option<String>,
     pub api_key: String,
-    pub api_secret: Option<String>,
+    pub api_secret: String,
     pub callback_url: Option<String>,
     #[serde(with = "datetime_format")]
     pub create_time: NaiveDateTime,
@@ -1582,23 +1586,28 @@ pub struct SmsChannelSimpleRespVO {
     pub code: SmsChannelEnum,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SmsTemplatePageReqVO {
-    pub r#type: Option<i32>, // 0: 验证码, 1: 通知, 2: 营销. Using i32 or Enum. Java uses Integer.
+    pub r#type: Option<SmsTemplateTypeEnum>, // 0: 验证码, 1: 通知, 2: 营销. Using i32 or Enum. Java uses Integer.
     pub status: Option<CommonStatusEnum>,
     pub code: Option<String>,
     pub content: Option<String>,
     pub api_template_id: Option<String>,
     pub channel_id: Option<String>,
+    /// 创建时间
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub create_time: Option<Vec<DateTime>>,
     #[serde(flatten)]
+    #[validate(nested)]
     pub pagination: PaginationParams,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SmsTemplateSaveReqVO {
-    pub r#type: i32,
+    pub r#type: SmsTemplateTypeEnum,
     pub status: CommonStatusEnum,
     pub code: String,
     pub name: String,
@@ -1608,11 +1617,11 @@ pub struct SmsTemplateSaveReqVO {
     pub channel_id: String,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SmsTemplateUpdateReqVO {
     pub id: String,
-    pub r#type: i32,
+    pub r#type: SmsTemplateTypeEnum,
     pub status: CommonStatusEnum,
     pub code: String,
     pub name: String,
@@ -1626,7 +1635,7 @@ pub struct SmsTemplateUpdateReqVO {
 #[serde(rename_all = "camelCase")]
 pub struct SmsTemplateRespVO {
     pub id: String,
-    pub r#type: i32,
+    pub r#type: SmsTemplateTypeEnum,
     pub status: CommonStatusEnum,
     pub code: String,
     pub name: String,
@@ -1635,12 +1644,12 @@ pub struct SmsTemplateRespVO {
     pub remark: Option<String>,
     pub api_template_id: String,
     pub channel_id: String,
-    pub channel_code: String,
+    pub channel_code: SmsChannelEnum,
     #[serde(with = "datetime_format")]
     pub create_time: NaiveDateTime,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SmsTemplateSendReqVO {
     pub mobile: String,

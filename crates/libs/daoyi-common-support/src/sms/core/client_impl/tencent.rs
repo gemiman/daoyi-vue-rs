@@ -57,7 +57,7 @@ impl SmsClient for TencentSmsClient {
         let date = now.format("%Y-%m-%d").to_string();
 
         let (app_id, secret_id) = self.get_app_id_and_key();
-        let secret_key = self.properties.api_secret.as_deref().unwrap_or_default();
+        let secret_key = self.properties.api_secret.clone();
 
         let params_vec: Vec<String> = template_params.values().cloned().collect();
 

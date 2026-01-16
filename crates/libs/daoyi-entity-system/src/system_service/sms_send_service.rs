@@ -1,15 +1,8 @@
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::sms::core::client::{SmsClient, SmsClientFactory};
-use daoyi_common_support::sms::core::client_factory::SmsClientFactoryImpl;
-use daoyi_common_support::sms::core::property::SmsChannelProperties;
+use daoyi_common_support::sms::core::sms_client_factory;
 use std::collections::HashMap;
-use std::sync::{Arc, OnceLock};
-
-static SMS_CLIENT_FACTORY: OnceLock<SmsClientFactoryImpl> = OnceLock::new();
-
-fn get_factory() -> &'static SmsClientFactoryImpl {
-    SMS_CLIENT_FACTORY.get_or_init(SmsClientFactoryImpl::new)
-}
+use std::sync::Arc;
 
 pub async fn send_single_sms_to_admin(
     mobile: &str,
@@ -41,7 +34,7 @@ pub async fn send_single_sms_to_admin(
 }
 
 async fn get_sms_client(channel_id: &str) -> ApiResult<Arc<dyn SmsClient>> {
-    let factory = get_factory();
+    let factory = sms_client_factory::get();
     if let Some(client) = factory.get_sms_client(channel_id) {
         return Ok(client);
     }
@@ -51,15 +44,6 @@ async fn get_sms_client(channel_id: &str) -> ApiResult<Arc<dyn SmsClient>> {
         .await?
         .ok_or_else(|| ApiError::biz("短信渠道不存在"))?;
 
-    let properties = SmsChannelProperties {
-        id: channel.id.clone(),
-        code: channel.code,
-        api_key: channel.api_key,
-        api_secret: channel.api_secret,
-        signature: Some(channel.signature),
-        callback_url: channel.callback_url,
-    };
-
-    let client = factory.create_or_update_sms_client(properties);
+    let client = factory.create_or_update_sms_client(channel.into());
     Ok(client)
 }

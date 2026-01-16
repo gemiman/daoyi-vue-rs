@@ -1,3 +1,4 @@
+use crate::enumeration::SmsTemplateAuditStatusEnum;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -20,10 +21,15 @@ pub struct SmsReceiveRespDTO {
     pub log_id: Option<i64>,
 }
 
+/// 短信模板 Response DTO
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct SmsTemplateRespDTO {
+    /// 模板编号
     pub id: String,
+    /// 短信内容
     pub content: String,
-    pub audit_status: i32, // See SmsTemplateAuditStatusEnum
+    /// 审核状态
+    pub audit_status: SmsTemplateAuditStatusEnum,
+    /// 审核未通过的理由
     pub audit_reason: Option<String>,
 }

@@ -4,12 +4,15 @@ use crate::system_service::system_sms_template_service;
 use daoyi_common_support::database;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::PageResult;
+use daoyi_common_support::sms::core::client::{SmsClient, SmsClientFactory};
+use daoyi_common_support::sms::core::sms_client_factory;
 use daoyi_common_support::vo::system_vo::{
     SmsChannelPageReqVO, SmsChannelRespVO, SmsChannelSaveReqVO, SmsChannelSimpleRespVO,
     SmsChannelUpdateReqVO,
 };
 use sea_orm::prelude::*;
 use sea_orm::{QueryOrder, QueryTrait};
+use std::sync::Arc;
 
 pub async fn create_sms_channel(vo: SmsChannelSaveReqVO) -> ApiResult<system_sms_channel::Model> {
     let db = database::get_db_async().await;
@@ -97,4 +100,10 @@ pub async fn get_sms_channel_list_simple() -> ApiResult<Vec<SmsChannelSimpleResp
         .all(&db)
         .await?;
     Ok(list.into_iter().map(Into::into).collect())
+}
+
+pub async fn get_sms_client(id: &str) -> ApiResult<Arc<dyn SmsClient>> {
+    let channel = validate_sms_channel_exists(id).await?;
+    let properties = channel.into();
+    Ok(sms_client_factory::get().create_or_update_sms_client(properties))
 }

@@ -76,9 +76,8 @@ impl AliyunSmsClient {
         let string_to_sign = format!("ACS3-HMAC-SHA256\n{}", hashed_canonical_request);
 
         type HmacSha256 = Hmac<Sha256>;
-        let mut mac =
-            HmacSha256::new_from_slice(self.properties.api_secret.as_ref().unwrap().as_bytes())
-                .expect("HMAC can take key of any size");
+        let mut mac = HmacSha256::new_from_slice(self.properties.api_secret.as_str().as_bytes())
+            .expect("HMAC can take key of any size");
         mac.update(string_to_sign.as_bytes());
         let signature = hex::encode(mac.finalize().into_bytes());
 
@@ -105,10 +104,7 @@ impl SmsClient for AliyunSmsClient {
 
         let mut query = BTreeMap::new();
         query.insert("PhoneNumbers".to_string(), mobile.to_string());
-        query.insert(
-            "SignName".to_string(),
-            self.properties.signature.clone().unwrap_or_default(),
-        );
+        query.insert("SignName".to_string(), self.properties.signature.clone());
         query.insert("TemplateCode".to_string(), api_template_id.to_string());
         query.insert(
             "TemplateParam".to_string(),

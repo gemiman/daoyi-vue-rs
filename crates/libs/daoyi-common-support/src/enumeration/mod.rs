@@ -320,3 +320,47 @@ pub enum SmsChannelEnum {
     #[sea_orm(string_value = "4")]
     Qiniu,
 }
+
+/// 短信模板的审核状态枚举
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum SmsTemplateAuditStatusEnum {
+    #[sea_orm(string_value = "1")]
+    CHECKING,
+    #[sea_orm(string_value = "2")]
+    SUCCESS,
+    #[sea_orm(string_value = "3")]
+    FAIL,
+}
+
+/// 短信的模板类型枚举
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum SmsTemplateTypeEnum {
+    #[sea_orm(string_value = "1")]
+    VerificationCode,
+    #[sea_orm(string_value = "2")]
+    Notice,
+    #[sea_orm(string_value = "3")]
+    Promotion,
+}

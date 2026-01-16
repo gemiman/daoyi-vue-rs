@@ -1,3 +1,4 @@
+use crate::enumeration::SmsTemplateAuditStatusEnum;
 use crate::error::ApiResult;
 use crate::sms::core::client::SmsClient;
 use crate::sms::core::dto::{SmsReceiveRespDTO, SmsSendRespDTO, SmsTemplateRespDTO};
@@ -50,7 +51,7 @@ impl SmsClient for DebugDingTalkSmsClient {
         Ok(SmsTemplateRespDTO {
             id: api_template_id.to_string(),
             content: "Mock Content".to_string(),
-            audit_status: 1,
+            audit_status: SmsTemplateAuditStatusEnum::CHECKING,
             audit_reason: None,
         })
     }

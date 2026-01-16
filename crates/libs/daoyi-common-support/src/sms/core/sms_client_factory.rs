@@ -7,8 +7,13 @@ use crate::sms::core::client_impl::qiniu::QiniuSmsClient;
 use crate::sms::core::client_impl::tencent::TencentSmsClient;
 use crate::sms::core::property::SmsChannelProperties;
 use std::collections::HashMap;
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, OnceLock, RwLock};
 
+static SMS_CLIENT_FACTORY: OnceLock<SmsClientFactoryImpl> = OnceLock::new();
+
+pub fn get() -> &'static SmsClientFactoryImpl {
+    SMS_CLIENT_FACTORY.get_or_init(SmsClientFactoryImpl::new)
+}
 pub struct SmsClientFactoryImpl {
     channel_id_clients: RwLock<HashMap<String, Arc<dyn SmsClient>>>,
     channel_code_clients: RwLock<HashMap<String, Arc<dyn SmsClient>>>,

@@ -933,7 +933,7 @@ CREATE TABLE system.system_sms_template
     code            varchar(63)  NOT NULL,
     name            varchar(63)  NOT NULL,
     content         varchar(255) NOT NULL,
-    params          varchar(255) NOT NULL,
+    params varchar(255)[] NOT NULL,
     remark          varchar(255) NULL     DEFAULT NULL,
     api_template_id varchar(63)  NOT NULL,
     channel_id      varchar(32)  NOT NULL,

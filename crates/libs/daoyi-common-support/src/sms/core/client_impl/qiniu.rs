@@ -1,3 +1,4 @@
+use crate::enumeration::SmsTemplateAuditStatusEnum;
 use crate::error::{ApiError, ApiResult};
 use crate::sms::core::client::SmsClient;
 use crate::sms::core::dto::{SmsReceiveRespDTO, SmsSendRespDTO, SmsTemplateRespDTO};
@@ -48,9 +49,8 @@ X-Qiniu-Date: {}
         }
 
         type HmacSha1 = Hmac<Sha1>;
-        let mut mac =
-            HmacSha1::new_from_slice(self.properties.api_secret.as_ref().unwrap().as_bytes())
-                .expect("HMAC can take key of any size");
+        let mut mac = HmacSha1::new_from_slice(self.properties.api_secret.as_str().as_bytes())
+            .expect("HMAC can take key of any size");
         mac.update(data_to_sign.as_bytes());
         let signature = BASE64_STANDARD
             .encode(mac.finalize().into_bytes())
@@ -197,10 +197,10 @@ impl SmsClient for QiniuSmsClient {
 
         // Parse status
         let audit_status = match response["audit_status"].as_str().unwrap_or("") {
-            "passed" => 1,    // Success
-            "reviewing" => 0, // Checking
-            "rejected" => 2,  // Fail
-            _ => 2,           // Default Fail or Unknown
+            "passed" => SmsTemplateAuditStatusEnum::SUCCESS, // Success
+            "reviewing" => SmsTemplateAuditStatusEnum::CHECKING, // Checking
+            "rejected" => SmsTemplateAuditStatusEnum::FAIL,  // Fail
+            _ => SmsTemplateAuditStatusEnum::FAIL,           // Default Fail or Unknown
         };
 
         Ok(SmsTemplateRespDTO {

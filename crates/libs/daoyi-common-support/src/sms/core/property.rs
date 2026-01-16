@@ -3,11 +3,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SmsChannelProperties {
-    pub id: String,           // Database ID
-    pub code: SmsChannelEnum, // Channel Code (ALIYUN, etc.)
+    /// 渠道编号
+    pub id: String,
+    /// 短信签名
+    pub signature: String,
+    /// 渠道编码
+    pub code: SmsChannelEnum,
+    /// 短信 API 的账号
     pub api_key: String,
-    pub api_secret: Option<String>,
-    pub signature: Option<String>,
+    /// 短信 API 的密钥
+    pub api_secret: String,
+    /// 短信发送回调 URL
     pub callback_url: Option<String>,
-    // Add other properties as needed from Java's SmsChannelProperties
 }

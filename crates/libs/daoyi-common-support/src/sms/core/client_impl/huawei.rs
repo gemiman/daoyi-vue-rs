@@ -1,3 +1,4 @@
+use crate::enumeration::SmsTemplateAuditStatusEnum;
 use crate::error::{ApiError, ApiResult};
 use crate::sms::core::client::SmsClient;
 use crate::sms::core::dto::{SmsReceiveRespDTO, SmsSendRespDTO, SmsTemplateRespDTO};
@@ -54,7 +55,7 @@ impl SmsClient for HuaweiSmsClient {
         let sdk_date = now.format("%Y%m%dT%H%M%SZ").to_string();
 
         let (app_key, sender) = self.get_app_key_and_sender();
-        let api_secret = self.properties.api_secret.as_deref().unwrap_or_default();
+        let api_secret = self.properties.api_secret.clone();
 
         let mut body_params = HashMap::new();
         body_params.insert("from", sender);
@@ -73,22 +74,6 @@ impl SmsClient for HuaweiSmsClient {
             body_params.insert("statusCallback", "".to_string());
         }
         body_params.insert("extend", log_id.to_string());
-
-        // Construct body string for signature and request
-        // let mut body_str = String::new();
-        // The order in Java appendToBody suggests: from, to, templateId, templateParas, statusCallback, extend
-        // However, Java uses appendToBody which just appends to a StringBuilder.
-        // It does NOT use a Map to build the body string for signature.
-        // It builds the string manually.
-        // So we must replicate the order EXACTLY.
-
-        // Java:
-        // appendToBody(requestBody, "from=", getSender());
-        // appendToBody(requestBody, "&to=", mobile);
-        // appendToBody(requestBody, "&templateId=", apiTemplateId);
-        // appendToBody(requestBody, "&templateParas=", JsonUtils.toJsonString(...));
-        // appendToBody(requestBody, "&statusCallback=", properties.getCallbackUrl());
-        // appendToBody(requestBody, "&extend=", String.valueOf(sendLogId));
 
         fn append(sb: &mut String, key: &str, value: &str) {
             if !value.is_empty() {
@@ -230,7 +215,7 @@ impl SmsClient for HuaweiSmsClient {
         Ok(SmsTemplateRespDTO {
             id: api_template_id.to_string(),
             content: "".to_string(),
-            audit_status: 1, // Success
+            audit_status: SmsTemplateAuditStatusEnum::CHECKING, // Success
             audit_reason: None,
         })
     }

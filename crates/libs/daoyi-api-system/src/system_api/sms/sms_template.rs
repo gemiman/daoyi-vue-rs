@@ -1,7 +1,7 @@
-use axum::extract::Query;
+use axum::Router;
 use axum::routing;
-use axum::{Json, Router};
 use daoyi_common_support::app::AppState;
+use daoyi_common_support::request::valid::{ValidJson, ValidQuery};
 use daoyi_common_support::response::{ApiResponse, RestApiResult};
 use daoyi_common_support::vo::system_vo::{
     IdParams, IdsParams, SmsTemplatePageReqVO, SmsTemplateRespVO, SmsTemplateSaveReqVO,
@@ -20,42 +20,49 @@ pub fn create_template_router() -> Router<AppState> {
         .route("/send-sms", routing::post(send_sms))
 }
 
-async fn create_sms_template(Json(req): Json<SmsTemplateSaveReqVO>) -> RestApiResult<String> {
-    let id = system_sms_template_service::create_sms_template(req).await?;
-    ApiResponse::success(id)
+async fn create_sms_template(
+    ValidJson(req): ValidJson<SmsTemplateSaveReqVO>,
+) -> RestApiResult<String> {
+    let model = system_sms_template_service::create_sms_template(req).await?;
+    ApiResponse::success(model.id)
 }
 
-async fn update_sms_template(Json(req): Json<SmsTemplateUpdateReqVO>) -> RestApiResult<bool> {
+async fn update_sms_template(
+    ValidJson(req): ValidJson<SmsTemplateUpdateReqVO>,
+) -> RestApiResult<bool> {
     system_sms_template_service::update_sms_template(req).await?;
     ApiResponse::success(true)
 }
 
-async fn delete_sms_template(Query(req): Query<IdParams>) -> RestApiResult<bool> {
-    system_sms_template_service::delete_sms_template(&req.id).await?;
+async fn delete_sms_template(
+    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
+) -> RestApiResult<bool> {
+    system_sms_template_service::delete_sms_template(&id).await?;
     ApiResponse::success(true)
 }
 
-async fn delete_sms_template_list(Query(req): Query<IdsParams>) -> RestApiResult<bool> {
-    system_sms_template_service::delete_sms_template_list(&req.ids).await?;
+async fn delete_sms_template_list(
+    ValidQuery(IdsParams { ids }): ValidQuery<IdsParams>,
+) -> RestApiResult<bool> {
+    system_sms_template_service::delete_sms_template_list(&ids).await?;
     ApiResponse::success(true)
 }
 
-async fn get_sms_template(Query(req): Query<IdParams>) -> RestApiResult<SmsTemplateRespVO> {
-    let template = system_sms_template_service::get_sms_template(&req.id).await?;
-    match template {
-        Some(t) => ApiResponse::success(t.into()),
-        None => Ok(ApiResponse::err("短信模板不存在")),
-    }
+async fn get_sms_template(
+    ValidQuery(IdParams { id }): ValidQuery<IdParams>,
+) -> RestApiResult<Option<SmsTemplateRespVO>> {
+    let template = system_sms_template_service::get_sms_template(&id).await?;
+    ApiResponse::success(template.map(Into::into))
 }
 
 async fn get_sms_template_page(
-    Query(req): Query<SmsTemplatePageReqVO>,
+    ValidQuery(req): ValidQuery<SmsTemplatePageReqVO>,
 ) -> RestApiResult<daoyi_common_support::models::pagination::PageResult<SmsTemplateRespVO>> {
     let page = system_sms_template_service::get_sms_template_page(&req).await?;
     ApiResponse::success(page)
 }
 
-async fn send_sms(Json(req): Json<SmsTemplateSendReqVO>) -> RestApiResult<String> {
+async fn send_sms(ValidJson(req): ValidJson<SmsTemplateSendReqVO>) -> RestApiResult<String> {
     let log_id = sms_send_service::send_single_sms_to_admin(
         &req.mobile,
         None,
