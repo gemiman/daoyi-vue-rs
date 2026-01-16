@@ -10,11 +10,11 @@ use daoyi_common_support::vo::system_vo::{
 use sea_orm::QueryTrait;
 use sea_orm::prelude::*;
 
-pub async fn create_sms_channel(vo: SmsChannelSaveReqVO) -> ApiResult<String> {
+pub async fn create_sms_channel(vo: SmsChannelSaveReqVO) -> ApiResult<system_sms_channel::Model> {
     let db = database::get_db_async().await;
     let active_model: system_sms_channel::ActiveModel = vo.into();
     let result = active_model.insert(&db).await?;
-    Ok(result.id)
+    Ok(result)
 }
 
 pub async fn update_sms_channel(vo: SmsChannelUpdateReqVO) -> ApiResult<()> {

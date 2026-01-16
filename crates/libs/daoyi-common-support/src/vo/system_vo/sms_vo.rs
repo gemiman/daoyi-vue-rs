@@ -4,7 +4,7 @@ use crate::serde::datetime_format;
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-
+use validator::Validate;
 // ==================== SmsChannel ====================
 
 #[derive(Debug, Deserialize)]
@@ -16,7 +16,7 @@ pub struct SmsChannelPageReqVO {
     pub pagination: PaginationParams,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SmsChannelSaveReqVO {
     pub signature: String,
@@ -28,7 +28,7 @@ pub struct SmsChannelSaveReqVO {
     pub callback_url: Option<String>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Deserialize, Validate)]
 #[serde(rename_all = "camelCase")]
 pub struct SmsChannelUpdateReqVO {
     pub id: String,
