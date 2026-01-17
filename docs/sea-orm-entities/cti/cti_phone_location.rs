@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize)]
 #[sea_orm(schema_name = "cti", table_name = "cti_phone_location")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
@@ -16,8 +16,8 @@ pub struct Model {
     pub received: Option<String>,
     pub path: Option<String>,
     pub expires: Option<DateTime>,
-    #[sea_orm(column_type = "Float", nullable)]
-    pub q: Option<f32>,
+    #[sea_orm(column_type = "Decimal(Some((10, 3)))", nullable)]
+    pub q: Option<Decimal>,
     pub callid: Option<String>,
     pub cseq: Option<i32>,
     pub last_modified: Option<DateTime>,
