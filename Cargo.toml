@@ -22,6 +22,8 @@ daoyi-entity-system = { version = "0.1.0", path = "./crates/libs/daoyi-entity-sy
 daoyi-api-system = { version = "0.1.0", path = "./crates/libs/daoyi-api-system" }
 daoyi-entity-infra = { version = "0.1.0", path = "./crates/libs/daoyi-entity-infra" }
 daoyi-api-infra = { version = "0.1.0", path = "./crates/libs/daoyi-api-infra" }
+daoyi-entity-cti = { version = "0.1.0", path = "./crates/libs/daoyi-entity-cti" }
+daoyi-api-cti = { version = "0.1.0", path = "./crates/libs/daoyi-api-cti" }
 axum = { version = "0.8.8", features = ["macros", "ws"] }
 tokio = { version = "1.49.0", features = ["full"] }
 tracing = { version = "0.1.44", features = ["async-await"] }

@@ -1,5 +1,5 @@
 [package]
-name = "daoyi-server"
+name = "daoyi-module-cti"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,10 +9,7 @@ authors.workspace = true
 readme.workspace = true
 
 [dependencies]
-daoyi-common-support.workspace = true
-daoyi-api-system.workspace = true
-daoyi-api-infra.workspace = true
-daoyi-api-cti.workspace = true
 tokio.workspace = true
+daoyi-common-support.workspace = true
 anyhow.workspace = true
-axum.workspace = true
+daoyi-api-cti.workspace = true
