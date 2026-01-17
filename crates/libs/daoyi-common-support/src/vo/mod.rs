@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 
+pub mod cti_vo;
 pub mod infra_vo;
 pub mod system_vo;
 
