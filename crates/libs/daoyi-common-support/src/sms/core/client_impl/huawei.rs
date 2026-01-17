@@ -215,7 +215,7 @@ impl SmsClient for HuaweiSmsClient {
         Ok(SmsTemplateRespDTO {
             id: api_template_id.to_string(),
             content: "".to_string(),
-            audit_status: SmsTemplateAuditStatusEnum::CHECKING, // Success
+            audit_status: SmsTemplateAuditStatusEnum::SUCCESS, // Success
             audit_reason: None,
         })
     }
