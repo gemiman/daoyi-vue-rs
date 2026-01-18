@@ -80,6 +80,109 @@ pub enum CommonStatusEnum {
     Disable,
 }
 
+/// 企业状态 状态(0:禁用企业,1:免费企业;2:试用企业,3:付费企业)
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum CompanyStatusEnum {
+    /// 禁用企业
+    #[sea_orm(string_value = "0")]
+    Disable,
+    /// 免费企业
+    #[sea_orm(string_value = "1")]
+    Free,
+    /// 试用企业
+    #[sea_orm(string_value = "2")]
+    Trial,
+    /// 付费企业
+    #[sea_orm(string_value = "3")]
+    Payed,
+}
+
+/// 计费方式 1:呼出计费,2:呼入计费,3:双向计费,0:全免费
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum BillingTypeEnum {
+    /// 全免费
+    #[sea_orm(string_value = "0")]
+    Free,
+    /// 呼出计费
+    #[sea_orm(string_value = "1")]
+    BillingOut,
+    /// 呼入计费
+    #[sea_orm(string_value = "2")]
+    BillingIn,
+    /// 双向计费
+    #[sea_orm(string_value = "3")]
+    BillingBoth,
+}
+
+/// 支付方式 0:预付费;1:后付费
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum PayTypeEnum {
+    /// 预付费
+    #[sea_orm(string_value = "0")]
+    Prepaid,
+    /// 后付费
+    #[sea_orm(string_value = "1")]
+    Postpaid,
+}
+
+/// 坐席密码等级(1:不限制 2:数字和字母 3:大小写字母和数字组合)
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum AgentPasswordTypeEnum {
+    /// 不限制
+    #[sea_orm(string_value = "1")]
+    NoRestriction,
+    /// 数字和字母
+    #[sea_orm(string_value = "2")]
+    NumberAndLetter,
+    /// 大小写字母和数字组合
+    #[sea_orm(string_value = "3")]
+    UpperLowerAndNumber,
+}
+
 #[derive(
     Debug,
     Clone,
