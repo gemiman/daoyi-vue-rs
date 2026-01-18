@@ -607,8 +607,6 @@ CREATE TABLE cti_company
     bill_type         varchar(32)          DEFAULT '0',
     pay_type          varchar(32)          DEFAULT '0',
     hidden_customer   varchar(32)          DEFAULT '0',
-    secret_type       varchar(32)          DEFAULT '1',
-    secret_key        VARCHAR(64),
     ivr_limit         INT                  DEFAULT 0,
     agent_limit       INT                  DEFAULT 0,
     group_limit       INT                  DEFAULT 0,
@@ -640,8 +638,6 @@ COMMENT ON COLUMN cti_company.balance IS '账户余额';
 COMMENT ON COLUMN cti_company.bill_type IS '计费类型(1:呼出计费,2:呼入计费,3:双向计费,0:全免费)';
 COMMENT ON COLUMN cti_company.pay_type IS '付费方式(0:预付费,1:后付费)';
 COMMENT ON COLUMN cti_company.hidden_customer IS '隐藏客户号码(0:不隐藏,1:隐藏)';
-COMMENT ON COLUMN cti_company.secret_type IS '坐席密码等级(1:不限制,2:数字和字母,3:大小写字母和数字组合)';
-COMMENT ON COLUMN cti_company.secret_key IS '验证秘钥';
 COMMENT ON COLUMN cti_company.ivr_limit IS 'IVR通道数限制';
 COMMENT ON COLUMN cti_company.agent_limit IS '开通坐席数限制';
 COMMENT ON COLUMN cti_company.group_limit IS '开通技能组数限制';
