@@ -10,6 +10,7 @@ use daoyi_common_support::vo::infra_vo::{
     CodegenCreateListReqVO, CodegenTablePageReqVO, CodegenTableRespVO, CodegenUpdateReqVO,
     DatabaseTableRespVO,
 };
+use daoyi_macros::transactional;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, Database, DbBackend, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Set, Statement,
@@ -115,28 +116,28 @@ pub async fn get_codegen_table_page(
     Ok(PageResult::from_pagination(&params.pagination, total, list))
 }
 
+#[transactional]
 pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<String>> {
-    let config = infra_data_source_config_service::validate_data_source_config_exists(
-        &req.data_source_config_id,
-    )
-    .await?;
-    let target_db = Database::connect(&config.url)
-        .await
-        .map_err(|e| ApiError::biz(format!("连接数据库失败: {}", e)))?;
-
+    let target_db =
+        infra_data_source_config_service::get_db_conn(&req.data_source_config_id).await?;
     let main_db = database::get_db_async().await;
     let mut ids = Vec::new();
 
     for table_name in req.table_names {
         // 1. Get Table Info
-        let sql_table = format!(
-            r#"
-            SELECT table_name, table_comment
-            FROM information_schema.tables
-            WHERE table_schema = (SELECT DATABASE()) AND table_name = '{}'
-        "#,
-            table_name
-        );
+        let sql_table = match target_db.get_database_backend() {
+            DbBackend::Postgres => Ok(format!(
+                r#"
+                SELECT t.table_name           as table_name,
+                   obj_description(c.oid) as table_comment
+                    FROM information_schema.tables t
+                             JOIN pg_class c ON c.relname = t.table_name
+                    WHERE t.table_type = 'BASE TABLE'
+                      and t.table_schema = current_schema() and t.table_name = '{table_name}'
+                "#,
+            )),
+            _ => Err(ApiError::biz("不支持的数据库类型")),
+        }?;
 
         let stmt_table = Statement::from_string(target_db.get_database_backend(), sql_table);
         let table_res = target_db
@@ -156,15 +157,30 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
         ids.push(table_id.clone());
 
         // 3. Get Columns Info
-        let sql_columns = format!(
-            r#"
-            SELECT column_name, data_type, column_comment, is_nullable, column_key, ordinal_position
-            FROM information_schema.columns
-            WHERE table_schema = (SELECT DATABASE()) AND table_name = '{}'
-            ORDER BY ordinal_position
-        "#,
-            table_name
-        );
+        let sql_columns = match target_db.get_database_backend() {
+            DbBackend::Postgres => Ok(format!(
+                r#"
+                SELECT a.attname                                         AS column_name,
+                       sc.udt_name                                       AS data_type,
+                       col_description(a.attrelid, a.attnum)             AS column_comment,
+                       CASE WHEN a.attnotnull THEN 'NO' ELSE 'YES' END   AS is_nullable,
+                       CASE WHEN pk.contype = 'p' THEN 'PRI' ELSE '' END AS column_key,
+                       a.attnum                                          AS ordinal_position
+                FROM pg_attribute a
+                         JOIN pg_class c ON a.attrelid = c.oid
+                         JOIN pg_namespace n ON c.relnamespace = n.oid
+                         LEFT JOIN pg_constraint pk ON c.oid = pk.conrelid AND a.attnum = ANY (pk.conkey) AND pk.contype = 'p'
+                         join information_schema.columns sc
+                              on sc.table_schema = n.nspname and sc.table_name = c.relname and sc.column_name = a.attname
+                WHERE n.nspname = current_schema()
+                  AND c.relname = '{table_name}'
+                  AND a.attnum > 0
+                  AND NOT a.attisdropped
+                ORDER BY a.attnum
+                "#,
+            )),
+            _ => Err(ApiError::biz("不支持的数据库类型")),
+        }?;
 
         let stmt_columns = Statement::from_string(target_db.get_database_backend(), sql_columns);
         let columns_res = target_db
@@ -197,6 +213,7 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
             column_model.insert(&main_db).await?;
         }
     }
+    target_db.close().await?;
     Ok(ids)
 }
 

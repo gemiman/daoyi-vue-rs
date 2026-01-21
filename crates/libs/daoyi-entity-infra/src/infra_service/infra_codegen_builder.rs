@@ -36,6 +36,7 @@ impl CodegenBuilder {
             table_name: Set(table_name.to_string()),
             table_comment: Set(table_comment.to_string()),
             class_name: Set(class_name),
+            class_comment: Set(table_comment.to_string()),
             module_name: Set(module_name),
             business_name: Set(business_name_camel),
             author: Set("admin".to_string()),
