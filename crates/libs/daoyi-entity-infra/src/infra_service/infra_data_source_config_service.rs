@@ -38,7 +38,7 @@ pub async fn validate_data_source_config_exists(
         .ok_or_else(|| ApiError::biz("数据源配置不存在"))
 }
 
-pub async fn get_database_conn_by_id(id: &str) -> ApiResult<DatabaseConnection> {
+pub async fn get_db_conn(id: &str) -> ApiResult<DatabaseConnection> {
     let config = validate_data_source_config_exists(id).await?;
     let mut clean_url = config.url;
     if clean_url.starts_with("jdbc:") {

@@ -22,9 +22,8 @@ pub async fn get_database_table_list(
     name: Option<String>,
     comment: Option<String>,
 ) -> ApiResult<Vec<DatabaseTableRespVO>> {
-    let db =
-        infra_data_source_config_service::get_database_conn_by_id(data_source_config_id).await?;
-    let sql = match db.get_database_backend() {
+    let conn = infra_data_source_config_service::get_db_conn(data_source_config_id).await?;
+    let sql = match conn.get_database_backend() {
         DbBackend::Postgres => Ok(r#"
         SELECT t.table_name           as table_name,
            obj_description(c.oid) as table_comment
@@ -35,8 +34,8 @@ pub async fn get_database_table_list(
         "#),
         _ => Err(ApiError::biz("不支持的数据库类型")),
     }?;
-    let stmt = Statement::from_string(db.get_database_backend(), sql.to_owned());
-    let results = db
+    let stmt = Statement::from_string(conn.get_database_backend(), sql.to_owned());
+    let results = conn
         .query_all(stmt)
         .await
         .map_err(|e| ApiError::biz(format!("查询表失败: {}", e)))?;
@@ -58,7 +57,7 @@ pub async fn get_database_table_list(
     if let Some(c) = comment {
         tables.retain(|t| t.comment.contains(&c));
     }
-    db.close().await?;
+    conn.close().await?;
     Ok(tables)
 }
 
