@@ -65,14 +65,14 @@ pub async fn get_post_page(params: &PostPageReqVO) -> ApiResult<PageResult<syste
     let db = database::get_db_async().await;
     let paginator = SystemPost::find_perm_with_tenant()
         .await
-        .apply_if(params.code.as_ref(), |query, code| {
-            query.filter(system_post::Column::Code.contains(code))
+        .apply_if(params.code.as_ref(), |query, val| {
+            query.filter(system_post::Column::Code.contains(val))
         })
-        .apply_if(params.name.as_ref(), |query, name| {
-            query.filter(system_post::Column::Name.contains(name))
+        .apply_if(params.name.as_ref(), |query, val| {
+            query.filter(system_post::Column::Name.contains(val))
         })
-        .apply_if(params.status, |query, status| {
-            query.filter(system_post::Column::Status.eq(status))
+        .apply_if(params.status, |query, val| {
+            query.filter(system_post::Column::Status.eq(val))
         })
         .order_by_desc(system_post::Column::CreateTime)
         .paginate(&db, params.pagination.page_size);

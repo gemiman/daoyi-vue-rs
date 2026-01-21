@@ -146,17 +146,17 @@ pub async fn get_role_page(params: &RolePageReqVO) -> ApiResult<PageResult<syste
     let db = database::get_db_async().await;
     let paginator = SystemRole::find_perm_with_tenant()
         .await
-        .apply_if(params.name.as_ref(), |query, name| {
-            query.filter(system_role::Column::Name.contains(name))
+        .apply_if(params.name.as_ref(), |query, val| {
+            query.filter(system_role::Column::Name.contains(val))
         })
-        .apply_if(params.code.as_ref(), |query, code| {
-            query.filter(system_role::Column::Code.contains(code))
+        .apply_if(params.code.as_ref(), |query, val| {
+            query.filter(system_role::Column::Code.contains(val))
         })
-        .apply_if(params.status, |query, status| {
-            query.filter(system_role::Column::Status.eq(status))
+        .apply_if(params.status, |query, val| {
+            query.filter(system_role::Column::Status.eq(val))
         })
-        .apply_if(params.create_time.as_ref(), |query, create_time| {
-            query.filter(system_role::Column::CreateTime.between(create_time[0], create_time[1]))
+        .apply_if(params.create_time.as_ref(), |query, val| {
+            query.filter(system_role::Column::CreateTime.between(val[0], val[1]))
         })
         .order_by_asc(system_role::Column::Sort)
         .order_by_desc(system_role::Column::Id)
