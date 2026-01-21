@@ -1,8 +1,8 @@
 use crate::infra_entity::{infra_codegen_column, infra_codegen_table};
 use daoyi_common_support::id_util;
-use heck::ToSnakeCase;
+use heck::{ToLowerCamelCase, ToPascalCase, ToSnakeCase};
 use std::collections::HashMap;
-use tera::{Context, Tera};
+use tera::{Context, Tera, Value, to_value, try_get_value};
 
 pub struct CodegenEngine;
 
@@ -14,6 +14,21 @@ impl CodegenEngine {
         sub_columns_list: &[Vec<infra_codegen_column::Model>],
     ) -> HashMap<String, String> {
         let mut tera = Tera::default();
+
+        tera.register_filter("snake_case", |value: &Value, _: &_| {
+            let s = try_get_value!("snake_case", "value", String, value);
+            Ok(to_value(s.to_snake_case()).unwrap())
+        });
+
+        tera.register_filter("camel_case", |value: &Value, _: &_| {
+            let s = try_get_value!("camel_case", "value", String, value);
+            Ok(to_value(s.to_lower_camel_case()).unwrap())
+        });
+
+        tera.register_filter("pascal_case", |value: &Value, _: &_| {
+            let s = try_get_value!("pascal_case", "value", String, value);
+            Ok(to_value(s.to_pascal_case()).unwrap())
+        });
 
         // --- 1. Entity Template ---
         let entity_tpl = r#"
@@ -27,15 +42,15 @@ use daoyi_macros::{daoyi_model, DaoyiActiveModelBehavior};
 
 #[daoyi_model]
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, DaoyiActiveModelBehavior)]
-#[sea_orm(table_name = "{{ table.table_name }}")]
+#[sea_orm(table_name = "{{ table.tableName }}")]
 #[serde(rename_all = "camelCase")]
 pub struct Model {
     #[sea_orm(primary_key{% if not primary_key_is_auto %}, auto_increment = false{% endif %})]
     pub id: {{ primary_key_type }},
     {% for col in columns %}
-    {% if col.column_name != "id" %}
-    /// {{ col.column_comment }}
-    pub {{ col.java_field }}: {{ col.java_type }},
+    {% if col.columnName != "id" %}
+    /// {{ col.columnComment }}
+    pub {{ col.javaField }}: {{ col.javaType }},
     {% endif %}
     {% endfor %}
 }
@@ -47,7 +62,7 @@ pub enum Relation {}
 
         // --- 2. Service Template ---
         let service_tpl = r#"
-use crate::entity::{prelude::*, {{ table.class_name | snake_case }}};
+use crate::entity::{prelude::*, {{ table.className | snake_case }}};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::{database, id_util};
@@ -55,14 +70,14 @@ use sea_orm::{ActiveModelTrait, ColumnTrait, EntityTrait, PaginatorTrait, QueryF
 {% if has_decimal %}use rust_decimal::Decimal;{% endif %}
 {% if has_json %}use serde_json::Value as Json;{% endif %}
 
-pub async fn create_{{ table.class_name | snake_case }}(req: {{ table.class_name }}CreateReq) -> ApiResult<String> {
+pub async fn create_{{ table.className | snake_case }}(req: {{ table.className }}CreateReq) -> ApiResult<String> {
     let db = database::get_db_async().await;
     let id = id_util::xid();
-    let model = {{ table.class_name | snake_case }}::ActiveModel {
+    let model = {{ table.className | snake_case }}::ActiveModel {
         id: Set(id.clone()),
         {% for col in columns %}
-        {% if col.create_operation and col.column_name != "id" %}
-        {{ col.java_field }}: Set(req.{{ col.java_field }}),
+        {% if col.createOperation and col.columnName != "id" %}
+        {{ col.javaField }}: Set(req.{{ col.javaField }}),
         {% endif %}
         {% endfor %}
         ..Default::default()
@@ -71,17 +86,17 @@ pub async fn create_{{ table.class_name | snake_case }}(req: {{ table.class_name
     Ok(id)
 }
 
-pub async fn update_{{ table.class_name | snake_case }}(req: {{ table.class_name }}UpdateReq) -> ApiResult<()> {
+pub async fn update_{{ table.className | snake_case }}(req: {{ table.className }}UpdateReq) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let mut model: {{ table.class_name | snake_case }}::ActiveModel = {{ table.class_name }}::find_by_id(&req.id)
+    let mut model: {{ table.className | snake_case }}::ActiveModel = {{ table.className }}::find_by_id(&req.id)
         .one(&db)
         .await?
         .ok_or_else(|| ApiError::biz("Record not found"))?
         .into();
 
     {% for col in columns %}
-    {% if col.update_operation and col.column_name != "id" %}
-    model.{{ col.java_field }} = Set(req.{{ col.java_field }});
+    {% if col.updateOperation and col.columnName != "id" %}
+    model.{{ col.javaField }} = Set(req.{{ col.javaField }});
     {% endif %}
     {% endfor %}
     
@@ -89,29 +104,29 @@ pub async fn update_{{ table.class_name | snake_case }}(req: {{ table.class_name
     Ok(())
 }
 
-pub async fn delete_{{ table.class_name | snake_case }}(id: &str) -> ApiResult<()> {
+pub async fn delete_{{ table.className | snake_case }}(id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    {{ table.class_name }}::delete_by_id(id).exec(&db).await?;
+    {{ table.className }}::delete_by_id(id).exec(&db).await?;
     Ok(())
 }
 
-pub async fn get_{{ table.class_name | snake_case }}(id: &str) -> ApiResult<Option<{{ table.class_name | snake_case }}::Model>> {
+pub async fn get_{{ table.className | snake_case }}(id: &str) -> ApiResult<Option<{{ table.className | snake_case }}::Model>> {
     let db = database::get_db_async().await;
-    let res = {{ table.class_name }}::find_by_id(id).one(&db).await?;
+    let res = {{ table.className }}::find_by_id(id).one(&db).await?;
     Ok(res)
 }
 
-pub async fn get_{{ table.class_name | snake_case }}_page(req: {{ table.class_name }}PageReq) -> ApiResult<PageResult<{{ table.class_name | snake_case }}::Model>> {
+pub async fn get_{{ table.className | snake_case }}_page(req: {{ table.className }}PageReq) -> ApiResult<PageResult<{{ table.className | snake_case }}::Model>> {
     let db = database::get_db_async().await;
-    let paginator = {{ table.class_name }}::find()
+    let paginator = {{ table.className }}::find()
         {% for col in columns %}
-        {% if col.list_operation %}
-        .apply_if(req.{{ col.java_field }}, |query, val| {
-            query.filter({{ table.class_name | snake_case }}::Column::{{ col.java_field | pascal_case }}.eq(val))
+        {% if col.listOperation %}
+        .apply_if(req.{{ col.javaField }}, |query, val| {
+            query.filter({{ table.className | snake_case }}::Column::{{ col.javaField | pascal_case }}.eq(val))
         })
         {% endif %}
         {% endfor %}
-        .order_by_desc({{ table.class_name | snake_case }}::Column::CreateTime)
+        .order_by_desc({{ table.className | snake_case }}::Column::CreateTime)
         .paginate(&db, req.pagination.page_size);
 
     let total = paginator.num_items().await?;
@@ -134,7 +149,7 @@ use daoyi_common_support::{
     request::valid::ValidJson,
     response::{ApiResponse, RestApiResult},
 };
-use crate::service::{{ table.class_name | snake_case }}_service;
+use crate::service::{{ table.className | snake_case }}_service;
 // Import VO structs here
 // Note: VO definition is usually in a separate file or common lib, 
 // but for codegen simplicity we assume the user will handle VO imports or define them here.
@@ -148,28 +163,28 @@ pub fn create_router() -> Router<AppState> {
         .route("/page", get(get_page))
 }
 
-async fn create(ValidJson(req): ValidJson<{{ table.class_name }}CreateReq>) -> RestApiResult<String> {
-    let res = {{ table.class_name | snake_case }}_service::create_{{ table.class_name | snake_case }}(req).await?;
+async fn create(ValidJson(req): ValidJson<{{ table.className }}CreateReq>) -> RestApiResult<String> {
+    let res = {{ table.className | snake_case }}_service::create_{{ table.className | snake_case }}(req).await?;
     ApiResponse::success(res)
 }
 
-async fn update(ValidJson(req): ValidJson<{{ table.class_name }}UpdateReq>) -> RestApiResult<()> {
-    {{ table.class_name | snake_case }}_service::update_{{ table.class_name | snake_case }}(req).await?;
+async fn update(ValidJson(req): ValidJson<{{ table.className }}UpdateReq>) -> RestApiResult<()> {
+    {{ table.className | snake_case }}_service::update_{{ table.className | snake_case }}(req).await?;
     ApiResponse::success(())
 }
 
 async fn delete(Query(req): Query<IdReq>) -> RestApiResult<()> {
-    {{ table.class_name | snake_case }}_service::delete_{{ table.class_name | snake_case }}(&req.id).await?;
+    {{ table.className | snake_case }}_service::delete_{{ table.className | snake_case }}(&req.id).await?;
     ApiResponse::success(())
 }
 
-async fn get(Query(req): Query<IdReq>) -> RestApiResult<Option<{{ table.class_name | snake_case }}::Model>> {
-    let res = {{ table.class_name | snake_case }}_service::get_{{ table.class_name | snake_case }}(&req.id).await?;
+async fn get(Query(req): Query<IdReq>) -> RestApiResult<Option<{{ table.className | snake_case }}::Model>> {
+    let res = {{ table.className | snake_case }}_service::get_{{ table.className | snake_case }}(&req.id).await?;
     ApiResponse::success(res)
 }
 
-async fn get_page(Query(req): Query<{{ table.class_name }}PageReq>) -> RestApiResult<PageResult<{{ table.class_name | snake_case }}::Model>> {
-    let res = {{ table.class_name | snake_case }}_service::get_{{ table.class_name | snake_case }}_page(req).await?;
+async fn get_page(Query(req): Query<{{ table.className }}PageReq>) -> RestApiResult<PageResult<{{ table.className | snake_case }}::Model>> {
+    let res = {{ table.className | snake_case }}_service::get_{{ table.className | snake_case }}_page(req).await?;
     ApiResponse::success(res)
 }
 "#;
@@ -183,9 +198,9 @@ async fn get_page(Query(req): Query<{{ table.class_name }}PageReq>) -> RestApiRe
     <!-- Search Form -->
     <el-form :model="queryParams" ref="queryFormRef" :inline="true" label-width="68px">
       {% for col in columns %}
-      {% if col.list_operation %}
-      <el-form-item label="{{ col.column_comment }}" prop="{{ col.java_field }}">
-        <el-input v-model="queryParams.{{ col.java_field }}" placeholder="请输入{{ col.column_comment }}" clearable class="!w-240px" />
+      {% if col.listOperation %}
+      <el-form-item label="{{ col.columnComment }}" prop="{{ col.javaField }}">
+        <el-input v-model="queryParams.{{ col.javaField }}" placeholder="请输入{{ col.columnComment }}" clearable class="!w-240px" />
       </el-form-item>
       {% endif %}
       {% endfor %}
@@ -202,8 +217,8 @@ async fn get_page(Query(req): Query<{{ table.class_name }}PageReq>) -> RestApiRe
   <ContentWrap>
     <el-table v-loading="loading" :data="list">
       {% for col in columns %}
-      {% if col.list_operation_result %}
-      <el-table-column label="{{ col.column_comment }}" align="center" prop="{{ col.java_field }}" />
+      {% if col.listOperationResult %}
+      <el-table-column label="{{ col.columnComment }}" align="center" prop="{{ col.javaField }}" />
       {% endif %}
       {% endfor %}
       <el-table-column label="操作" align="center" fixed="right" width="180">
@@ -222,12 +237,12 @@ async fn get_page(Query(req): Query<{{ table.class_name }}PageReq>) -> RestApiRe
   </ContentWrap>
 
   <!-- Form Dialog -->
-  <{{ table.class_name }}Form ref="formRef" @success="getList" />
+  <{{ table.className }}Form ref="formRef" @success="getList" />
 </template>
 <script setup lang="ts">
 import { dateFormatter } from '@/utils/formatTime'
-import * as {{ table.class_name }}Api from '@/api/{{ table.module_name }}/{{ table.business_name }}'
-import {{ table.class_name }}Form from './{{ table.class_name }}Form.vue'
+import * as {{ table.className }}Api from '@/api/{{ table.moduleName }}/{{ table.businessName }}'
+import {{ table.className }}Form from './{{ table.className }}Form.vue'
 
 const message = useMessage()
 const { t } = useI18n()
@@ -239,8 +254,8 @@ const queryParams = reactive({
   pageNo: 1,
   pageSize: 10,
   {% for col in columns %}
-  {% if col.list_operation %}
-  {{ col.java_field }}: undefined,
+  {% if col.listOperation %}
+  {{ col.javaField }}: undefined,
   {% endif %}
   {% endfor %}
 })
@@ -249,7 +264,7 @@ const queryFormRef = ref()
 const getList = async () => {
   loading.value = true
   try {
-    const data = await {{ table.class_name }}Api.get{{ table.class_name }}Page(queryParams)
+    const data = await {{ table.className }}Api.get{{ table.className }}Page(queryParams)
     list.value = data.list
     total.value = data.total
   } finally {
@@ -275,7 +290,7 @@ const openForm = (type: string, id?: number) => {
 const handleDelete = async (id: number) => {
   try {
     await message.delConfirm()
-    await {{ table.class_name }}Api.delete{{ table.class_name }}(id)
+    await {{ table.className }}Api.delete{{ table.className }}(id)
     message.success(t('common.delSuccess'))
     await getList()
   } catch {}
@@ -294,16 +309,16 @@ onMounted(() => {
   <Dialog :title="dialogTitle" v-model="dialogVisible">
     <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px" v-loading="formLoading">
       {% for col in columns %}
-      {% if col.create_operation or col.update_operation %}
-      <el-form-item label="{{ col.column_comment }}" prop="{{ col.java_field }}">
-        {% if col.html_type == 'input' %}
-        <el-input v-model="formData.{{ col.java_field }}" placeholder="请输入{{ col.column_comment }}" />
-        {% elif col.html_type == 'textarea' %}
-        <el-input v-model="formData.{{ col.java_field }}" type="textarea" placeholder="请输入{{ col.column_comment }}" />
-        {% elif col.html_type == 'datetime' %}
-        <el-date-picker v-model="formData.{{ col.java_field }}" type="datetime" value-format="x" placeholder="选择{{ col.column_comment }}" />
+      {% if col.createOperation or col.updateOperation %}
+      <el-form-item label="{{ col.columnComment }}" prop="{{ col.javaField }}">
+        {% if col.htmlType == 'input' %}
+        <el-input v-model="formData.{{ col.javaField }}" placeholder="请输入{{ col.columnComment }}" />
+        {% elif col.htmlType == 'textarea' %}
+        <el-input v-model="formData.{{ col.javaField }}" type="textarea" placeholder="请输入{{ col.columnComment }}" />
+        {% elif col.htmlType == 'datetime' %}
+        <el-date-picker v-model="formData.{{ col.javaField }}" type="datetime" value-format="x" placeholder="选择{{ col.columnComment }}" />
         {% else %}
-        <el-input v-model="formData.{{ col.java_field }}" placeholder="请输入{{ col.column_comment }}" />
+        <el-input v-model="formData.{{ col.javaField }}" placeholder="请输入{{ col.columnComment }}" />
         {% endif %}
       </el-form-item>
       {% endif %}
@@ -314,9 +329,9 @@ onMounted(() => {
     <!-- Sub Tables -->
     <el-tabs v-model="activeTab">
       {% for sub in sub_tables %}
-      <el-tab-pane label="{{ sub.table_comment }}" name="{{ sub.class_name | camel_case }}">
+      <el-tab-pane label="{{ sub.tableComment }}" name="{{ sub.className | camel_case }}">
         <!-- Placeholder for sub-table component -->
-        <div>Sub-table: {{ sub.table_comment }}</div>
+        <div>Sub-table: {{ sub.tableComment }}</div>
       </el-tab-pane>
       {% endfor %}
     </el-tabs>
@@ -329,7 +344,7 @@ onMounted(() => {
   </Dialog>
 </template>
 <script setup lang="ts">
-import * as {{ table.class_name }}Api from '@/api/{{ table.module_name }}/{{ table.business_name }}'
+import * as {{ table.className }}Api from '@/api/{{ table.moduleName }}/{{ table.businessName }}'
 
 const { t } = useI18n()
 const message = useMessage()
@@ -340,15 +355,15 @@ const formLoading = ref(false)
 const formType = ref('')
 const formData = ref({
   {% for col in columns %}
-  {% if col.create_operation or col.update_operation %}
-  {{ col.java_field }}: undefined,
+  {% if col.createOperation or col.updateOperation %}
+  {{ col.javaField }}: undefined,
   {% endif %}
   {% endfor %}
 })
 const formRules = reactive({
   {% for col in columns %}
-  {% if not col.nullable and (col.create_operation or col.update_operation) %}
-  {{ col.java_field }}: [{ required: true, message: '{{ col.column_comment }}不能为空', trigger: 'blur' }],
+  {% if not col.nullable and (col.createOperation or col.updateOperation) %}
+  {{ col.javaField }}: [{ required: true, message: '{{ col.columnComment }}不能为空', trigger: 'blur' }],
   {% endif %}
   {% endfor %}
 })
@@ -363,7 +378,7 @@ const open = async (type: string, id?: number) => {
   if (id) {
     formLoading.value = true
     try {
-      formData.value = await {{ table.class_name }}Api.get{{ table.class_name }}(id)
+      formData.value = await {{ table.className }}Api.get{{ table.className }}(id)
     } finally {
       formLoading.value = false
     }
@@ -378,10 +393,10 @@ const submitForm = async () => {
   try {
     const data = formData.value
     if (formType.value === 'create') {
-      await {{ table.class_name }}Api.create{{ table.class_name }}(data)
+      await {{ table.className }}Api.create{{ table.className }}(data)
       message.success(t('common.createSuccess'))
     } else {
-      await {{ table.class_name }}Api.update{{ table.class_name }}(data)
+      await {{ table.className }}Api.update{{ table.className }}(data)
       message.success(t('common.updateSuccess'))
     }
     dialogVisible.value = false
@@ -394,8 +409,8 @@ const submitForm = async () => {
 const resetForm = () => {
   formData.value = {
     {% for col in columns %}
-    {% if col.create_operation or col.update_operation %}
-    {{ col.java_field }}: undefined,
+    {% if col.createOperation or col.updateOperation %}
+    {{ col.javaField }}: undefined,
     {% endif %}
     {% endfor %}
   }
@@ -414,8 +429,8 @@ INSERT INTO system.system_menu (
     creator, create_time, updater, update_time, deleted, tenant_id
 )
 VALUES (
-    '{{ menu_id }}', '{{ table.class_comment }}', '', '2', {{ table.gen_menu_sort | default(value=1) }}, '{{ table.parent_menu_id }}',
-    '{{ table.business_name }}', 'ep:menu', '{{ table.module_name }}/{{ table.business_name }}/index', '{{ table.class_name }}', '0', true, true, true,
+    '{{ menu_id }}', '{{ table.classComment }}', '', '2', {{ table.genMenuSort | default(value=1) }}, '{{ table.parentMenuId }}',
+    '{{ table.businessName }}', 'ep:menu', '{{ table.moduleName }}/{{ table.businessName }}/index', '{{ table.className }}', '0', true, true, true,
     'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, false, '1'
 );
 
@@ -427,7 +442,7 @@ INSERT INTO system.system_menu (
     creator, create_time, updater, update_time, deleted, tenant_id
 )
 VALUES (
-    '{{ button_query_id }}', '{{ table.class_comment }}查询', '{{ table.module_name }}:{{ table.business_name }}:query', '3', 1, '{{ menu_id }}',
+    '{{ button_query_id }}', '{{ table.classComment }}查询', '{{ table.moduleName }}:{{ table.businessName }}:query', '3', 1, '{{ menu_id }}',
     '', '', '', '', '0', true, true, true,
     'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, false, '1'
 );
@@ -439,7 +454,7 @@ INSERT INTO system.system_menu (
     creator, create_time, updater, update_time, deleted, tenant_id
 )
 VALUES (
-    '{{ button_create_id }}', '{{ table.class_comment }}新增', '{{ table.module_name }}:{{ table.business_name }}:create', '3', 2, '{{ menu_id }}',
+    '{{ button_create_id }}', '{{ table.classComment }}新增', '{{ table.moduleName }}:{{ table.businessName }}:create', '3', 2, '{{ menu_id }}',
     '', '', '', '', '0', true, true, true,
     'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, false, '1'
 );
@@ -451,7 +466,7 @@ INSERT INTO system.system_menu (
     creator, create_time, updater, update_time, deleted, tenant_id
 )
 VALUES (
-    '{{ button_update_id }}', '{{ table.class_comment }}修改', '{{ table.module_name }}:{{ table.business_name }}:update', '3', 3, '{{ menu_id }}',
+    '{{ button_update_id }}', '{{ table.classComment }}修改', '{{ table.moduleName }}:{{ table.businessName }}:update', '3', 3, '{{ menu_id }}',
     '', '', '', '', '0', true, true, true,
     'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, false, '1'
 );
@@ -463,7 +478,7 @@ INSERT INTO system.system_menu (
     creator, create_time, updater, update_time, deleted, tenant_id
 )
 VALUES (
-    '{{ button_delete_id }}', '{{ table.class_comment }}删除', '{{ table.module_name }}:{{ table.business_name }}:delete', '3', 4, '{{ menu_id }}',
+    '{{ button_delete_id }}', '{{ table.classComment }}删除', '{{ table.moduleName }}:{{ table.businessName }}:delete', '3', 4, '{{ menu_id }}',
     '', '', '', '', '0', true, true, true,
     'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, false, '1'
 );
@@ -475,7 +490,7 @@ INSERT INTO system.system_menu (
     creator, create_time, updater, update_time, deleted, tenant_id
 )
 VALUES (
-    '{{ button_export_id }}', '{{ table.class_comment }}导出', '{{ table.module_name }}:{{ table.business_name }}:export', '3', 5, '{{ menu_id }}',
+    '{{ button_export_id }}', '{{ table.classComment }}导出', '{{ table.moduleName }}:{{ table.businessName }}:export', '3', 5, '{{ menu_id }}',
     '', '', '', '', '0', true, true, true,
     'admin', CURRENT_TIMESTAMP, 'admin', CURRENT_TIMESTAMP, false, '1'
 );
@@ -486,51 +501,51 @@ VALUES (
         let api_tpl = r#"
 import request from '@/config/axios'
 
-export interface {{ table.class_name }}VO {
+export interface {{ table.className }}VO {
   id: number
   {% for col in columns %}
-  {% if col.column_name != "id" %}
-  {{ col.java_field }}: {{ col.java_type | replace(from="i32", to="number") | replace(from="i64", to="number") | replace(from="f64", to="number") | replace(from="String", to="string") | replace(from="bool", to="boolean") | replace(from="DateTime", to="number") | replace(from="Date", to="number") | replace(from="Decimal", to="number") }}
+  {% if col.columnName != "id" %}
+  {{ col.javaField }}: {{ col.javaType | replace(from="i32", to="number") | replace(from="i64", to="number") | replace(from="f64", to="number") | replace(from="String", to="string") | replace(from="bool", to="boolean") | replace(from="DateTime", to="number") | replace(from="Date", to="number") | replace(from="Decimal", to="number") }}
   {% endif %}
   {% endfor %}
 }
 
-export interface {{ table.class_name }}PageReqVO extends PageParam {
+export interface {{ table.className }}PageReqVO extends PageParam {
   {% for col in columns %}
-  {% if col.list_operation %}
-  {{ col.java_field }}?: {{ col.java_type | replace(from="i32", to="number") | replace(from="i64", to="number") | replace(from="f64", to="number") | replace(from="String", to="string") | replace(from="bool", to="boolean") | replace(from="DateTime", to="number") | replace(from="Date", to="number") | replace(from="Decimal", to="number") }}
+  {% if col.listOperation %}
+  {{ col.javaField }}?: {{ col.javaType | replace(from="i32", to="number") | replace(from="i64", to="number") | replace(from="f64", to="number") | replace(from="String", to="string") | replace(from="bool", to="boolean") | replace(from="DateTime", to="number") | replace(from="Date", to="number") | replace(from="Decimal", to="number") }}
   {% endif %}
   {% endfor %}
 }
 
 // 查询列表
-export const get{{ table.class_name }}Page = (params: {{ table.class_name }}PageReqVO) => {
-  return request.get({ url: '/{{ table.module_name }}/{{ table.business_name }}/page', params })
+export const get{{ table.className }}Page = (params: {{ table.className }}PageReqVO) => {
+  return request.get({ url: '/{{ table.moduleName }}/{{ table.businessName }}/page', params })
 }
 
 // 查询详情
-export const get{{ table.class_name }} = (id: number) => {
-  return request.get({ url: '/{{ table.module_name }}/{{ table.business_name }}/get?id=' + id })
+export const get{{ table.className }} = (id: number) => {
+  return request.get({ url: '/{{ table.moduleName }}/{{ table.businessName }}/get?id=' + id })
 }
 
 // 新增
-export const create{{ table.class_name }} = (data: {{ table.class_name }}VO) => {
-  return request.post({ url: '/{{ table.module_name }}/{{ table.business_name }}/create', data })
+export const create{{ table.className }} = (data: {{ table.className }}VO) => {
+  return request.post({ url: '/{{ table.moduleName }}/{{ table.businessName }}/create', data })
 }
 
 // 修改
-export const update{{ table.class_name }} = (data: {{ table.class_name }}VO) => {
-  return request.put({ url: '/{{ table.module_name }}/{{ table.business_name }}/update', data })
+export const update{{ table.className }} = (data: {{ table.className }}VO) => {
+  return request.put({ url: '/{{ table.moduleName }}/{{ table.businessName }}/update', data })
 }
 
 // 删除
-export const delete{{ table.class_name }} = (id: number) => {
-  return request.delete({ url: '/{{ table.module_name }}/{{ table.business_name }}/delete?id=' + id })
+export const delete{{ table.className }} = (id: number) => {
+  return request.delete({ url: '/{{ table.moduleName }}/{{ table.businessName }}/delete?id=' + id })
 }
 
 // 导出
-export const export{{ table.class_name }} = (params: {{ table.class_name }}PageReqVO) => {
-  return request.download({ url: '/{{ table.module_name }}/{{ table.business_name }}/export-excel', params })
+export const export{{ table.className }} = (params: {{ table.className }}PageReqVO) => {
+  return request.download({ url: '/{{ table.moduleName }}/{{ table.businessName }}/export-excel', params })
 }
 "#;
         tera.add_raw_template("api.ts", api_tpl).unwrap();
@@ -574,71 +589,92 @@ export const export{{ table.class_name }} = (params: {{ table.class_name }}PageR
         let mut result = HashMap::new();
 
         // Entity
-        if let Ok(code) = tera.render("entity.rs", &context) {
-            result.insert(
-                format!("backend/src/entity/{}.rs", table.class_name.to_snake_case()),
-                code,
-            );
+        match tera.render("entity.rs", &context) {
+            Ok(code) => {
+                result.insert(
+                    format!("backend/src/entity/{}.rs", table.class_name.to_snake_case()),
+                    code,
+                );
+            }
+            Err(e) => tracing::error!("Failed to render entity.rs: {:#?}", e),
         }
 
         // Service
-        if let Ok(code) = tera.render("service.rs", &context) {
-            result.insert(
-                format!(
-                    "backend/src/service/{}_service.rs",
-                    table.class_name.to_snake_case()
-                ),
-                code,
-            );
+        match tera.render("service.rs", &context) {
+            Ok(code) => {
+                result.insert(
+                    format!(
+                        "backend/src/service/{}_service.rs",
+                        table.class_name.to_snake_case()
+                    ),
+                    code,
+                );
+            }
+            Err(e) => tracing::error!("Failed to render service.rs: {:#?}", e),
         }
 
         // Controller
-        if let Ok(code) = tera.render("controller.rs", &context) {
-            result.insert(
-                format!(
-                    "backend/src/controller/{}_controller.rs",
-                    table.class_name.to_snake_case()
-                ),
-                code,
-            );
+        match tera.render("controller.rs", &context) {
+            Ok(code) => {
+                result.insert(
+                    format!(
+                        "backend/src/controller/{}_controller.rs",
+                        table.class_name.to_snake_case()
+                    ),
+                    code,
+                );
+            }
+            Err(e) => tracing::error!("Failed to render controller.rs: {:#?}", e),
         }
 
         // Vue Index
-        if let Ok(code) = tera.render("index.vue", &context) {
-            result.insert(
-                format!(
-                    "frontend/src/views/{}/{}/index.vue",
-                    table.module_name, table.business_name
-                ),
-                code,
-            );
+        match tera.render("index.vue", &context) {
+            Ok(code) => {
+                result.insert(
+                    format!(
+                        "frontend/src/views/{}/{}/index.vue",
+                        table.module_name, table.business_name
+                    ),
+                    code,
+                );
+            }
+            Err(e) => tracing::error!("Failed to render index.vue: {:#?}", e),
         }
 
         // Vue Form
-        if let Ok(code) = tera.render("form.vue", &context) {
-            result.insert(
-                format!(
-                    "frontend/src/views/{}/{}/{}Form.vue",
-                    table.module_name, table.business_name, table.class_name
-                ),
-                code,
-            );
+        match tera.render("form.vue", &context) {
+            Ok(code) => {
+                result.insert(
+                    format!(
+                        "frontend/src/views/{}/{}/{}Form.vue",
+                        table.module_name, table.business_name, table.class_name
+                    ),
+                    code,
+                );
+            }
+            Err(e) => tracing::error!("Failed to render form.vue: {:#?}", e),
         }
 
         // SQL
-        if let Ok(code) = tera.render("sql.sql", &context) {
-            result.insert("sql/sql.sql".to_string(), code);
+        match tera.render("sql.sql", &context) {
+            Ok(code) => {
+                result.insert("sql/sql.sql".to_string(), code);
+            }
+            Err(e) => tracing::error!("Failed to render sql.sql: {:#?}", e),
         }
 
         // API
-        if let Ok(code) = tera.render("api.ts", &context) {
-            result.insert(
-                format!(
-                    "frontend/src/api/{}/{}.ts",
-                    table.module_name, table.business_name
-                ),
-                code,
-            );
+        match tera.render("api.ts", &context) {
+            Ok(code) => {
+                result.insert(
+                    format!(
+                        "frontend/src/api/{}/{}.ts",
+                        table.module_name, table.business_name
+                    ),
+                    code,
+                );
+            }
+            Err(e) => tracing::error!("Failed to render api.ts: {:#?}", e),
         }
 
         result

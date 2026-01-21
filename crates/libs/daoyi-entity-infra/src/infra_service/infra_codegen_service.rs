@@ -16,7 +16,7 @@ use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DbBackend, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Set, Statement,
 };
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::io::Write;
 
 pub async fn get_database_table_list(
@@ -383,7 +383,7 @@ async fn get_sub_tables(
     Ok((sub_tables, sub_columns_list))
 }
 
-pub async fn download_codegen(table_id: &str) -> ApiResult<Vec<u8>> {
+pub async fn generation_codes(table_id: &str) -> ApiResult<HashMap<String, String>> {
     let db = database::get_db_async().await;
     let table = get_codegen_table(table_id)
         .await?
@@ -393,7 +393,16 @@ pub async fn download_codegen(table_id: &str) -> ApiResult<Vec<u8>> {
     // Load Sub-tables
     let (sub_tables, sub_columns_list) = get_sub_tables(&table, &db).await?;
 
-    let codes = CodegenEngine::execute(&table, &columns, &sub_tables, &sub_columns_list);
+    Ok(CodegenEngine::execute(
+        &table,
+        &columns,
+        &sub_tables,
+        &sub_columns_list,
+    ))
+}
+
+pub async fn download_codegen(table_id: &str) -> ApiResult<Vec<u8>> {
+    let codes = generation_codes(table_id).await?;
 
     let mut buf = Vec::new();
     {

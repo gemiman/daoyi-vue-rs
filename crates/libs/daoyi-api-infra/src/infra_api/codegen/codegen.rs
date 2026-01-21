@@ -8,7 +8,6 @@ use daoyi_common_support::request::valid::ValidQuery;
 use daoyi_common_support::vo::infra_vo::{DataSourceConfigIdParam, DbTableListReq, TableIdParam};
 use daoyi_common_support::{
     app::AppState,
-    error::ApiError,
     models::pagination::PageResult,
     request::valid::ValidJson,
     response::{ApiResponse, RestApiResult},
@@ -17,9 +16,7 @@ use daoyi_common_support::{
         CodegenTableRespVO, CodegenUpdateReqVO, DatabaseTableRespVO,
     },
 };
-use daoyi_entity_infra::infra_service::{
-    infra_codegen_engine::CodegenEngine, infra_codegen_service,
-};
+use daoyi_entity_infra::infra_service::infra_codegen_service;
 
 pub fn create_router() -> Router<AppState> {
     Router::new()
@@ -119,22 +116,15 @@ async fn get_codegen_detail(
 async fn preview_codegen(
     ValidQuery(TableIdParam { table_id }): ValidQuery<TableIdParam>,
 ) -> RestApiResult<Vec<CodegenPreviewRespVO>> {
-    let table = infra_codegen_service::get_codegen_table(&table_id).await?;
-    let columns = infra_codegen_service::get_codegen_columns(&table_id).await?;
-
-    if let Some(t) = table {
-        let codes = CodegenEngine::execute(&t, &columns, &[], &[]);
-        let resp: Vec<CodegenPreviewRespVO> = codes
-            .into_iter()
-            .map(|(path, code)| CodegenPreviewRespVO {
-                file_path: path,
-                code,
-            })
-            .collect();
-        ApiResponse::success(resp)
-    } else {
-        Err(ApiError::biz("生成预览失败"))
-    }
+    let codes = infra_codegen_service::generation_codes(&table_id).await?;
+    let resp: Vec<CodegenPreviewRespVO> = codes
+        .into_iter()
+        .map(|(path, code)| CodegenPreviewRespVO {
+            file_path: path,
+            code,
+        })
+        .collect();
+    ApiResponse::success(resp)
 }
 
 #[debug_handler]
