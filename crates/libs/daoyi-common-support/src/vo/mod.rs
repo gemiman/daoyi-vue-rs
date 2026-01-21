@@ -25,3 +25,7 @@ impl<T> MqMsgBody<T> {
         self
     }
 }
+
+use crate::response::ApiResponse;
+
+pub type R<T> = ApiResponse<T>;

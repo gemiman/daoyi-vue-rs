@@ -39,6 +39,7 @@ pub fn create_router() -> Router<AppState> {
         .nest("/role", permission::role::create_router())
         .nest("/sms-channel", sms::sms_channel::create_channel_router())
         .nest("/sms-template", sms::sms_template::create_template_router())
+        .nest("/sms-log", sms::sms_log::create_router())
         .nest("/social", social::create_router())
         .nest("/tenant", tenant::tenant::create_router())
         .nest("/tenant-package", tenant::tenant_package::create_router())

@@ -54,4 +54,18 @@ impl<T> PageResult<T> {
     pub fn empty(pagination: &PaginationParams) -> Self {
         PageResult::new(pagination.page_no, pagination.page_size, 0, vec![])
     }
+
+    pub fn map<U, F>(self, f: F) -> PageResult<U>
+    where
+        F: FnMut(T) -> U,
+    {
+        let new_list: Vec<U> = self.list.into_iter().map(f).collect();
+        PageResult {
+            page_no: self.page_no,
+            page_size: self.page_size,
+            total: self.total,
+            list: new_list,
+            total_page: self.total_page,
+        }
+    }
 }

@@ -1656,3 +1656,64 @@ pub struct SmsTemplateSendReqVO {
     pub template_code: String,
     pub template_params: HashMap<String, String>,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsCodeSendReqVO {
+    #[validate(custom(function = "validation::is_mobile_phone"))]
+    pub mobile: String,
+    pub scene: i16,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsCodeValidateReqVO {
+    pub mobile: String,
+    pub code: String,
+    pub scene: i16,
+}
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsLogPageReqVO {
+    pub channel_id: Option<String>,
+    pub template_id: Option<String>,
+    pub mobile: Option<String>,
+    pub send_status: Option<i16>, // 0: Init, 10: Success, 20: Fail
+    pub receive_status: Option<bool>,
+    #[serde(default)]
+    #[serde(with = "option_vec_datetime_format")]
+    pub send_time: Option<Vec<DateTime>>,
+    #[serde(flatten)]
+    #[validate(nested)]
+    pub pagination: PaginationParams,
+}
+
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SmsLogRespVO {
+    pub id: String,
+    pub channel_id: String,
+    pub channel_code: String,
+    pub template_id: String,
+    pub template_code: String,
+    pub template_type: String,
+    pub template_content: String,
+    pub template_params: Json,
+    pub api_template_id: String,
+    pub mobile: String,
+    pub user_id: Option<String>,
+    pub user_type: Option<String>,
+    pub send_status: i16,
+    #[serde(with = "option_datetime_format")]
+    pub send_time: Option<DateTime>,
+    pub api_send_code: Option<String>,
+    pub api_send_msg: Option<String>,
+    pub api_serial_no: Option<String>,
+    pub api_request_id: Option<String>,
+    pub receive_status: bool,
+    #[serde(with = "option_datetime_format")]
+    pub receive_time: Option<DateTime>,
+    #[serde(with = "datetime_format")]
+    pub create_time: DateTime,
+}

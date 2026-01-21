@@ -52,14 +52,7 @@ X-Qiniu-Date: {}
         let mut mac = HmacSha1::new_from_slice(self.properties.api_secret.as_str().as_bytes())
             .expect("HMAC can take key of any size");
         mac.update(data_to_sign.as_bytes());
-        let signature = BASE64_STANDARD
-            .encode(mac.finalize().into_bytes())
-            .replace("+", "-")
-            .replace("/", "_"); // URL safe base64? Java uses standard base64?
-        // Java: SecureUtil.hmac(HmacAlgorithm.HmacSHA1, ...).digestBase64(..., true) -> UrlSafe is true?
-        // Checking Java code: digestBase64(data, true) -> isUrlSafe = true.
-        // So we need URL Safe Base64.
-        // Or replace + with - and / with _ manually as I did above.
+        let signature = BASE64_URL_SAFE.encode(mac.finalize().into_bytes());
 
         format!("Qiniu {}:{}", self.properties.api_key, signature)
     }

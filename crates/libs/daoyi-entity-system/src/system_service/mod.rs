@@ -16,7 +16,9 @@ pub mod system_post_service;
 pub mod system_role_menu_service;
 pub mod system_role_service;
 pub mod system_sms_channel_service;
+pub mod system_sms_log_service;
 pub mod system_sms_template_service;
+
 pub mod system_tenant_package_service;
 pub mod system_tenant_service;
 pub mod system_user_post_service;

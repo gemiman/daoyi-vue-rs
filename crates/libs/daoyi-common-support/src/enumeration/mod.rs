@@ -409,6 +409,7 @@ pub enum MailSendStatusEnum {
     DeriveActiveEnum,
     DaoyiIntoActiveValue,
     DaoyiStringOrNumberSerde,
+    strum_macros::Display,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum SmsChannelEnum {
@@ -457,6 +458,7 @@ pub enum SmsTemplateAuditStatusEnum {
     DeriveActiveEnum,
     DaoyiIntoActiveValue,
     DaoyiStringOrNumberSerde,
+    strum_macros::Display,
 )]
 #[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
 pub enum SmsTemplateTypeEnum {
@@ -466,4 +468,103 @@ pub enum SmsTemplateTypeEnum {
     Notice,
     #[sea_orm(string_value = "3")]
     Promotion,
+}
+
+/// 代码生成的场景枚举
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+    strum_macros::Display,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum CodegenSceneEnum {
+    /// 管理后台
+    #[sea_orm(string_value = "1")]
+    ADMIN,
+    /// 用户 APP
+    #[sea_orm(string_value = "2")]
+    APP,
+}
+
+/// 代码生成模板类型
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+    strum_macros::Display,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum CodegenTemplateTypeEnum {
+    /// 单表（增删改查）
+    #[sea_orm(string_value = "1")]
+    ONE,
+    /// 树表（增删改查）
+    #[sea_orm(string_value = "2")]
+    TREE,
+    ///     MasterNormal(10), // 主子表 - 主表 - 普通模式
+    #[sea_orm(string_value = "10")]
+    MasterNormal,
+    //     MasterErp(11), // 主子表 - 主表 - ERP 模式
+    #[sea_orm(string_value = "11")]
+    MasterErp,
+    //     MasterInner(12), // 主子表 - 主表 - 内嵌模式
+    #[sea_orm(string_value = "12")]
+    MasterInner,
+    //     SUB(15), // 主子表 - 子表
+    #[sea_orm(string_value = "15")]
+    SUB,
+}
+
+/// 代码生成模板类型
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+    strum_macros::Display,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum CodegenFrontTypeEnum {
+    ///     VUE2_ELEMENT_UI(10), // Vue2 Element UI 标准模版
+    #[sea_orm(string_value = "10")]
+    Vue2ElementUi,
+    //     VUE3_ELEMENT_PLUS(20), // Vue3 Element Plus 标准模版
+    #[sea_orm(string_value = "20")]
+    Vue3ElementPlus,
+    //     VUE3_VBEN2_ANTD_SCHEMA(30), // Vue3 VBEN2 + ANTD + Schema 模版
+    #[sea_orm(string_value = "30")]
+    Vue3Vben2AntdSchema,
+    //     VUE3_VBEN5_ANTD_SCHEMA(40), // Vue3 VBEN5 + ANTD + schema 模版
+    #[sea_orm(string_value = "40")]
+    Vue3Vben5AntdSchema,
+    //     VUE3_VBEN5_ANTD_GENERAL(41), // Vue3 VBEN5 + ANTD 标准模版
+    #[sea_orm(string_value = "41")]
+    Vue3Vben5AntdGeneral,
+    //     VUE3_VBEN5_EP_SCHEMA(50), // Vue3 VBEN5 + EP + schema 模版
+    #[sea_orm(string_value = "50")]
+    Vue3Vben5EpSchema,
+    //     VUE3_VBEN5_EP_GENERAL(51), // Vue3 VBEN5 + EP 标准模版
+    #[sea_orm(string_value = "51")]
+    Vue3Vben5EpGeneral,
+    //     VUE3_ADMIN_UNIAPP_WOT(60), // Vue3 Admin + Uniapp + WOT 标准模版
+    #[sea_orm(string_value = "60")]
+    Vue3AdminUniappWot,
 }

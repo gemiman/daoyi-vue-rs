@@ -2,6 +2,7 @@
 
 use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
+use daoyi_common_support::enumeration::{SmsChannelEnum, SmsTemplateTypeEnum};
 use daoyi_macros::{daoyi_model, DaoyiActiveModelBehavior};
 
 #[daoyi_model]
@@ -21,10 +22,10 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub channel_id: String,
-    pub channel_code: String,
+    pub channel_code: SmsChannelEnum,
     pub template_id: String,
     pub template_code: String,
-    pub template_type: String,
+    pub template_type: SmsTemplateTypeEnum,
     pub template_content: String,
     #[sea_orm(column_type = "JsonBinary")]
     pub template_params: Json,
@@ -32,7 +33,7 @@ pub struct Model {
     pub mobile: String,
     pub user_id: Option<String>,
     pub user_type: Option<String>,
-    pub send_status: bool,
+    pub send_status: i16,
     pub send_time: Option<DateTime>,
     pub api_send_code: Option<String>,
     pub api_send_msg: Option<String>,

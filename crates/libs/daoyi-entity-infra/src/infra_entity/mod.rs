@@ -5,3 +5,6 @@ pub mod prelude;
 pub mod infra_file;
 pub mod infra_file_config;
 pub mod infra_file_content;
+pub mod infra_data_source_config;
+pub mod infra_codegen_table;
+pub mod infra_codegen_column;

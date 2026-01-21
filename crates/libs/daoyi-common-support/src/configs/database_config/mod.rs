@@ -41,4 +41,15 @@ impl DatabaseConfig {
     pub fn schema(&self) -> &str {
         self.schema.as_deref().unwrap_or("public")
     }
+    pub fn url(&self) -> String {
+        format!(
+            "{}://{}:{}@{}:{}/{}",
+            self.driver(),
+            self.user(),
+            self.password(),
+            self.host(),
+            self.port(),
+            self.database()
+        )
+    }
 }

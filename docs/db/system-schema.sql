@@ -873,7 +873,7 @@ CREATE TABLE system.system_sms_log
     mobile           varchar(11)  NOT NULL,
     user_id          varchar(32)  NULL     DEFAULT NULL,
     user_type        varchar(32)  NULL     DEFAULT NULL,
-    send_status      boolean      NOT NULL DEFAULT false,
+    send_status smallint NOT NULL DEFAULT 0,
     send_time        timestamp    NULL     DEFAULT NULL,
     api_send_code    varchar(63)  NULL     DEFAULT NULL,
     api_send_msg     varchar(255) NULL     DEFAULT NULL,

@@ -27,7 +27,7 @@ impl TencentSmsClient {
     fn get_app_id_and_key(&self) -> (String, String) {
         let parts: Vec<&str> = self.properties.api_key.split_whitespace().collect();
         if parts.len() == 2 {
-            (parts[1].to_string(), parts[0].to_string()) // "secretId sdkAppId" -> (sdkAppId, secretId)
+            (parts[0].to_string(), parts[1].to_string()) // "sdkAppId secretId" -> (sdkAppId, secretId)
         } else {
             ("".to_string(), self.properties.api_key.clone())
         }
@@ -115,7 +115,7 @@ impl SmsClient for TencentSmsClient {
 
         // Corrected string escape using raw string literal
         let auth_header = format!(
-            r"TC3-HMAC-SHA256 Credential={}/{}\, SignedHeaders={}\, Signature={}",
+            "TC3-HMAC-SHA256 Credential={}/{}, SignedHeaders={}, Signature={}",
             secret_id, credential_scope, signed_headers, signature
         );
 
