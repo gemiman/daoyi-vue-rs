@@ -1,11 +1,11 @@
 use axum::http::header;
 use axum::{
-    Router,
+    Router, debug_handler,
     response::IntoResponse,
     routing::{delete, get, post, put},
 };
 use daoyi_common_support::request::valid::ValidQuery;
-use daoyi_common_support::vo::infra_vo::{DbTableListReq, TableIdParam};
+use daoyi_common_support::vo::infra_vo::{DataSourceConfigIdParam, DbTableListReq, TableIdParam};
 use daoyi_common_support::{
     app::AppState,
     error::ApiError,
@@ -24,6 +24,7 @@ use daoyi_entity_infra::infra_service::{
 pub fn create_router() -> Router<AppState> {
     Router::new()
         .route("/db/table/list", get(get_database_table_list))
+        .route("/table/list", get(get_codegen_table_list))
         .route("/table/page", get(get_codegen_table_page))
         .route("/create-list", post(create_codegen_list))
         .route("/update", put(update_codegen))
@@ -34,6 +35,22 @@ pub fn create_router() -> Router<AppState> {
         .route("/download", get(download_codegen))
 }
 
+#[debug_handler]
+async fn get_codegen_table_list(
+    ValidQuery(DataSourceConfigIdParam {
+        data_source_config_id,
+    }): ValidQuery<DataSourceConfigIdParam>,
+) -> RestApiResult<Vec<CodegenTableRespVO>> {
+    ApiResponse::success(
+        infra_codegen_service::get_codegen_table_list(&data_source_config_id)
+            .await?
+            .into_iter()
+            .map(Into::into)
+            .collect(),
+    )
+}
+
+#[debug_handler]
 async fn get_database_table_list(
     ValidQuery(req): ValidQuery<DbTableListReq>,
 ) -> RestApiResult<Vec<DatabaseTableRespVO>> {
@@ -42,10 +59,11 @@ async fn get_database_table_list(
         req.name,
         req.comment,
     )
-        .await?;
+    .await?;
     ApiResponse::success(res)
 }
 
+#[debug_handler]
 async fn get_codegen_table_page(
     ValidQuery(params): ValidQuery<CodegenTablePageReqVO>,
 ) -> RestApiResult<PageResult<CodegenTableRespVO>> {
@@ -59,11 +77,13 @@ async fn create_codegen_list(
     ApiResponse::success(res)
 }
 
+#[debug_handler]
 async fn update_codegen(ValidJson(req): ValidJson<CodegenUpdateReqVO>) -> RestApiResult<()> {
     infra_codegen_service::update_codegen(req).await?;
     ApiResponse::success(())
 }
 
+#[debug_handler]
 async fn delete_codegen(
     ValidQuery(TableIdParam { table_id }): ValidQuery<TableIdParam>,
 ) -> RestApiResult<()> {
@@ -71,6 +91,7 @@ async fn delete_codegen(
     ApiResponse::success(())
 }
 
+#[debug_handler]
 async fn sync_codegen_from_db(
     ValidQuery(TableIdParam { table_id }): ValidQuery<TableIdParam>,
 ) -> RestApiResult<()> {
@@ -78,6 +99,7 @@ async fn sync_codegen_from_db(
     ApiResponse::success(())
 }
 
+#[debug_handler]
 async fn get_codegen_detail(
     ValidQuery(TableIdParam { table_id }): ValidQuery<TableIdParam>,
 ) -> RestApiResult<CodegenDetailRespVO> {
@@ -93,6 +115,7 @@ async fn get_codegen_detail(
     ApiResponse::success(CodegenDetailRespVO { table, columns })
 }
 
+#[debug_handler]
 async fn preview_codegen(
     ValidQuery(TableIdParam { table_id }): ValidQuery<TableIdParam>,
 ) -> RestApiResult<Vec<CodegenPreviewRespVO>> {
@@ -114,6 +137,7 @@ async fn preview_codegen(
     }
 }
 
+#[debug_handler]
 async fn download_codegen(
     ValidQuery(TableIdParam { table_id }): ValidQuery<TableIdParam>,
 ) -> impl IntoResponse {

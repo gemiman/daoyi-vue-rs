@@ -1,9 +1,10 @@
 use axum::{
-    Router,
-    extract::Query,
+    Router, debug_handler,
     routing::{delete, get, post, put},
 };
+use daoyi_common_support::request::valid::ValidQuery;
 use daoyi_common_support::vo::infra_vo::DataSourceConfigUpdateReqVO;
+use daoyi_common_support::vo::system_vo::IdParams;
 use daoyi_common_support::{
     app::AppState,
     request::valid::ValidJson,
@@ -21,6 +22,7 @@ pub fn create_router() -> Router<AppState> {
         .route("/list", get(get_data_source_config_list))
 }
 
+#[debug_handler]
 async fn create_data_source_config(
     ValidJson(req): ValidJson<DataSourceConfigSaveReqVO>,
 ) -> RestApiResult<String> {
@@ -28,6 +30,7 @@ async fn create_data_source_config(
     ApiResponse::success(res)
 }
 
+#[debug_handler]
 async fn update_data_source_config(
     ValidJson(req): ValidJson<DataSourceConfigUpdateReqVO>,
 ) -> RestApiResult<()> {
@@ -35,18 +38,15 @@ async fn update_data_source_config(
     ApiResponse::success(())
 }
 
-#[derive(serde::Deserialize)]
-struct IdReq {
-    id: String,
-}
-
-async fn delete_data_source_config(Query(req): Query<IdReq>) -> RestApiResult<()> {
+#[debug_handler]
+async fn delete_data_source_config(ValidQuery(req): ValidQuery<IdParams>) -> RestApiResult<()> {
     infra_data_source_config_service::delete_data_source_config(&req.id).await?;
     ApiResponse::success(())
 }
 
+#[debug_handler]
 async fn get_data_source_config(
-    Query(req): Query<IdReq>,
+    ValidQuery(req): ValidQuery<IdParams>,
 ) -> RestApiResult<Option<DataSourceConfigRespVO>> {
     let res = infra_data_source_config_service::get_data_source_config(&req.id)
         .await?
@@ -54,6 +54,7 @@ async fn get_data_source_config(
     ApiResponse::success(res)
 }
 
+#[debug_handler]
 async fn get_data_source_config_list() -> RestApiResult<Vec<DataSourceConfigRespVO>> {
     let res = infra_data_source_config_service::get_data_source_config_list()
         .await?

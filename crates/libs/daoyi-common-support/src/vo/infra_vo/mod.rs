@@ -446,3 +446,9 @@ pub struct CodegenPreviewRespVO {
 pub struct TableIdParam {
     pub table_id: String,
 }
+
+#[derive(Debug, Deserialize, Validate)]
+#[serde(rename_all = "camelCase")]
+pub struct DataSourceConfigIdParam {
+    pub data_source_config_id: String,
+}

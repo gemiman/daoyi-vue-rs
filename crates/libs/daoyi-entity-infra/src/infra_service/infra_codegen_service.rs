@@ -69,7 +69,7 @@ async fn get_codegen_table_name_set(data_source_config_id: &str) -> ApiResult<Ha
         .map(|list| list.into_iter().map(|item| item.table_name).collect())
 }
 
-async fn get_codegen_table_list(
+pub async fn get_codegen_table_list(
     data_source_config_id: &str,
 ) -> ApiResult<Vec<infra_codegen_table::Model>> {
     let db = database::get_db_async().await;
