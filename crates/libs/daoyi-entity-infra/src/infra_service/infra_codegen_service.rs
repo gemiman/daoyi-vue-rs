@@ -11,6 +11,7 @@ use daoyi_common_support::vo::infra_vo::{
     DatabaseTableRespVO,
 };
 use daoyi_macros::transactional;
+use sea_orm::prelude::Expr;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DbBackend, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Set, Statement,
@@ -121,7 +122,6 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
     let target_db =
         infra_data_source_config_service::get_db_conn(&req.data_source_config_id).await?;
     let main_db = database::get_db_async().await;
-
     let tasks = req.table_names.into_iter().map(|table_name| {
         let target_db = target_db.clone();
         let main_db = main_db.clone();
@@ -141,7 +141,6 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
             Ok::<String, ApiError>(table_id)
         }
     });
-
     let ids = futures::future::try_join_all(tasks).await?;
     target_db.close().await?;
     Ok(ids)
@@ -320,127 +319,26 @@ pub async fn sync_codegen_from_db(table_id: &str) -> ApiResult<()> {
     let table = InfraCodegenTable::find_by_id_perm_with_tenant(&db, table_id)
         .await?
         .ok_or_else(|| ApiError::biz("表不存在"))?;
-
-    let target_db =
-        infra_data_source_config_service::get_db_conn(&table.data_source_config_id).await?;
-    // Get current DB columns
-    let sql_columns = format!(
-        r#"
-        SELECT column_name, data_type, column_comment, is_nullable, column_key, ordinal_position
-        FROM information_schema.columns
-        WHERE table_schema = (SELECT DATABASE()) AND table_name = '{}'
-        ORDER BY ordinal_position
-    "#,
-        table.table_name
-    );
-
-    let stmt = Statement::from_string(target_db.get_database_backend(), sql_columns);
-    let columns_res = target_db
-        .query_all(stmt)
-        .await
-        .map_err(|e| ApiError::biz(format!("查询表 {} 字段失败: {}", table.table_name, e)))?;
-
-    // Get existing codegen columns
-    let existing_columns = InfraCodegenColumn::find()
-        .filter(infra_codegen_column::Column::TableId.eq(table_id))
-        .all(&db)
-        .await?;
-
-    let existing_map: std::collections::HashMap<_, _> = existing_columns
-        .into_iter()
-        .map(|c| (c.column_name.clone(), c))
-        .collect();
-
-    let mut new_col_names = Vec::new();
-
-    for col_row in columns_res {
-        let col_name: String = col_row.try_get("", "column_name").unwrap_or_default();
-        let data_type: String = col_row.try_get("", "data_type").unwrap_or_default();
-        let col_comment: String = col_row.try_get("", "column_comment").unwrap_or_default();
-        let is_nullable_str: String = col_row.try_get("", "is_nullable").unwrap_or_default();
-        let column_key: String = col_row.try_get("", "column_key").unwrap_or_default();
-        let ordinal_position: i32 = col_row.try_get("", "ordinal_position").unwrap_or(0);
-
-        let is_nullable = is_nullable_str.to_uppercase() == "YES";
-        let is_primary = column_key == "PRI";
-
-        new_col_names.push(col_name.clone());
-
-        if let Some(existing_col) = existing_map.get(&col_name) {
-            // Update existing if types changed
-            let type_changed = existing_col.data_type != data_type
-                || existing_col.nullable != is_nullable
-                || existing_col.primary_key != is_primary;
-
-            if type_changed {
-                // Re-build column to get new Java/Rust types
-                let new_model = CodegenBuilder::build_column(
-                    table_id,
-                    &col_name,
-                    &data_type,
-                    &col_comment,
-                    is_nullable,
-                    is_primary,
-                    ordinal_position,
-                );
-
-                // Update core fields only, preserve customizations
-                let mut active_model: infra_codegen_column::ActiveModel =
-                    existing_col.clone().into();
-                active_model.data_type = Set(new_model.data_type.unwrap());
-                active_model.column_comment = Set(new_model.column_comment.unwrap());
-                active_model.nullable = Set(new_model.nullable.unwrap());
-                active_model.primary_key = Set(new_model.primary_key.unwrap());
-                active_model.ordinal_position = Set(new_model.ordinal_position.unwrap());
-                active_model.java_type = Set(new_model.java_type.unwrap());
-                active_model.java_field = Set(new_model.java_field.unwrap());
-
-                active_model.update(&db).await?;
-            } else if existing_col.column_comment != col_comment
-                || existing_col.ordinal_position != ordinal_position
-            {
-                // Only comment or order changed
-                let mut active_model: infra_codegen_column::ActiveModel =
-                    existing_col.clone().into();
-                active_model.column_comment = Set(col_comment);
-                active_model.ordinal_position = Set(ordinal_position);
-                active_model.update(&db).await?;
-            }
-        } else {
-            // Add new
-            let column_model = CodegenBuilder::build_column(
-                table_id,
-                &col_name,
-                &data_type,
-                &col_comment,
-                is_nullable,
-                is_primary,
-                ordinal_position,
-            );
-            column_model.insert(&db).await?;
-        }
-    }
-
-    // Delete removed columns
-    for (name, col) in existing_map {
-        if !new_col_names.contains(&name) {
-            InfraCodegenColumn::delete_by_id(col.id).exec(&db).await?;
-        }
-    }
-
+    delete_codegen(table_id).await?;
+    create_codegen_list(CodegenCreateListReqVO {
+        data_source_config_id: table.data_source_config_id,
+        table_names: vec![table.table_name],
+    })
+    .await?;
     Ok(())
 }
 
 pub async fn delete_codegen(table_id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
     // Delete columns first
-    InfraCodegenColumn::delete_many()
+    InfraCodegenColumn::update_many_auto()
+        .await
         .filter(infra_codegen_column::Column::TableId.eq(table_id))
+        .col_expr(infra_codegen_column::Column::Deleted, Expr::value(true))
         .exec(&db)
         .await?;
-
     // Delete table
-    InfraCodegenTable::delete_by_id(table_id).exec(&db).await?;
+    InfraCodegenTable::delete_logical_by_id(&db, table_id).await?;
     Ok(())
 }
 
