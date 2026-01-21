@@ -24,5 +24,7 @@ suppaftp.workspace = true
 # SFTP
 ssh2.workspace = true
 tera = "1.20.1"
+futures.workspace = true
+
 heck = "0.5.0"
 zip = "0.6.6"

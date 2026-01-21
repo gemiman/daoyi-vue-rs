@@ -121,23 +121,28 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
     let target_db =
         infra_data_source_config_service::get_db_conn(&req.data_source_config_id).await?;
     let main_db = database::get_db_async().await;
-    let mut ids = Vec::new();
 
-    for table_name in req.table_names {
-        // 1. Get Table Info
-        // 2. Build Table Model
-        let table_model =
-            build_table_from_db(&target_db, &req.data_source_config_id, &table_name).await?;
-        // Insert Table
-        let table_id = table_model.insert(&main_db).await?.id;
-        // 3. Get and Build Columns Info
-        let columns = build_column_from_db(&target_db, &table_id, &table_name).await?;
-        // 4. Insert Columns
-        for column_model in columns {
-            column_model.insert(&main_db).await?;
+    let tasks = req.table_names.into_iter().map(|table_name| {
+        let target_db = target_db.clone();
+        let main_db = main_db.clone();
+        let config_id = req.data_source_config_id.clone();
+        async move {
+            // 1. Get Table Info
+            // 2. Build Table Model
+            let table_model = build_table_from_db(&target_db, &config_id, &table_name).await?;
+            // Insert Table
+            let table_id = table_model.insert(&main_db).await?.id;
+            // 3. Get and Build Columns Info
+            let columns = build_column_from_db(&target_db, &table_id, &table_name).await?;
+            // 4. Insert Columns
+            for column_model in columns {
+                column_model.insert(&main_db).await?;
+            }
+            Ok::<String, ApiError>(table_id)
         }
-        ids.push(table_id);
-    }
+    });
+
+    let ids = futures::future::try_join_all(tasks).await?;
     target_db.close().await?;
     Ok(ids)
 }
