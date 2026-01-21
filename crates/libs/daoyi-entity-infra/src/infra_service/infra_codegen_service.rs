@@ -12,7 +12,7 @@ use daoyi_common_support::vo::infra_vo::{
 };
 use daoyi_macros::transactional;
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, Database, DbBackend, EntityTrait,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DbBackend, EntityTrait,
     PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Set, Statement,
 };
 use std::collections::HashSet;
@@ -125,9 +125,32 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
 
     for table_name in req.table_names {
         // 1. Get Table Info
-        let sql_table = match target_db.get_database_backend() {
-            DbBackend::Postgres => Ok(format!(
-                r#"
+        // 2. Build Table Model
+        let table_model =
+            build_table_from_db(&target_db, &req.data_source_config_id, &table_name).await?;
+        // Insert Table
+        let table_id = table_model.insert(&main_db).await?.id;
+        // 3. Get and Build Columns Info
+        let columns = build_column_from_db(&target_db, &table_id, &table_name).await?;
+        // 4. Insert Columns
+        for column_model in columns {
+            column_model.insert(&main_db).await?;
+        }
+        ids.push(table_id);
+    }
+    target_db.close().await?;
+    Ok(ids)
+}
+
+pub async fn build_table_from_db(
+    conn: &DatabaseConnection,
+    data_source_config_id: &str,
+    table_name: &str,
+) -> ApiResult<infra_codegen_table::ActiveModel> {
+    // 1. Get Table Info
+    let sql_table = match conn.get_database_backend() {
+        DbBackend::Postgres => Ok(format!(
+            r#"
                 SELECT t.table_name           as table_name,
                    obj_description(c.oid) as table_comment
                     FROM information_schema.tables t
@@ -135,31 +158,36 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
                     WHERE t.table_type = 'BASE TABLE'
                       and t.table_schema = current_schema() and t.table_name = '{table_name}'
                 "#,
-            )),
-            _ => Err(ApiError::biz("不支持的数据库类型")),
-        }?;
+        )),
+        _ => Err(ApiError::biz("不支持的数据库类型")),
+    }?;
 
-        let stmt_table = Statement::from_string(target_db.get_database_backend(), sql_table);
-        let table_res = target_db
-            .query_one(stmt_table)
-            .await
-            .map_err(|e| ApiError::biz(format!("查询表 {} 失败: {}", table_name, e)))?
-            .ok_or_else(|| ApiError::biz(format!("表 {} 不存在", table_name)))?;
+    let stmt_table = Statement::from_string(conn.get_database_backend(), sql_table);
+    let table_res = conn
+        .query_one(stmt_table)
+        .await
+        .map_err(|e| ApiError::biz(format!("查询表 {} 失败: {}", table_name, e)))?
+        .ok_or_else(|| ApiError::biz(format!("表 {} 不存在", table_name)))?;
 
-        let comment: String = table_res.try_get("", "table_comment").unwrap_or_default();
+    let comment: String = table_res.try_get("", "table_comment").unwrap_or_default();
 
-        // 2. Build Table Model
-        let table_model =
-            CodegenBuilder::build_table(&req.data_source_config_id, &table_name, &comment);
-        // Insert Table
-        let table_res = table_model.insert(&main_db).await?;
-        let table_id = table_res.id.clone();
-        ids.push(table_id.clone());
+    // 2. Build Table Model
+    Ok(CodegenBuilder::build_table(
+        data_source_config_id,
+        table_name,
+        &comment,
+    ))
+}
 
-        // 3. Get Columns Info
-        let sql_columns = match target_db.get_database_backend() {
-            DbBackend::Postgres => Ok(format!(
-                r#"
+pub async fn build_column_from_db(
+    conn: &DatabaseConnection,
+    table_id: &str,
+    table_name: &str,
+) -> ApiResult<Vec<infra_codegen_column::ActiveModel>> {
+    // 3. Get Columns Info
+    let sql_columns = match conn.get_database_backend() {
+        DbBackend::Postgres => Ok(format!(
+            r#"
                 SELECT a.attname                                         AS column_name,
                        sc.udt_name                                       AS data_type,
                        col_description(a.attrelid, a.attnum)             AS column_comment,
@@ -178,18 +206,17 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
                   AND NOT a.attisdropped
                 ORDER BY a.attnum
                 "#,
-            )),
-            _ => Err(ApiError::biz("不支持的数据库类型")),
-        }?;
+        )),
+        _ => Err(ApiError::biz("不支持的数据库类型")),
+    }?;
 
-        let stmt_columns = Statement::from_string(target_db.get_database_backend(), sql_columns);
-        let columns_res = target_db
-            .query_all(stmt_columns)
-            .await
-            .map_err(|e| ApiError::biz(format!("查询表 {} 字段失败: {}", table_name, e)))?;
-
-        // 4. Build and Insert Columns
-        for col_row in columns_res {
+    let stmt_columns = Statement::from_string(conn.get_database_backend(), sql_columns);
+    let columns_res = conn
+        .query_all(stmt_columns)
+        .await
+        .map_err(|e| ApiError::biz(format!("查询表 {} 字段失败: {}", table_name, e)))?
+        .into_iter()
+        .map(|col_row| {
             let col_name: String = col_row.try_get("", "column_name").unwrap_or_default();
             let data_type: String = col_row.try_get("", "data_type").unwrap_or_default();
             let col_comment: String = col_row.try_get("", "column_comment").unwrap_or_default();
@@ -200,7 +227,7 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
             let is_nullable = is_nullable_str.to_uppercase() == "YES";
             let is_primary = column_key == "PRI";
 
-            let column_model = CodegenBuilder::build_column(
+            CodegenBuilder::build_column(
                 &table_id,
                 &col_name,
                 &data_type,
@@ -208,13 +235,10 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
                 is_nullable,
                 is_primary,
                 ordinal_position,
-            );
-
-            column_model.insert(&main_db).await?;
-        }
-    }
-    target_db.close().await?;
-    Ok(ids)
+            )
+        })
+        .collect();
+    Ok(columns_res)
 }
 
 pub async fn get_codegen_table(table_id: &str) -> ApiResult<Option<infra_codegen_table::Model>> {
@@ -288,19 +312,12 @@ pub async fn update_codegen(req: CodegenUpdateReqVO) -> ApiResult<()> {
 
 pub async fn sync_codegen_from_db(table_id: &str) -> ApiResult<()> {
     let db = database::get_db_async().await;
-    let table = InfraCodegenTable::find_by_id(table_id)
-        .one(&db)
+    let table = InfraCodegenTable::find_by_id_perm_with_tenant(&db, table_id)
         .await?
         .ok_or_else(|| ApiError::biz("表不存在"))?;
 
-    let config = infra_data_source_config_service::validate_data_source_config_exists(
-        &table.data_source_config_id,
-    )
-    .await?;
-    let target_db = Database::connect(&config.url)
-        .await
-        .map_err(|e| ApiError::biz(format!("连接数据库失败: {}", e)))?;
-
+    let target_db =
+        infra_data_source_config_service::get_db_conn(&table.data_source_config_id).await?;
     // Get current DB columns
     let sql_columns = format!(
         r#"

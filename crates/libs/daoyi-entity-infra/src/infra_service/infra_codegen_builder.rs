@@ -125,7 +125,6 @@ impl CodegenBuilder {
         }
 
         infra_codegen_column::ActiveModel {
-            id: Set(id_util::xid()),
             table_id: Set(table_id.to_string()),
             column_name: Set(column_name.to_string()),
             data_type: Set(data_type.to_string()),
