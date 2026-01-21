@@ -11,9 +11,10 @@ use daoyi_common_support::vo::infra_vo::{
     DatabaseTableRespVO,
 };
 use sea_orm::{
-    ActiveModelTrait, ColumnTrait, ConnectionTrait, Database, EntityTrait, PaginatorTrait,
-    QueryFilter, QueryOrder, QueryTrait, Set, Statement,
+    ActiveModelTrait, ColumnTrait, ConnectionTrait, Database, DbBackend, EntityTrait,
+    PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Set, Statement,
 };
+use std::collections::HashSet;
 use std::io::Write;
 
 pub async fn get_database_table_list(
@@ -21,25 +22,25 @@ pub async fn get_database_table_list(
     name: Option<String>,
     comment: Option<String>,
 ) -> ApiResult<Vec<DatabaseTableRespVO>> {
-    let config =
-        infra_data_source_config_service::validate_data_source_config_exists(data_source_config_id)
-            .await?;
-    let db = Database::connect(&config.url)
-        .await
-        .map_err(|e| ApiError::biz(format!("连接数据库失败: {}", e)))?;
-
-    // Basic MySQL implementation for now
-    let sql = r#"
-        SELECT table_name, table_comment
-        FROM information_schema.tables
-        WHERE table_schema = (SELECT DATABASE())
-    "#;
+    let db =
+        infra_data_source_config_service::get_database_conn_by_id(data_source_config_id).await?;
+    let sql = match db.get_database_backend() {
+        DbBackend::Postgres => Ok(r#"
+        SELECT t.table_name           as table_name,
+           obj_description(c.oid) as table_comment
+            FROM information_schema.tables t
+                     JOIN pg_class c ON c.relname = t.table_name
+            WHERE t.table_type = 'BASE TABLE'
+              and t.table_schema = current_schema()
+        "#),
+        _ => Err(ApiError::biz("不支持的数据库类型")),
+    }?;
     let stmt = Statement::from_string(db.get_database_backend(), sql.to_owned());
     let results = db
         .query_all(stmt)
         .await
         .map_err(|e| ApiError::biz(format!("查询表失败: {}", e)))?;
-
+    let exists_tables = get_codegen_table_name_set(data_source_config_id).await?;
     let mut tables: Vec<DatabaseTableRespVO> = results
         .into_iter()
         .map(|res| {
@@ -47,6 +48,7 @@ pub async fn get_database_table_list(
             let comment: String = res.try_get("", "table_comment").unwrap_or_default();
             DatabaseTableRespVO { name, comment }
         })
+        .filter(|table| !exists_tables.contains(&table.name))
         .collect();
 
     // Filter
@@ -56,8 +58,27 @@ pub async fn get_database_table_list(
     if let Some(c) = comment {
         tables.retain(|t| t.comment.contains(&c));
     }
-
+    db.close().await?;
     Ok(tables)
+}
+
+async fn get_codegen_table_name_set(data_source_config_id: &str) -> ApiResult<HashSet<String>> {
+    get_codegen_table_list(data_source_config_id)
+        .await
+        .map(|list| list.into_iter().map(|item| item.table_name).collect())
+}
+
+async fn get_codegen_table_list(
+    data_source_config_id: &str,
+) -> ApiResult<Vec<infra_codegen_table::Model>> {
+    let db = database::get_db_async().await;
+    let list = InfraCodegenTable::find_perm_with_tenant()
+        .await
+        .filter(infra_codegen_table::Column::DataSourceConfigId.eq(data_source_config_id))
+        .order_by_asc(infra_codegen_table::Column::CreateTime)
+        .all(&db)
+        .await?;
+    Ok(list)
 }
 
 pub async fn get_codegen_table_page(
@@ -99,7 +120,7 @@ pub async fn create_codegen_list(req: CodegenCreateListReqVO) -> ApiResult<Vec<S
     let config = infra_data_source_config_service::validate_data_source_config_exists(
         &req.data_source_config_id,
     )
-        .await?;
+    .await?;
     let target_db = Database::connect(&config.url)
         .await
         .map_err(|e| ApiError::biz(format!("连接数据库失败: {}", e)))?;
@@ -259,7 +280,7 @@ pub async fn sync_codegen_from_db(table_id: &str) -> ApiResult<()> {
     let config = infra_data_source_config_service::validate_data_source_config_exists(
         &table.data_source_config_id,
     )
-        .await?;
+    .await?;
     let target_db = Database::connect(&config.url)
         .await
         .map_err(|e| ApiError::biz(format!("连接数据库失败: {}", e)))?;
@@ -400,7 +421,7 @@ async fn get_sub_tables(
         CodegenTemplateTypeEnum::MasterErp,
         CodegenTemplateTypeEnum::MasterInner,
     ]
-        .contains(&table.template_type);
+    .contains(&table.template_type);
 
     if !is_master {
         return Ok((Vec::new(), Vec::new()));

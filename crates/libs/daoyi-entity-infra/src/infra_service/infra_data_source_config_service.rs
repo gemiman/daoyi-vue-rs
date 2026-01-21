@@ -5,7 +5,8 @@ use daoyi_common_support::enumeration::ID_ROOT;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::infra_vo::{DataSourceConfigSaveReqVO, DataSourceConfigUpdateReqVO};
 use sea_orm::{
-    ActiveModelTrait, ConnectOptions, ConnectionTrait, Database, EntityTrait, QueryOrder, Statement,
+    ActiveModelTrait, ConnectOptions, ConnectionTrait, Database, DatabaseConnection, QueryOrder,
+    Statement,
 };
 use std::time::Duration;
 
@@ -37,6 +38,28 @@ pub async fn validate_data_source_config_exists(
         .ok_or_else(|| ApiError::biz("数据源配置不存在"))
 }
 
+pub async fn get_database_conn_by_id(id: &str) -> ApiResult<DatabaseConnection> {
+    let config = validate_data_source_config_exists(id).await?;
+    let mut clean_url = config.url;
+    if clean_url.starts_with("jdbc:") {
+        clean_url = clean_url.replacen("jdbc:", "", 1);
+    }
+    let username = config.username.as_deref().unwrap_or("");
+    let password = config.password_plaintext.as_deref().unwrap_or("");
+    if !username.is_empty() && !clean_url.contains(&format!("{}:{}@", username, password)) {
+        if let Some(scheme_end) = clean_url.find("://") {
+            let (scheme, rest) = clean_url.split_at(scheme_end + 3);
+            clean_url = format!("{}{}:{}@{}", scheme, username, password, rest);
+        }
+    }
+    let mut opts = ConnectOptions::new(clean_url);
+    opts.connect_timeout(Duration::from_secs(5))
+        .sqlx_logging(false)
+        .set_schema_search_path(config.schema_name);
+    let db = Database::connect(opts).await?;
+    Ok(db)
+}
+
 async fn check_connection(
     url: &str,
     username: Option<&str>,
@@ -58,7 +81,8 @@ async fn check_connection(
     }
 
     let mut opts = ConnectOptions::new(clean_url);
-    opts.connect_timeout(Duration::from_secs(5));
+    opts.connect_timeout(Duration::from_secs(5))
+        .sqlx_logging(false);
 
     let db = Database::connect(opts)
         .await
