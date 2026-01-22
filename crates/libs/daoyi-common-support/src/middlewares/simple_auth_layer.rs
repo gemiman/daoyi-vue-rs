@@ -1,12 +1,14 @@
-use crate::auth;
 use crate::configs::AppConfig;
 use crate::context::HttpRequestContext;
 use crate::enumeration::{APP_API, UserTypeEnum};
 use crate::error::ApiError;
+use crate::{auth, id_util};
 use axum::body::Body;
+use axum::extract::ConnectInfo;
 use axum::http::{Request, Response};
 use axum::middleware::Next;
 use axum::response::IntoResponse;
+use std::net::SocketAddr;
 use std::pin::Pin;
 use std::sync::Arc;
 use tokio::sync::OnceCell;
@@ -32,6 +34,20 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
     fn authorize(&mut self, mut request: Request<Body>) -> Self::Future {
         Box::pin(async move {
             let mut context = HttpRequestContext::new();
+            context.tracing_id = Some(Arc::new(id_util::xid()));
+            // 获取连接信息
+            if let Some(ConnectInfo(addr)) = request.extensions().get::<ConnectInfo<SocketAddr>>() {
+                context.user_ip = Some(Arc::new(addr.ip().to_string()));
+            }
+            // 获取 User-Agent
+            let headers = request.headers();
+            let user_agent = headers
+                .get("User-Agent")
+                .and_then(|value| value.to_str().ok())
+                .map(|s| s.to_string())
+                .unwrap_or_default();
+            context.user_agent = Some(Arc::new(user_agent));
+
             // Check if tenant is enabled
             let auth_config = AppConfig::get().auth();
             let url = request.uri().path();

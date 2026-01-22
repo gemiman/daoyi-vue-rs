@@ -1,8 +1,8 @@
 use crate::app::AppState;
 use crate::auth::Principal;
 use crate::configs::ServerConfig;
+use crate::context::HttpRequestContext;
 use crate::error::ApiError;
-use crate::id_util;
 use crate::middlewares::simple_auth_layer;
 use crate::middlewares::trace_layer::LatencyOnResponse;
 use crate::response::RestApiResult;
@@ -76,7 +76,7 @@ impl Server {
             .make_span_with(|request: &Request| {
                 let method = request.method();
                 let path = request.uri().path();
-                let id = id_util::xid();
+                let id = HttpRequestContext::get_tracing_id_as_string();
                 if let Some(principal) = request.extensions().get::<Principal>() {
                     tracing::info_span!("Api request ", id = %id, method = %method, path = %path, user_id = %principal.id, user_name = %principal.name)
                 } else {

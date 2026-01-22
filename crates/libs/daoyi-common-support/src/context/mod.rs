@@ -24,6 +24,13 @@ tokio::task_local! {
 /// - `login_id`: 登录用户 ID | Logged-in user ID
 #[derive(Debug, Clone)]
 pub struct HttpRequestContext {
+    /// 登录 IP | Login IP
+    pub user_ip: Option<Arc<String>>,
+    /// Tracing ID
+    pub tracing_id: Option<Arc<String>>,
+    /// User-Agent
+    pub user_agent: Option<Arc<String>>,
+
     /// 当前请求的 token | Current request's token
     pub token: Option<Arc<String>>,
 
@@ -43,6 +50,9 @@ pub struct HttpRequestContext {
 /// HttpRequestContext 构建器
 #[derive(Debug, Clone, Default)]
 pub struct HttpRequestContextBuilder {
+    user_ip: Option<Arc<String>>,
+    tracing_id: Option<Arc<String>>,
+    user_agent: Option<Arc<String>>,
     token: Option<Arc<String>>,
     tenant_id: Option<Arc<String>>,
     login_id: Option<Arc<String>>,
@@ -54,6 +64,23 @@ impl HttpRequestContextBuilder {
     /// 创建新的构建器
     pub fn new() -> Self {
         Self::default()
+    }
+
+    /// 设置登录 IP
+    pub fn user_ip(mut self, user_ip: impl Into<String>) -> Self {
+        self.user_ip = Some(Arc::new(user_ip.into()));
+        self
+    }
+
+    /// 设置 Tracing ID
+    pub fn tracing_id(mut self, tracing_id: impl Into<String>) -> Self {
+        self.tracing_id = Some(Arc::new(tracing_id.into()));
+        self
+    }
+    /// 设置 User-Agent
+    pub fn user_agent(mut self, user_agent: impl Into<String>) -> Self {
+        self.user_agent = Some(Arc::new(user_agent.into()));
+        self
     }
 
     /// 设置 token
@@ -89,6 +116,9 @@ impl HttpRequestContextBuilder {
     /// 构建 HttpRequestContext
     pub fn build(self) -> HttpRequestContext {
         HttpRequestContext {
+            user_ip: self.user_ip,
+            tracing_id: self.tracing_id,
+            user_agent: self.user_agent,
             token: self.token,
             tenant_id: self.tenant_id,
             login_id: self.login_id,
@@ -103,6 +133,9 @@ impl HttpRequestContext {
     }
     pub fn new() -> Self {
         Self {
+            user_ip: None,
+            tracing_id: None,
+            user_agent: None,
             token: None,
             tenant_id: None,
             login_id: None,
@@ -151,6 +184,25 @@ impl HttpRequestContext {
             .flatten()
     }
 
+    pub fn get_user_ip() -> Option<String> {
+        CONTEXT
+            .try_with(|c| c.user_ip.as_ref().map(|s| s.as_ref().clone()))
+            .ok()
+            .flatten()
+    }
+    pub fn get_tracing_id() -> Option<String> {
+        CONTEXT
+            .try_with(|c| c.tracing_id.as_ref().map(|s| s.as_ref().clone()))
+            .ok()
+            .flatten()
+    }
+    pub fn get_user_agent() -> Option<String> {
+        CONTEXT
+            .try_with(|c| c.user_agent.as_ref().map(|s| s.as_ref().clone()))
+            .ok()
+            .flatten()
+    }
+
     pub fn get_token() -> Option<String> {
         CONTEXT
             .try_with(|c| c.token.as_ref().map(|s| s.as_ref().clone()))
@@ -174,6 +226,17 @@ impl HttpRequestContext {
     }
     pub fn get_login_id_as_string() -> anyhow::Result<String> {
         Self::get_login_id().ok_or_else(|| anyhow::anyhow!("login_id is None"))
+    }
+
+    pub fn get_user_ip_as_string() -> String {
+        Self::get_user_ip().unwrap_or(String::from("0.0.0.0"))
+    }
+
+    pub fn get_tracing_id_as_string() -> String {
+        Self::get_tracing_id().unwrap_or(String::from("0"))
+    }
+    pub fn get_user_agent_as_string() -> String {
+        Self::get_user_agent().unwrap_or(String::from("unknown"))
     }
 
     pub fn get_token_as_string() -> anyhow::Result<String> {

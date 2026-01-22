@@ -1,16 +1,14 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_access_token;
 use daoyi_common_support::configs::AppConfig;
-use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::RedisKey;
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::vo::system_vo::AuthLoginRespVO;
-use daoyi_common_support::{database, id_util, redis_utils};
-use sea_orm::Set;
+use daoyi_common_support::{database, redis_utils};
 use sea_orm::entity::prelude::*;
 use sea_orm::sqlx::types::chrono::Local;
 
-async fn get_refresh_token(token: &str) -> ApiResult<system_access_token::Model> {
+pub async fn get_refresh_token(token: &str) -> ApiResult<system_access_token::Model> {
     let db = database::get_db_async().await;
     let option = SystemAccessToken::find_perm()
         .await
@@ -56,41 +54,4 @@ pub async fn check_access_token(token: &str) -> ApiResult<AuthLoginRespVO> {
         return Err(ApiError::unauthenticated("Token过期"));
     }
     Ok(vo)
-}
-
-use std::sync::Arc;
-
-pub async fn create_token_after_login_success(
-    tenant_id: &str,
-    login_id: &str,
-) -> ApiResult<AuthLoginRespVO> {
-    let access_token = loop {
-        let token = id_util::xid();
-        if let Err(_) = get_access_token(&token).await {
-            break token;
-        }
-    };
-    let refresh_token = loop {
-        let token = id_util::xid();
-        if let Err(_) = get_refresh_token(&token).await {
-            break token;
-        }
-    };
-    let mut context = HttpRequestContext::new();
-    context.token = Some(Arc::new(access_token.clone()));
-    context.login_id = Some(Arc::new(String::from(login_id)));
-    context.tenant_id = Some(Arc::new(String::from(tenant_id)));
-
-    HttpRequestContext::scope(context, || async move {
-        let token_expiration = AppConfig::get().auth().token_expiration();
-        let db = database::get_db_async().await;
-        let mut active_model = system_access_token::ActiveModel::new();
-        active_model.user_id = Set(String::from(login_id));
-        active_model.access_token = Set(access_token);
-        active_model.refresh_token = Set(refresh_token);
-        active_model.expires_time = Set(Local::now().naive_local() + token_expiration);
-        let model = active_model.insert(&db).await?;
-        Ok(model.into())
-    })
-    .await
 }
