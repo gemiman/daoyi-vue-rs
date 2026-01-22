@@ -19,6 +19,69 @@ pub const APP_API: &str = "/app-api";
     Copy,
     PartialEq,
     Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum LoginResultEnum {
+    //     SUCCESS(0), // 成功
+    #[sea_orm(string_value = "0")]
+    Success,
+    //     BAD_CREDENTIALS(10), // 账号或密码不正确
+    #[sea_orm(string_value = "10")]
+    BadCredentials,
+    //     USER_DISABLED(20), // 用户被禁用
+    #[sea_orm(string_value = "20")]
+    UserDisabled,
+    //     CAPTCHA_NOT_FOUND(30), // 图片验证码不存在
+    #[sea_orm(string_value = "30")]
+    CaptchaNotFound,
+    //     CAPTCHA_CODE_ERROR(31), // 图片验证码不正确
+    #[sea_orm(string_value = "31")]
+    CaptchaCodeError,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum LoginLogTypeEnum {
+    //    LOGIN_USERNAME(100), // 使用账号登录
+    #[sea_orm(string_value = "100")]
+    LoginUsername,
+    //     LOGIN_SOCIAL(101), // 使用社交登录
+    #[sea_orm(string_value = "101")]
+    LoginSocial,
+    //     LOGIN_MOBILE(103), // 使用手机登陆
+    #[sea_orm(string_value = "103")]
+    LoginMobile,
+    //     LOGIN_SMS(104), // 使用短信登陆
+    #[sea_orm(string_value = "104")]
+    LoginSms,
+    //     LOGOUT_SELF(200),  // 自己主动登出
+    #[sea_orm(string_value = "200")]
+    LogoutSelf,
+    //     LOGOUT_DELETE(202), // 强制退出
+    #[sea_orm(string_value = "202")]
+    LogoutDelete,
+}
+
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
     Serialize,
     Deserialize,
     EnumIter,

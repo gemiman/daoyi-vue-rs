@@ -20,9 +20,9 @@ CREATE TABLE system.system_users
     post_ids    varchar(255)[] NULL     DEFAULT NULL,
     email       varchar(128)   NULL     DEFAULT '',
     mobile      varchar(128)   NULL     DEFAULT '',
-    sex    varchar(32) NULL     DEFAULT '0',
+    sex         varchar(32)    NULL     DEFAULT '0',
     avatar      varchar(512)   NULL     DEFAULT '',
-    status varchar(32) NOT NULL DEFAULT '0',
+    status      varchar(32)    NOT NULL DEFAULT '0',
     login_ip    varchar(128)   NULL     DEFAULT '',
     login_date  timestamp      NULL     DEFAULT NULL,
     creator     varchar(32)    NULL     DEFAULT '',
@@ -71,17 +71,17 @@ commit;
 DROP TABLE IF EXISTS system.system_access_token;
 CREATE TABLE system.system_access_token
 (
-    id           varchar(32)  NOT NULL primary key,
-    user_id      varchar(32)  NOT NULL,
-    access_token varchar(255) NOT NULL,
+    id            varchar(32)  NOT NULL primary key,
+    user_id       varchar(32)  NOT NULL,
+    access_token  varchar(255) NOT NULL,
     refresh_token varchar(255) NOT NULL,
-    expires_time timestamp    NOT NULL,
-    creator      varchar(32)  NULL     DEFAULT '',
-    create_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updater      varchar(32)  NULL     DEFAULT '',
-    update_time  timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted      boolean      NOT NULL DEFAULT false,
-    tenant_id    varchar(32)  NOT NULL DEFAULT '0'
+    expires_time  timestamp    NOT NULL,
+    creator       varchar(32)  NULL     DEFAULT '',
+    create_time   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater       varchar(32)  NULL     DEFAULT '',
+    update_time   timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted       boolean      NOT NULL DEFAULT false,
+    tenant_id     varchar(32)  NOT NULL DEFAULT '0'
 );
 
 CREATE INDEX idx_system_access_token_01 ON system.system_access_token (access_token);
@@ -112,7 +112,7 @@ CREATE TABLE system.system_tenant
     contact_user_id varchar(32)    NULL     DEFAULT NULL,
     contact_name    varchar(128)   NOT NULL,
     contact_mobile  varchar(128)   NULL     DEFAULT NULL,
-    status varchar(32) NOT NULL DEFAULT '0',
+    status          varchar(32)    NOT NULL DEFAULT '0',
     websites        varchar(256)[] NULL     DEFAULT '{}',
     package_id      varchar(32)    NOT NULL,
     expire_time     timestamp      NOT NULL,
@@ -161,7 +161,7 @@ CREATE TABLE system.system_dict_data
     label       varchar(100) NOT NULL DEFAULT '',
     value       varchar(100) NOT NULL DEFAULT '',
     dict_type   varchar(100) NOT NULL DEFAULT '',
-    status varchar(32) NOT NULL DEFAULT '0',
+    status      varchar(32)  NOT NULL DEFAULT '0',
     color_type  varchar(100) NULL     DEFAULT '',
     css_class   varchar(100) NULL     DEFAULT '',
     remark      varchar(500) NULL     DEFAULT NULL,
@@ -200,7 +200,7 @@ CREATE TABLE system.system_dict_type
     id           varchar(32)  NOT NULL primary key,
     name         varchar(100) NOT NULL DEFAULT '',
     type         varchar(100) NOT NULL DEFAULT '',
-    status varchar(32) NOT NULL DEFAULT '0',
+    status       varchar(32)  NOT NULL DEFAULT '0',
     remark       varchar(500) NULL     DEFAULT NULL,
     deleted_time timestamp    NULL     DEFAULT NULL,
     creator      varchar(32)  NULL     DEFAULT '',
@@ -262,21 +262,21 @@ COMMENT ON TABLE system.system_user_role IS '用户和角色关联表';
 DROP TABLE IF EXISTS system.system_role;
 CREATE TABLE system.system_role
 (
-    id          varchar(32)  NOT NULL primary key,
-    name        varchar(30)  NOT NULL,
-    code        varchar(100) NOT NULL,
-    sort        int4         NOT NULL,
-    data_scope  varchar(32)  NOT NULL DEFAULT '1',
+    id                  varchar(32)   NOT NULL primary key,
+    name                varchar(30)   NOT NULL,
+    code                varchar(100)  NOT NULL,
+    sort                int4          NOT NULL,
+    data_scope          varchar(32)   NOT NULL DEFAULT '1',
     data_scope_dept_ids varchar(32)[] NOT NULL DEFAULT '{}',
-    status      varchar(32)  NOT NULL,
-    type        varchar(32)  NOT NULL,
-    remark      varchar(500) NULL     DEFAULT NULL,
-    creator     varchar(64)  NULL     DEFAULT '',
-    create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updater     varchar(64)  NULL     DEFAULT '',
-    update_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted     boolean      NOT NULL DEFAULT false,
-    tenant_id   varchar(32)  NOT NULL DEFAULT '0'
+    status              varchar(32)   NOT NULL,
+    type                varchar(32)   NOT NULL,
+    remark              varchar(500)  NULL     DEFAULT NULL,
+    creator             varchar(64)   NULL     DEFAULT '',
+    create_time         timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater             varchar(64)   NULL     DEFAULT '',
+    update_time         timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted             boolean       NOT NULL DEFAULT false,
+    tenant_id           varchar(32)   NOT NULL DEFAULT '0'
 );
 
 COMMENT ON COLUMN system.system_role.id IS '角色ID';
@@ -335,14 +335,14 @@ CREATE TABLE system.system_menu
     id             varchar(32)  NOT NULL primary key,
     name           varchar(50)  NOT NULL,
     permission     varchar(100) NOT NULL DEFAULT '',
-    type   varchar(32) NOT NULL,
+    type           varchar(32)  NOT NULL,
     sort           int4         NOT NULL DEFAULT 0,
     parent_id      varchar(32)  NOT NULL DEFAULT '0',
     path           varchar(200) NULL     DEFAULT '',
     icon           varchar(100) NULL     DEFAULT '#',
     component      varchar(255) NULL     DEFAULT NULL,
     component_name varchar(255) NULL     DEFAULT NULL,
-    status varchar(32) NOT NULL DEFAULT '0',
+    status         varchar(32)  NOT NULL DEFAULT '0',
     visible        bool         NOT NULL DEFAULT true,
     keep_alive     bool         NOT NULL DEFAULT true,
     always_show    bool         NOT NULL DEFAULT true,
@@ -387,7 +387,7 @@ CREATE TABLE system.system_tenant_package
 (
     id          varchar(32)   NOT NULL primary key,
     name        varchar(30)   NOT NULL,
-    status varchar(32) NOT NULL DEFAULT '0',
+    status      varchar(32)   NOT NULL DEFAULT '0',
     remark      varchar(256)  NULL     DEFAULT '',
     menu_ids    varchar(32)[] NOT NULL DEFAULT '{}',
     creator     varchar(64)   NULL     DEFAULT '',
@@ -454,7 +454,7 @@ CREATE TABLE system.system_dept
     leader_user_id varchar(32) NULL     DEFAULT NULL,
     phone          varchar(32) NULL     DEFAULT NULL,
     email          varchar(50) NULL     DEFAULT NULL,
-    status varchar(32) NOT NULL,
+    status         varchar(32) NOT NULL,
     creator        varchar(64) NULL     DEFAULT '',
     create_time    timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updater        varchar(64) NULL     DEFAULT '',
@@ -490,7 +490,7 @@ CREATE TABLE system.system_post
     code        varchar(64)  NOT NULL,
     name        varchar(50)  NOT NULL,
     sort        int4         NOT NULL,
-    status varchar(32) NOT NULL,
+    status      varchar(32)  NOT NULL,
     remark      varchar(500) NULL     DEFAULT NULL,
     creator     varchar(64)  NULL     DEFAULT '',
     create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -524,8 +524,8 @@ CREATE TABLE system.system_notice
     id          varchar(32) NOT NULL primary key,
     title       varchar(50) NOT NULL,
     content     text        NOT NULL,
-    type   varchar(32) NOT NULL,
-    status varchar(32) NOT NULL DEFAULT '0',
+    type        varchar(32) NOT NULL,
+    status      varchar(32) NOT NULL DEFAULT '0',
     creator     varchar(64) NULL     DEFAULT '',
     create_time timestamp   NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updater     varchar(64) NULL     DEFAULT '',
@@ -559,9 +559,9 @@ CREATE TABLE system.system_notify_template
     code        varchar(64)    NOT NULL,
     nickname    varchar(255)   NOT NULL,
     content     varchar(1024)  NOT NULL,
-    type   varchar(32) NOT NULL,
+    type        varchar(32)    NOT NULL,
     params      varchar(255)[] NULL     DEFAULT '{}',
-    status varchar(32) NOT NULL DEFAULT '0',
+    status      varchar(32)    NOT NULL DEFAULT '0',
     remark      varchar(255)   NULL     DEFAULT NULL,
     creator     varchar(64)    NULL     DEFAULT '',
     create_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -597,12 +597,12 @@ CREATE TABLE system.system_notify_message
 (
     id                varchar(32)   NOT NULL primary key,
     user_id           varchar(32)   NOT NULL,
-    user_type     varchar(32) NOT NULL,
+    user_type         varchar(32)   NOT NULL,
     template_id       varchar(32)   NOT NULL,
     template_code     varchar(64)   NOT NULL,
     template_nickname varchar(63)   NOT NULL,
     template_content  varchar(1024) NOT NULL,
-    template_type varchar(32) NOT NULL,
+    template_type     varchar(32)   NOT NULL,
     template_params   jsonb         NOT NULL,
     read_status       bool          NOT NULL,
     read_time         timestamp     NULL     DEFAULT NULL,
@@ -687,7 +687,7 @@ CREATE TABLE system.system_mail_template
     title       varchar(255)   NOT NULL,
     content     varchar(10240) NOT NULL,
     params      varchar(255)[] NOT NULL,
-    status varchar(32) NOT NULL,
+    status      varchar(32)    NOT NULL,
     remark      varchar(255)   NULL     DEFAULT NULL,
     creator     varchar(32)    NULL     DEFAULT '',
     create_time timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -724,10 +724,10 @@ CREATE TABLE system.system_mail_log
 (
     id                varchar(32)    NOT NULL primary key,
     user_id           varchar(32)    NULL     DEFAULT NULL,
-    user_type   varchar(32)    NULL     DEFAULT NULL,
-    to_mails    varchar(255)[] NOT NULL DEFAULT '{}',
-    cc_mails    varchar(255)[] NULL     DEFAULT '{}',
-    bcc_mails   varchar(255)[] NULL     DEFAULT '{}',
+    user_type         varchar(32)    NULL     DEFAULT NULL,
+    to_mails          varchar(255)[] NOT NULL DEFAULT '{}',
+    cc_mails          varchar(255)[] NULL     DEFAULT '{}',
+    bcc_mails         varchar(255)[] NULL     DEFAULT '{}',
     account_id        varchar(32)    NOT NULL,
     from_mail         varchar(255)   NOT NULL,
     template_id       varchar(32)    NOT NULL,
@@ -736,7 +736,7 @@ CREATE TABLE system.system_mail_log
     template_title    varchar(255)   NOT NULL,
     template_content  varchar(10240) NOT NULL,
     template_params   jsonb          NOT NULL,
-    send_status varchar(10)    NOT NULL DEFAULT '0',
+    send_status       varchar(10)    NOT NULL DEFAULT '0',
     send_time         timestamp      NULL     DEFAULT NULL,
     send_message_id   varchar(255)   NULL     DEFAULT NULL,
     send_exception    varchar(4096)  NULL     DEFAULT NULL,
@@ -873,7 +873,7 @@ CREATE TABLE system.system_sms_log
     mobile           varchar(11)  NOT NULL,
     user_id          varchar(32)  NULL     DEFAULT NULL,
     user_type        varchar(32)  NULL     DEFAULT NULL,
-    send_status smallint NOT NULL DEFAULT 0,
+    send_status      smallint     NOT NULL DEFAULT 0,
     send_time        timestamp    NULL     DEFAULT NULL,
     api_send_code    varchar(63)  NULL     DEFAULT NULL,
     api_send_msg     varchar(255) NULL     DEFAULT NULL,
@@ -927,23 +927,23 @@ COMMENT ON TABLE system.system_sms_log IS '短信日志';
 DROP TABLE IF EXISTS system.system_sms_template;
 CREATE TABLE system.system_sms_template
 (
-    id              varchar(32)  NOT NULL primary key,
-    type            varchar(32)  NOT NULL,
-    status          varchar(32)  NOT NULL,
-    code            varchar(63)  NOT NULL,
-    name            varchar(63)  NOT NULL,
-    content         varchar(255) NOT NULL,
-    params varchar(255)[] NOT NULL,
-    remark          varchar(255) NULL     DEFAULT NULL,
-    api_template_id varchar(63)  NOT NULL,
-    channel_id      varchar(32)  NOT NULL,
-    channel_code    varchar(63)  NOT NULL,
-    creator         varchar(32)  NULL     DEFAULT '',
-    create_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updater         varchar(32)  NULL     DEFAULT '',
-    update_time     timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    deleted         boolean      NOT NULL DEFAULT false,
-    tenant_id       varchar(32)  NOT NULL DEFAULT '0'
+    id              varchar(32)    NOT NULL primary key,
+    type            varchar(32)    NOT NULL,
+    status          varchar(32)    NOT NULL,
+    code            varchar(63)    NOT NULL,
+    name            varchar(63)    NOT NULL,
+    content         varchar(255)   NOT NULL,
+    params          varchar(255)[] NOT NULL,
+    remark          varchar(255)   NULL     DEFAULT NULL,
+    api_template_id varchar(63)    NOT NULL,
+    channel_id      varchar(32)    NOT NULL,
+    channel_code    varchar(63)    NOT NULL,
+    creator         varchar(32)    NULL     DEFAULT '',
+    create_time     timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater         varchar(32)    NULL     DEFAULT '',
+    update_time     timestamp      NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted         boolean        NOT NULL DEFAULT false,
+    tenant_id       varchar(32)    NOT NULL DEFAULT '0'
 );
 
 COMMENT ON COLUMN system.system_sms_template.id IS '编号';
@@ -964,3 +964,95 @@ COMMENT ON COLUMN system.system_sms_template.update_time IS '更新时间';
 COMMENT ON COLUMN system.system_sms_template.deleted IS '是否删除';
 COMMENT ON COLUMN system.system_sms_template.tenant_id IS '租户编号';
 COMMENT ON TABLE system.system_sms_template IS '短信模板';
+
+
+-- ----------------------------
+-- Table structure for system.system_operate_log
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_operate_log;
+CREATE TABLE system.system_operate_log
+(
+    id             varchar(32)   NOT NULL primary key,
+    trace_id       varchar(64)   NOT NULL DEFAULT '',
+    user_id        varchar(32)   NOT NULL,
+    user_type      varchar(32)   NOT NULL DEFAULT '0',
+    type           varchar(50)   NOT NULL,
+    sub_type       varchar(50)   NOT NULL,
+    biz_id         varchar(32)   NOT NULL,
+    action         varchar(2000) NOT NULL DEFAULT '',
+    success        bool          NOT NULL DEFAULT true,
+    extra          jsonb         NOT NULL,
+    request_method varchar(32)   NULL     DEFAULT '',
+    request_url    varchar(255)  NULL     DEFAULT '',
+    user_ip        varchar(50)   NULL     DEFAULT NULL,
+    user_agent     varchar(512)  NULL     DEFAULT NULL,
+    creator        varchar(32)   NULL     DEFAULT '',
+    create_time    timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater        varchar(32)   NULL     DEFAULT '',
+    update_time    timestamp     NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted        boolean       NOT NULL DEFAULT false,
+    tenant_id      varchar(32)   NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_operate_log.id IS '日志主键';
+COMMENT ON COLUMN system.system_operate_log.trace_id IS '链路追踪编号';
+COMMENT ON COLUMN system.system_operate_log.user_id IS '用户编号';
+COMMENT ON COLUMN system.system_operate_log.user_type IS '用户类型';
+COMMENT ON COLUMN system.system_operate_log.type IS '操作模块类型';
+COMMENT ON COLUMN system.system_operate_log.sub_type IS '操作名';
+COMMENT ON COLUMN system.system_operate_log.biz_id IS '操作数据模块编号';
+COMMENT ON COLUMN system.system_operate_log.action IS '操作内容';
+COMMENT ON COLUMN system.system_operate_log.success IS '操作结果';
+COMMENT ON COLUMN system.system_operate_log.extra IS '拓展字段';
+COMMENT ON COLUMN system.system_operate_log.request_method IS '请求方法名';
+COMMENT ON COLUMN system.system_operate_log.request_url IS '请求地址';
+COMMENT ON COLUMN system.system_operate_log.user_ip IS '用户 IP';
+COMMENT ON COLUMN system.system_operate_log.user_agent IS '浏览器 UA';
+COMMENT ON COLUMN system.system_operate_log.creator IS '创建者';
+COMMENT ON COLUMN system.system_operate_log.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_operate_log.updater IS '更新者';
+COMMENT ON COLUMN system.system_operate_log.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_operate_log.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_operate_log.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_operate_log IS '操作日志记录 V2 版本';
+
+
+-- ----------------------------
+-- Table structure for system.system_login_log
+-- ----------------------------
+DROP TABLE IF EXISTS system.system_login_log;
+CREATE TABLE system.system_login_log
+(
+    id          varchar(32)  NOT NULL primary key,
+    log_type    varchar(32)  NOT NULL,
+    trace_id    varchar(64)  NOT NULL DEFAULT '',
+    user_id     varchar(32)  NOT NULL DEFAULT '0',
+    user_type   varchar(32)  NOT NULL DEFAULT '0',
+    username    varchar(50)  NOT NULL DEFAULT '',
+    result      varchar(32)  NOT NULL,
+    user_ip     varchar(50)  NOT NULL,
+    user_agent  varchar(512) NOT NULL,
+    creator     varchar(32)  NULL     DEFAULT '',
+    create_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updater     varchar(32)  NULL     DEFAULT '',
+    update_time timestamp    NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    deleted     boolean      NOT NULL DEFAULT false,
+    tenant_id   varchar(32)  NOT NULL DEFAULT '0'
+);
+
+COMMENT ON COLUMN system.system_login_log.id IS '访问ID';
+COMMENT ON COLUMN system.system_login_log.log_type IS '日志类型';
+COMMENT ON COLUMN system.system_login_log.trace_id IS '链路追踪编号';
+COMMENT ON COLUMN system.system_login_log.user_id IS '用户编号';
+COMMENT ON COLUMN system.system_login_log.user_type IS '用户类型';
+COMMENT ON COLUMN system.system_login_log.username IS '用户账号';
+COMMENT ON COLUMN system.system_login_log.result IS '登陆结果';
+COMMENT ON COLUMN system.system_login_log.user_ip IS '用户 IP';
+COMMENT ON COLUMN system.system_login_log.user_agent IS '浏览器 UA';
+COMMENT ON COLUMN system.system_login_log.creator IS '创建者';
+COMMENT ON COLUMN system.system_login_log.create_time IS '创建时间';
+COMMENT ON COLUMN system.system_login_log.updater IS '更新者';
+COMMENT ON COLUMN system.system_login_log.update_time IS '更新时间';
+COMMENT ON COLUMN system.system_login_log.deleted IS '是否删除';
+COMMENT ON COLUMN system.system_login_log.tenant_id IS '租户编号';
+COMMENT ON TABLE system.system_login_log IS '系统访问记录';

@@ -1,3 +1,5 @@
+pub mod login_log_vo;
+
 use crate::enumeration::{
     CommonStatusEnum, DataScopeEnum, MailSendStatusEnum, MenuTypeEnum, NoticeTypeEnum,
     NotifyTemplateTypeEnum, RoleTypeEnum, SexEnum, SmsChannelEnum, SmsTemplateTypeEnum,
