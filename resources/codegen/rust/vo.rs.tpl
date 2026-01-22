@@ -13,7 +13,7 @@ pub struct {{ table.businessName | pascal_case }}SaveReqVO {
     {% for col in columns %}
     {% if col.createOperation and col.columnName != "id" %}
     #[validate(required)]
-    pub {{ col.javaField }}: {{ col.javaType }},
+    pub {{ col.javaField | snake_case }}: {{ col.javaType }},
     {% endif %}
     {% endfor %}
 }
@@ -25,7 +25,7 @@ pub struct {{ table.businessName | pascal_case }}UpdateReqVo {
     pub id: String,
     {% for col in columns %}
     {% if col.updateOperation and col.columnName != "id" %}
-    pub {{ col.javaField }}: {{ col.javaType }},
+    pub {{ col.javaField | snake_case }}: {{ col.javaType }},
     {% endif %}
     {% endfor %}
 }
@@ -36,7 +36,7 @@ pub struct {{ table.businessName | pascal_case }}RespVo {
     pub id: String,
     {% for col in columns %}
     {% if col.columnName != "id" %}
-    pub {{ col.javaField }}: {{ col.javaType }},
+    pub {{ col.javaField | snake_case }}: {{ col.javaType }},
     {% endif %}
     {% endfor %}
 }
@@ -55,7 +55,7 @@ pub struct {{ table.businessName | pascal_case }}PageReqVO {
     pub pagination: PageParam,
     {% for col in columns %}
     {% if col.listOperation %}
-    pub {{ col.javaField }}: Option<{{ col.javaType }}>,
+    pub {{ col.javaField | snake_case }}: Option<{{ col.javaType }}>,
     {% endif %}
     {% endfor %}
 }

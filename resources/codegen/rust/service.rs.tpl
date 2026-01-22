@@ -67,7 +67,7 @@ pub async fn get_{{ table.businessName | snake_case }}_page(params: &{{ table.bu
         .await
         {% for col in columns %}
         {% if col.listOperation %}
-        .apply_if(params.{{ col.javaField }}.as_ref(), |query, val| {
+        .apply_if(params.{{ col.javaField | snake_case }}.as_ref(), |query, val| {
             query.filter({{ table.className | snake_case }}::Column::{{ col.javaField | pascal_case }}.eq(val))
         })
         {% endif %}

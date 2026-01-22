@@ -21,7 +21,7 @@ pub struct Model {
     {% for col in columns %}
     {% if col.columnName != "id" %}
     /// {{ col.columnComment }}
-    pub {{ col.javaField }}: {{ col.javaType }},
+    pub {{ col.javaField | snake_case }}: {{ col.javaType }},
     {% endif %}
     {% endfor %}
 }
@@ -44,7 +44,7 @@ impl From<Model> for {{ table.businessName | pascal_case }}RespVo {
             id: value.id,
             {% for col in columns %}
             {% if col.columnName != "id" %}
-            {{ col.javaField }}: value.{{ col.javaField }},
+            {{ col.javaField | snake_case }}: value.{{ col.javaField | snake_case }},
             {% endif %}
             {% endfor %}
         }
@@ -56,7 +56,7 @@ impl From<{{ table.businessName | pascal_case }}SaveReqVO> for ActiveModel {
         Self {
             {% for col in columns %}
             {% if col.createOperation and col.columnName != "id" %}
-            {{ col.javaField }}: Set(value.{{ col.javaField }}),
+            {{ col.javaField | snake_case }}: Set(value.{{ col.javaField | snake_case }}),
             {% endif %}
             {% endfor %}
             ..Default::default()
@@ -70,7 +70,7 @@ impl From<{{ table.businessName | pascal_case }}UpdateReqVo> for ActiveModel {
             id: Unchanged(value.id),
             {% for col in columns %}
             {% if col.updateOperation and col.columnName != "id" %}
-            {{ col.javaField }}: Set(value.{{ col.javaField }}),
+            {{ col.javaField | snake_case }}: Set(value.{{ col.javaField | snake_case }}),
             {% endif %}
             {% endfor %}
             ..Default::default()
