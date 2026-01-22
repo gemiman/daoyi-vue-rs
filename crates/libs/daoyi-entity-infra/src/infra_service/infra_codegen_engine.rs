@@ -105,12 +105,12 @@ impl CodegenEngine {
         context.insert("primary_key_is_auto", &primary_key_is_auto);
 
         // Generate UUIDs for SQL
-        context.insert("menu_id", &id_util::xid());
-        context.insert("button_query_id", &id_util::xid());
-        context.insert("button_create_id", &id_util::xid());
-        context.insert("button_update_id", &id_util::xid());
-        context.insert("button_delete_id", &id_util::xid());
-        context.insert("button_export_id", &id_util::xid());
+        context.insert("menu_id", &id_util::next_string());
+        context.insert("button_query_id", &id_util::next_string());
+        context.insert("button_create_id", &id_util::next_string());
+        context.insert("button_update_id", &id_util::next_string());
+        context.insert("button_delete_id", &id_util::next_string());
+        context.insert("button_export_id", &id_util::next_string());
 
         // Check types for imports
         let has_decimal = columns.iter().any(|c| c.java_type == "Decimal");

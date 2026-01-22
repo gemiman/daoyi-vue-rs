@@ -14,7 +14,7 @@ use daoyi_macros::transactional;
 use sea_orm::prelude::Expr;
 use sea_orm::{
     ActiveModelTrait, ColumnTrait, ConnectionTrait, DatabaseConnection, DbBackend, EntityTrait,
-    PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Set, Statement,
+    PaginatorTrait, QueryFilter, QueryOrder, QueryTrait, Statement,
 };
 use std::collections::{HashMap, HashSet};
 use std::io::Write;
@@ -263,51 +263,16 @@ pub async fn get_codegen_columns(table_id: &str) -> ApiResult<Vec<infra_codegen_
 
 pub async fn update_codegen(req: CodegenUpdateReqVO) -> ApiResult<()> {
     let db = database::get_db_async().await;
-
+    InfraCodegenTable::find_by_id_perm_with_tenant(&db, &req.table.id)
+        .await?
+        .ok_or_else(|| ApiError::biz("表不存在"))?;
     // 1. Update Table
-    let table_id = req.table.id.clone();
-    let mut table_model: infra_codegen_table::ActiveModel =
-        InfraCodegenTable::find_by_id(&table_id)
-            .one(&db)
-            .await?
-            .ok_or_else(|| ApiError::biz("表不存在"))?
-            .into();
-
-    table_model.table_name = Set(req.table.table_name);
-    table_model.table_comment = Set(req.table.table_comment);
-    table_model.class_name = Set(req.table.class_name);
-    table_model.module_name = Set(req.table.module_name);
-    table_model.business_name = Set(req.table.business_name);
-    table_model.scene = Set(req.table.scene);
-    table_model.template_type = Set(req.table.template_type);
-    table_model.master_table_id = Set(req.table.master_table_id);
-    table_model.sub_join_column_id = Set(req.table.sub_join_column_id);
-    table_model.sub_join_many = Set(req.table.sub_join_many);
-    table_model.tree_parent_column_id = Set(req.table.tree_parent_column_id);
-    table_model.tree_name_column_id = Set(req.table.tree_name_column_id);
+    let table_model: infra_codegen_table::ActiveModel = req.table.into();
     table_model.update(&db).await?;
 
     // 2. Update Columns
     for col_req in req.columns {
-        let mut col_model: infra_codegen_column::ActiveModel =
-            InfraCodegenColumn::find_by_id(&col_req.id)
-                .one(&db)
-                .await?
-                .ok_or_else(|| ApiError::biz("字段不存在"))?
-                .into();
-
-        col_model.column_comment = Set(col_req.column_comment);
-        col_model.java_type = Set(col_req.java_type);
-        col_model.java_field = Set(col_req.java_field);
-        col_model.dict_type = Set(col_req.dict_type);
-        col_model.example = Set(col_req.example);
-        col_model.create_operation = Set(col_req.create_operation);
-        col_model.update_operation = Set(col_req.update_operation);
-        col_model.list_operation = Set(col_req.list_operation);
-        col_model.list_operation_condition = Set(col_req.list_operation_condition);
-        col_model.list_operation_result = Set(col_req.list_operation_result);
-        col_model.html_type = Set(col_req.html_type);
-
+        let col_model: infra_codegen_column::ActiveModel = col_req.into();
         col_model.update(&db).await?;
     }
 

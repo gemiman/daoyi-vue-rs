@@ -1,21 +1,15 @@
 use daoyi_common_support::enumeration::{
     CodegenFrontTypeEnum, CodegenSceneEnum, CodegenTemplateTypeEnum,
 };
-use daoyi_common_support::vo::infra_vo::CodegenTableRespVO;
+use daoyi_common_support::vo::infra_vo::{CodegenTableRespVO, CodegenTableSaveReqVO};
 use daoyi_macros::{DaoyiActiveModelBehavior, daoyi_model};
 use sea_orm::entity::prelude::*;
+use sea_orm::{Set, Unchanged};
 use serde::{Deserialize, Serialize};
 
 #[daoyi_model]
 #[derive(
-    Clone,
-    Debug,
-    PartialEq,
-    DeriveEntityModel,
-    Eq,
-    Serialize,
-    Deserialize,
-    DaoyiActiveModelBehavior,
+    Clone, Debug, PartialEq, DeriveEntityModel, Eq, Serialize, Deserialize, DaoyiActiveModelBehavior,
 )]
 #[sea_orm(schema_name = "infra", table_name = "infra_codegen_table")]
 #[serde(rename_all = "camelCase")]
@@ -69,6 +63,32 @@ impl From<Model> for CodegenTableRespVO {
             front_type: value.front_type,
             sub_join_many: value.sub_join_many,
             tree_parent_column_id: value.tree_parent_column_id,
+        }
+    }
+}
+
+impl From<CodegenTableSaveReqVO> for ActiveModel {
+    fn from(value: CodegenTableSaveReqVO) -> Self {
+        Self {
+            id: Unchanged(value.id),
+            scene: Set(value.scene),
+            table_name: Set(value.table_name),
+            table_comment: Set(value.table_comment),
+            remark: Set(value.remark),
+            module_name: Set(value.module_name),
+            business_name: Set(value.business_name),
+            class_name: Set(value.class_name),
+            class_comment: Set(value.class_comment),
+            author: Set(value.author),
+            template_type: Set(value.template_type),
+            front_type: Set(value.front_type),
+            parent_menu_id: Set(value.parent_menu_id),
+            master_table_id: Set(value.master_table_id),
+            sub_join_column_id: Set(value.sub_join_column_id),
+            sub_join_many: Set(value.sub_join_many),
+            tree_parent_column_id: Set(value.tree_parent_column_id),
+            tree_name_column_id: Set(value.tree_name_column_id),
+            ..Default::default()
         }
     }
 }
