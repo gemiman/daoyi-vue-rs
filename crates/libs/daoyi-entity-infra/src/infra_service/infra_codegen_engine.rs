@@ -32,44 +32,60 @@ impl CodegenEngine {
         });
 
         // --- 0. VO Template ---
-        let vo_tpl = fs::read_to_string("resources/codegen/rust/vo.rs")
-            .expect("Failed to read vo.rs template");
+
+        let vo_tpl = fs::read_to_string("resources/codegen/rust/vo.rs.tpl")
+            .expect("Failed to read vo.rs.tpl template");
+
         tera.add_raw_template("vo.rs", &vo_tpl).unwrap();
 
         // --- 1. Entity Template ---
-        let entity_tpl = fs::read_to_string("resources/codegen/rust/entity.rs")
-            .expect("Failed to read entity.rs template");
+
+        let entity_tpl = fs::read_to_string("resources/codegen/rust/entity.rs.tpl")
+            .expect("Failed to read entity.rs.tpl template");
+
         tera.add_raw_template("entity.rs", &entity_tpl).unwrap();
 
         // --- 2. Service Template ---
-        let service_tpl = fs::read_to_string("resources/codegen/rust/service.rs")
-            .expect("Failed to read service.rs template");
+
+        let service_tpl = fs::read_to_string("resources/codegen/rust/service.rs.tpl")
+            .expect("Failed to read service.rs.tpl template");
+
         tera.add_raw_template("service.rs", &service_tpl).unwrap();
 
         // --- 3. Controller Template ---
-        let controller_tpl = fs::read_to_string("resources/codegen/rust/controller.rs")
-            .expect("Failed to read controller.rs template");
+
+        let controller_tpl = fs::read_to_string("resources/codegen/rust/controller.rs.tpl")
+            .expect("Failed to read controller.rs.tpl template");
+
         tera.add_raw_template("controller.rs", &controller_tpl)
             .unwrap();
 
         // --- 4. Vue Index Template ---
-        let vue_index_tpl = fs::read_to_string("resources/codegen/vue3/index.vue")
-            .expect("Failed to read index.vue template");
+
+        let vue_index_tpl = fs::read_to_string("resources/codegen/vue3/index.vue.tpl")
+            .expect("Failed to read index.vue.tpl template");
+
         tera.add_raw_template("index.vue", &vue_index_tpl).unwrap();
 
         // --- 5. Vue Form Template ---
-        let vue_form_tpl = fs::read_to_string("resources/codegen/vue3/form.vue")
-            .expect("Failed to read form.vue template");
+
+        let vue_form_tpl = fs::read_to_string("resources/codegen/vue3/form.vue.tpl")
+            .expect("Failed to read form.vue.tpl template");
+
         tera.add_raw_template("form.vue", &vue_form_tpl).unwrap();
 
         // --- 6. SQL Template ---
-        let sql_tpl = fs::read_to_string("resources/codegen/sql/sql.sql")
-            .expect("Failed to read sql.sql template");
+
+        let sql_tpl = fs::read_to_string("resources/codegen/sql/sql.sql.tpl")
+            .expect("Failed to read sql.sql.tpl template");
+
         tera.add_raw_template("sql.sql", &sql_tpl).unwrap();
 
         // --- 7. API Template ---
-        let api_tpl = fs::read_to_string("resources/codegen/vue3/api.ts")
-            .expect("Failed to read api.ts template");
+
+        let api_tpl = fs::read_to_string("resources/codegen/vue3/api.ts.tpl")
+            .expect("Failed to read api.ts.tpl template");
+
         tera.add_raw_template("api.ts", &api_tpl).unwrap();
 
         // --- Context Preparation ---
