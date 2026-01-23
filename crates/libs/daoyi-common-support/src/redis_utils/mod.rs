@@ -30,6 +30,7 @@ fn get_redis_url() -> String {
 
 async fn init() -> anyhow::Result<ConnectionManager> {
     let url = get_redis_url();
+    // tracing::info!("Redis URL: {}", url);
     let client = Client::open(url)?;
     // 使用 ConnectionManager，它会自动处理重连
     let mut mgr = client.get_connection_manager().await?;

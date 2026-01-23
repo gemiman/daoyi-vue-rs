@@ -182,6 +182,7 @@ async fn load_nacos_config(
     let config_resp = config_service
         .get_config(data_id, String::from(nacos_config.group()))
         .await;
+    // println!("config_resp: {:?}", config_resp);
     if let Ok(config_resp) = config_resp {
         return Ok(Some(
             Config::builder()

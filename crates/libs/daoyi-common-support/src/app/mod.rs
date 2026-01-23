@@ -30,6 +30,7 @@ impl Default for AppState {
 pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Result<()> {
     println!("==============================================开始加载配置...");
     AppConfig::load(app_name.unwrap_or("app")).await?;
+    // println!("AppConfig: {:?}", AppConfig::get());
     println!("==============================================配置加载完成...开始初始化日志组件....");
     logger::init_logger().await;
     tracing::info!("日志组件初始化完成... Starting redis_utils...");
