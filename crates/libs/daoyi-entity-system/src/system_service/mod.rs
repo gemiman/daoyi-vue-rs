@@ -21,6 +21,7 @@ pub mod system_sms_template_service;
 
 pub mod admin_auth_service;
 pub mod system_login_log_service;
+pub mod system_operate_log_service;
 pub mod system_tenant_package_service;
 pub mod system_tenant_service;
 pub mod system_user_post_service;
