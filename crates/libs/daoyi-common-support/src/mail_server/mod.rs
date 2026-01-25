@@ -135,15 +135,18 @@ pub async fn init_mail_queue_consumer() -> ApiResult<()> {
 }
 
 async fn do_send_mail(msg: MqMsgBody<MailSendMessage>) -> ApiResult<()> {
-    let url = format!(
-        "{}?token={}",
-        AppConfig::get().mail_server().send_mail_url(),
-        msg.token.as_deref().unwrap_or(""),
-    );
     let client = reqwest::Client::new();
 
     let resp = client
-        .post(url)
+        .post(AppConfig::get().mail_server().send_mail_url())
+        .header(
+            AppConfig::get().auth().header_key_token(),
+            format!("Bearer {}", msg.token.unwrap_or_default()),
+        )
+        .header(
+            AppConfig::get().auth().header_key_tenant(),
+            msg.tenant_id.unwrap_or_default(),
+        )
         .json(&msg.payload)
         .send()
         .await

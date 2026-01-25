@@ -34,7 +34,7 @@ pub struct OperateLogRespVO {
     /// 浏览器 UserAgent
     pub user_agent: Option<String>,
     /// 用户编号
-    pub user_id: String,
+    pub user_id: Option<String>,
     /// 用户 IP
     pub user_ip: Option<String>,
     /// 用户昵称
@@ -74,7 +74,7 @@ pub struct OperateLogCreateReqDTO {
     pub trace_id: String,
     /// 用户编号
     /// 关联 MemberUserDO 的 id 属性，或者 AdminUserDO 的 id 属性
-    pub user_id: String,
+    pub user_id: Option<String>,
     /// 用户类型
     /// 关联 UserTypeEnum
     pub user_type: UserTypeEnum,
@@ -98,4 +98,6 @@ pub struct OperateLogCreateReqDTO {
     pub user_ip: Option<String>,
     /// 浏览器 UA
     pub user_agent: Option<String>,
+    /// 租户编号
+    pub tenant_id: Option<String>,
 }

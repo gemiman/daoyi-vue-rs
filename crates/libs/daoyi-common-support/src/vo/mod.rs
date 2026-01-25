@@ -8,6 +8,7 @@ pub mod system_vo;
 pub struct MqMsgBody<T> {
     pub topic: String,
     pub token: Option<String>,
+    pub tenant_id: Option<String>,
     pub payload: T,
 }
 
@@ -16,12 +17,18 @@ impl<T> MqMsgBody<T> {
         Self {
             topic: topic.into(),
             token: None,
+            tenant_id: None,
             payload,
         }
     }
 
     pub fn with_token(mut self, token: &str) -> Self {
         self.token = Some(token.to_string());
+        self
+    }
+
+    pub fn with_tenant_id(mut self, tenant_id: &str) -> Self {
+        self.tenant_id = Some(tenant_id.to_string());
         self
     }
 }

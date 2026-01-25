@@ -10,6 +10,8 @@ log:
   dir: ./logs
   filename: app.log
   rolling: daily
+  enable_operate_log: false
+  log_server_url: http://127.0.0.1:48001/admin-api/system/operate-log/create
 database:
   driver: postgres
   host: 127.0.0.1

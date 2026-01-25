@@ -19,7 +19,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub trace_id: String,
-    pub user_id: String,
+    pub user_id: Option<String>,
     pub user_type: UserTypeEnum,
     pub r#type: String,
     pub sub_type: String,

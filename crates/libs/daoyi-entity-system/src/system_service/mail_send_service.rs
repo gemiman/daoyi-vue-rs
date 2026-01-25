@@ -3,7 +3,9 @@ use crate::system_service::{
     system_mail_account_service, system_mail_log_service, system_mail_template_service,
     system_users_service,
 };
-use daoyi_common_support::enumeration::{CommonStatusEnum, MailSendStatusEnum, UserTypeEnum};
+use daoyi_common_support::enumeration::{
+    CommonStatusEnum, ID_ROOT, MailSendStatusEnum, UserTypeEnum,
+};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::utils::templates;
 use daoyi_common_support::{mail_server, redis_utils};
@@ -150,7 +152,16 @@ pub async fn send_single_mail(
         };
 
         let mq_msg = MqMsgBody::new(MAIL_SEND_STREAM_KEY, message)
-            .with_token(HttpRequestContext::get_token().as_deref().unwrap_or(""));
+            .with_token(
+                HttpRequestContext::get_token()
+                    .as_deref()
+                    .unwrap_or(ID_ROOT),
+            )
+            .with_tenant_id(
+                HttpRequestContext::get_tenant_id()
+                    .as_deref()
+                    .unwrap_or(ID_ROOT),
+            );
         match redis_utils::send_mq_msg(&mq_msg).await {
             Ok(msg_id) => {
                 tracing::info!(

@@ -51,9 +51,11 @@ pub async fn get_operate_log(id: &str) -> ApiResult<Option<system_operate_log::M
     Ok(SystemOperateLog::find_by_id_perm_with_tenant(&database::get_db_async().await, id).await?)
 }
 
-pub async fn create_operate_log(vo: OperateLogCreateReqDTO) -> ApiResult<()> {
+pub async fn create_operate_log(
+    vo: OperateLogCreateReqDTO,
+) -> ApiResult<system_operate_log::Model> {
     let db = database::get_db_async().await;
     let active_model: system_operate_log::ActiveModel = vo.into();
-    active_model.insert(&db).await?;
-    Ok(())
+    let model = active_model.insert(&db).await?;
+    Ok(model)
 }

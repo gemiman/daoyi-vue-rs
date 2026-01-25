@@ -53,6 +53,11 @@ pub async fn run(app_name: Option<&str>, router: Router<AppState>) -> anyhow::Re
         mail_server::init_mail_queue_consumer().await?;
     }
 
+    if AppConfig::get().log().enable_operate_log() {
+        // 初始化日志队列消费者
+        logger::init_operate_log_subscriber().await?;
+    }
+
     let server = server::Server::new(AppConfig::get().server());
     server.start(state, router).await
 }

@@ -31,6 +31,11 @@ pub struct HttpRequestContext {
     /// User-Agent
     pub user_agent: Option<Arc<String>>,
 
+    /// Request Method
+    pub request_method: Option<Arc<String>>,
+    /// Request URL
+    pub request_url: Option<Arc<String>>,
+
     /// 当前请求的 token | Current request's token
     pub token: Option<Arc<String>>,
 
@@ -53,6 +58,8 @@ pub struct HttpRequestContextBuilder {
     user_ip: Option<Arc<String>>,
     tracing_id: Option<Arc<String>>,
     user_agent: Option<Arc<String>>,
+    request_method: Option<Arc<String>>,
+    request_url: Option<Arc<String>>,
     token: Option<Arc<String>>,
     tenant_id: Option<Arc<String>>,
     login_id: Option<Arc<String>>,
@@ -80,6 +87,18 @@ impl HttpRequestContextBuilder {
     /// 设置 User-Agent
     pub fn user_agent(mut self, user_agent: impl Into<String>) -> Self {
         self.user_agent = Some(Arc::new(user_agent.into()));
+        self
+    }
+
+    /// 设置 Request Method
+    pub fn request_method(mut self, request_method: impl Into<String>) -> Self {
+        self.request_method = Some(Arc::new(request_method.into()));
+        self
+    }
+
+    /// 设置 Request URL
+    pub fn request_url(mut self, request_url: impl Into<String>) -> Self {
+        self.request_url = Some(Arc::new(request_url.into()));
         self
     }
 
@@ -119,6 +138,8 @@ impl HttpRequestContextBuilder {
             user_ip: self.user_ip,
             tracing_id: self.tracing_id,
             user_agent: self.user_agent,
+            request_method: self.request_method,
+            request_url: self.request_url,
             token: self.token,
             tenant_id: self.tenant_id,
             login_id: self.login_id,
@@ -136,6 +157,8 @@ impl HttpRequestContext {
             user_ip: None,
             tracing_id: None,
             user_agent: None,
+            request_method: None,
+            request_url: None,
             token: None,
             tenant_id: None,
             login_id: None,
@@ -199,6 +222,20 @@ impl HttpRequestContext {
     pub fn get_user_agent() -> Option<String> {
         CONTEXT
             .try_with(|c| c.user_agent.as_ref().map(|s| s.as_ref().clone()))
+            .ok()
+            .flatten()
+    }
+
+    pub fn get_request_method() -> Option<String> {
+        CONTEXT
+            .try_with(|c| c.request_method.as_ref().map(|s| s.as_ref().clone()))
+            .ok()
+            .flatten()
+    }
+
+    pub fn get_request_url() -> Option<String> {
+        CONTEXT
+            .try_with(|c| c.request_url.as_ref().map(|s| s.as_ref().clone()))
             .ok()
             .flatten()
     }

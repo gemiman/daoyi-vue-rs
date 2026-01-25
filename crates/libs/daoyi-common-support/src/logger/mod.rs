@@ -1,4 +1,12 @@
 use crate::configs::AppConfig;
+use crate::context::HttpRequestContext;
+use crate::enumeration::ID_ROOT;
+use crate::enumeration::redis_keys::{CHANNEL_OPERATE_LOG, MAIL_SEND_STREAM_KEY};
+use crate::error::{ApiError, ApiResult};
+use crate::redis_utils;
+use crate::response::ApiResponse;
+use crate::vo::MqMsgBody;
+use crate::vo::system_vo::operate_log_vo::OperateLogCreateReqDTO;
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
@@ -62,4 +70,141 @@ pub async fn init_logger() {
     // 注意：_guard 需要保持存活，否则日志会丢失
     // 可以考虑将其存储在全局变量中
     std::mem::forget(_guard);
+}
+
+/// 记录操作日志（异步、优雅的封装）
+///
+/// # 示例
+///
+/// ```rust
+/// use daoyi_entity_system::system_service::system_operate_log_service;
+///
+/// system_operate_log_service::record_operate_log(
+///     "订单模块",
+///     "创建订单",
+///     "1024",
+///     "用户创建了订单",
+///     None
+/// );
+/// ```
+///
+/// # 参数
+/// * `r#type` - 操作模块类型
+/// * `sub_type` - 操作名
+/// * `biz_id` - 业务 ID
+/// * `action` - 操作内容
+/// * `extra` - 额外信息
+pub async fn record_operate_log(
+    r#type: &str,
+    sub_type: &str,
+    biz_id: &str,
+    action: &str,
+    extra: Option<serde_json::Value>,
+) -> ApiResult<()> {
+    let trace_id = HttpRequestContext::get_tracing_id_as_string();
+    let user_id = HttpRequestContext::get_login_id();
+    let user_type = HttpRequestContext::get_user_type();
+    let user_ip = HttpRequestContext::get_user_ip();
+    let user_agent = HttpRequestContext::get_user_agent();
+    let request_method = HttpRequestContext::get_request_method();
+    let request_url = HttpRequestContext::get_request_url().unwrap_or_else(|| "".to_string());
+    let tenant_id = HttpRequestContext::get_tenant_id();
+
+    let req = OperateLogCreateReqDTO {
+        trace_id,
+        user_id,
+        user_type,
+        r#type: r#type.to_string(),
+        sub_type: sub_type.to_string(),
+        biz_id: biz_id.to_string(),
+        action: action.to_string(),
+        extra: extra.unwrap_or(serde_json::json!({})),
+        request_method,
+        request_url,
+        user_ip,
+        user_agent,
+        tenant_id,
+    };
+    let mq_msg = MqMsgBody::new(CHANNEL_OPERATE_LOG, req)
+        .with_token(
+            HttpRequestContext::get_token()
+                .as_deref()
+                .unwrap_or(ID_ROOT),
+        )
+        .with_tenant_id(
+            HttpRequestContext::get_tenant_id()
+                .as_deref()
+                .unwrap_or(ID_ROOT),
+        );
+    match redis_utils::send_mq_msg(&mq_msg).await {
+        Ok(msg_id) => {
+            tracing::info!("发送日志消息到Redis Stream成功 msg_id: {}", msg_id);
+        }
+        Err(e) => {
+            tracing::error!("发送日志消息到Redis Stream失败， error: {}", e);
+        }
+    }
+    Ok(())
+}
+
+/// 初始化操作日志订阅器（在 System 模块启动时调用）
+pub async fn init_operate_log_subscriber() -> ApiResult<()> {
+    tracing::info!("Initializing operate log subscriber...");
+    tokio::spawn(async {
+        let result = redis_utils::subscribe(CHANNEL_OPERATE_LOG, |msg: String| async move {
+            match serde_json::from_str::<MqMsgBody<OperateLogCreateReqDTO>>(&msg) {
+                Ok(req) => {
+                    if let Err(e) = create_operate_log(req).await {
+                        tracing::error!("Failed to create operate log from redis: {}", e);
+                    }
+                }
+                Err(e) => {
+                    tracing::error!(
+                        "Failed to deserialize operate log message: {}, error: {}",
+                        msg,
+                        e
+                    );
+                }
+            }
+        })
+        .await;
+
+        if let Err(e) = result {
+            tracing::error!("Operate log subscriber failed: {}", e);
+        }
+    });
+    Ok(())
+}
+
+async fn create_operate_log(msg: MqMsgBody<OperateLogCreateReqDTO>) -> ApiResult<()> {
+    let client = reqwest::Client::new();
+
+    let resp = client
+        .post(AppConfig::get().log().log_server_url())
+        .header(
+            AppConfig::get().auth().header_key_token(),
+            format!("Bearer {}", msg.token.unwrap_or_default()),
+        )
+        .header(
+            AppConfig::get().auth().header_key_tenant(),
+            msg.tenant_id.unwrap_or_default(),
+        )
+        .json(&msg.payload)
+        .send()
+        .await
+        .map_err(|e| ApiError::biz(format!("日志发送失败0: {}", e)))?;
+    if !resp.status().is_success() {
+        return Err(ApiError::biz(format!(
+            "日志发送失败1：status: {}",
+            resp.status()
+        )));
+    }
+    let api_response = resp
+        .json::<ApiResponse<Option<String>>>()
+        .await
+        .map_err(|e| ApiError::biz(format!("日志发送失败2: {}", e)))?;
+    if !api_response.success {
+        return Err(ApiError::biz(api_response.msg));
+    }
+    Ok(())
 }

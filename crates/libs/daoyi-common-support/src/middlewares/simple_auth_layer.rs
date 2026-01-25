@@ -47,6 +47,8 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
                 .map(|s| s.to_string())
                 .unwrap_or_default();
             context.user_agent = Some(Arc::new(user_agent));
+            context.request_method = Some(Arc::new(request.method().to_string()));
+            context.request_url = Some(Arc::new(request.uri().to_string()));
 
             // Check if tenant is enabled
             let auth_config = AppConfig::get().auth();
