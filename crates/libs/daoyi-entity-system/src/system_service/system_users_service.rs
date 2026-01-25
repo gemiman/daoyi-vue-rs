@@ -20,10 +20,18 @@ use std::collections::{HashMap, HashSet};
 
 pub async fn update_user_password(vo: UserUpdatePasswordReqVo) -> ApiResult<()> {
     // 1. 校验用户存在
-    let mut active_model = get_by_id(&vo.id).await?.into_active_model();
+    let model = get_by_id(&vo.id).await?;
+    let username = model.username.clone();
+    let mut active_model = model.into_active_model();
     // 2. 更新密码
     active_model.password = Set(hash_password(&vo.password).await?);
     active_model.update(&database::get_db_async().await).await?;
+    // 记录日志
+    OperateLogBuilder::new("用户模块", "修改密码")
+        .biz_id(&vo.id)
+        .action(format!("用户{}密码修改为：{}", username, vo.password))
+        .record()
+        .await?;
     Ok(())
 }
 
