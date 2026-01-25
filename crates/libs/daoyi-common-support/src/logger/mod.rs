@@ -12,6 +12,9 @@ use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
+pub mod builder;
+pub use builder::OperateLogBuilder;
+
 pub async fn init_logger() {
     let app_config = AppConfig::get();
     let log_config = app_config.log();
@@ -77,15 +80,15 @@ pub async fn init_logger() {
 /// # 示例
 ///
 /// ```rust
-/// use daoyi_entity_system::system_service::system_operate_log_service;
+/// use daoyi_common_support::logger;
 ///
-/// system_operate_log_service::record_operate_log(
+/// logger::record_operate_log(
 ///     "订单模块",
 ///     "创建订单",
 ///     "1024",
 ///     "用户创建了订单",
 ///     None
-/// );
+/// ).await?;
 /// ```
 ///
 /// # 参数
