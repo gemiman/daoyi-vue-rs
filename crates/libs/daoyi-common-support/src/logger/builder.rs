@@ -78,12 +78,43 @@ impl OperateLogBuilder {
     }
 
     /// 自动计算两个对象的差异并设置为 extra
-    /// 仅记录变更的字段
+    /// 仅记录变更的字段，并将变更详情追加到 action 中
     pub fn diff<T: Serialize>(mut self, old: &T, new: &T) -> Self {
-        let diff = calculate_diff(old, new);
-        if let Some(diff_obj) = diff.as_object() {
-            if !diff_obj.is_empty() {
-                self.extra = Some(diff);
+        let old_val = serde_json::to_value(old).unwrap_or(Value::Null);
+        let new_val = serde_json::to_value(new).unwrap_or(Value::Null);
+
+        let mut diffs = serde_json::Map::new();
+        let mut changes = Vec::new();
+
+        if let (Value::Object(old_map), Value::Object(new_map)) = (&old_val, &new_val) {
+            for (k, v_new) in new_map {
+                // 忽略一些无需比较的字段
+                if k == "update_time" || k == "create_time" || k == "update_by" || k == "create_by"
+                {
+                    continue;
+                }
+
+                let v_old = old_map.get(k).unwrap_or(&Value::Null);
+
+                if v_new != v_old {
+                    diffs.insert(k.clone(), v_new.clone());
+
+                    let old_str = value_to_simple_string(v_old);
+                    let new_str = value_to_simple_string(v_new);
+                    changes.push(format!("将{}从{}更新为{}", k, old_str, new_str));
+                }
+            }
+        }
+
+        if !diffs.is_empty() {
+            self.extra = Some(Value::Object(diffs));
+            if !changes.is_empty() {
+                let suffix = changes.join("，");
+                if self.action.is_empty() {
+                    self.action = suffix;
+                } else {
+                    self.action = format!("{}，{}", self.action, suffix);
+                }
             }
         }
         self
@@ -108,6 +139,14 @@ impl OperateLogBuilder {
             self.extra,
         )
         .await
+    }
+}
+
+fn value_to_simple_string(v: &Value) -> String {
+    match v {
+        Value::String(s) => s.clone(),
+        Value::Null => "空".to_string(),
+        _ => v.to_string(),
     }
 }
 
@@ -173,6 +212,31 @@ mod tests {
         assert_eq!(diff_obj.get("age").unwrap(), &serde_json::json!(31));
         assert_eq!(diff_obj.get("email").unwrap(), &serde_json::json!(null));
         assert!(!diff_obj.contains_key("name"));
+    }
+
+    #[test]
+    fn test_builder_diff_action_append() {
+        let old = User {
+            id: 1,
+            name: "武大郎".to_string(),
+            age: 30,
+            email: None,
+        };
+
+        let mut new = old.clone();
+        new.name = "李世民".to_string();
+        new.age = 31;
+
+        let builder = OperateLogBuilder::new("test", "update")
+            .action("更新了用户")
+            .diff(&old, &new);
+
+        let action = builder.action;
+        // 注意：HashMap 迭代顺序不确定，可能先 age 后 name，或反之
+        // 因此检查包含关系
+        assert!(action.contains("更新了用户"));
+        assert!(action.contains("将name从武大郎更新为李世民"));
+        assert!(action.contains("将age从30更新为31"));
     }
 
     #[test]
