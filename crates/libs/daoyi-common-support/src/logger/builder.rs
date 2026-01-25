@@ -89,7 +89,14 @@ impl OperateLogBuilder {
         if let (Value::Object(old_map), Value::Object(new_map)) = (&old_val, &new_val) {
             for (k, v_new) in new_map {
                 // 忽略一些无需比较的字段
-                if k == "update_time" || k == "create_time" || k == "update_by" || k == "create_by"
+                if k == "update_time"
+                    || k == "create_time"
+                    || k == "update_by"
+                    || k == "create_by"
+                    || k == "updateTime"
+                    || k == "createTime"
+                    || k == "updateBy"
+                    || k == "createBy"
                 {
                     continue;
                 }
