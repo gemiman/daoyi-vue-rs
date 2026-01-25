@@ -275,6 +275,12 @@ impl HttpRequestContext {
     pub fn get_user_agent_as_string() -> String {
         Self::get_user_agent().unwrap_or(String::from("unknown"))
     }
+    pub fn get_request_method_as_string() -> String {
+        Self::get_request_method().unwrap_or(String::from("GET"))
+    }
+    pub fn get_request_url_as_string() -> String {
+        Self::get_request_url().unwrap_or(String::from("/"))
+    }
 
     pub fn get_token_as_string() -> anyhow::Result<String> {
         Self::get_token().ok_or_else(|| anyhow::anyhow!("login_id is None"))

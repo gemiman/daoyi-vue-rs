@@ -19,7 +19,7 @@ pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: String,
     pub trace_id: String,
-    pub user_id: Option<String>,
+    pub user_id: String,
     pub user_type: UserTypeEnum,
     pub r#type: String,
     pub sub_type: String,
@@ -28,10 +28,10 @@ pub struct Model {
     pub success: bool,
     #[sea_orm(column_type = "JsonBinary")]
     pub extra: Json,
-    pub request_method: Option<String>,
-    pub request_url: Option<String>,
-    pub user_ip: Option<String>,
-    pub user_agent: Option<String>,
+    pub request_method: String,
+    pub request_url: String,
+    pub user_ip: String,
+    pub user_agent: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
@@ -66,6 +66,7 @@ impl From<OperateLogCreateReqDTO> for ActiveModel {
             user_id: Set(value.user_id),
             user_type: Set(value.user_type),
             r#type: Set(value.r#type),
+            sub_type: Set(value.sub_type),
             biz_id: Set(value.biz_id),
             action: Set(value.action),
             extra: Set(value.extra),

@@ -105,13 +105,13 @@ pub async fn record_operate_log(
     extra: Option<serde_json::Value>,
 ) -> ApiResult<()> {
     let trace_id = HttpRequestContext::get_tracing_id_as_string();
-    let user_id = HttpRequestContext::get_login_id();
+    let user_id = HttpRequestContext::get_login_id_as_string()?;
     let user_type = HttpRequestContext::get_user_type();
-    let user_ip = HttpRequestContext::get_user_ip();
-    let user_agent = HttpRequestContext::get_user_agent();
-    let request_method = HttpRequestContext::get_request_method();
-    let request_url = HttpRequestContext::get_request_url().unwrap_or_else(|| "".to_string());
-    let tenant_id = HttpRequestContext::get_tenant_id();
+    let user_ip = HttpRequestContext::get_user_ip_as_string();
+    let user_agent = HttpRequestContext::get_user_agent_as_string();
+    let request_method = HttpRequestContext::get_request_method_as_string();
+    let request_url = HttpRequestContext::get_request_url_as_string();
+    let tenant_id = HttpRequestContext::get_tenant_id_as_string()?;
 
     let req = OperateLogCreateReqDTO {
         trace_id,

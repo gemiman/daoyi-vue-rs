@@ -22,9 +22,9 @@ pub struct OperateLogRespVO {
     /// 日志编号
     pub id: String,
     /// 请求方法名
-    pub request_method: Option<String>,
+    pub request_method: String,
     /// 请求地址
-    pub request_url: Option<String>,
+    pub request_url: String,
     /// 操作名
     pub sub_type: String,
     /// 链路追踪编号
@@ -32,11 +32,11 @@ pub struct OperateLogRespVO {
     /// 操作模块类型
     pub r#type: String,
     /// 浏览器 UserAgent
-    pub user_agent: Option<String>,
+    pub user_agent: String,
     /// 用户编号
-    pub user_id: Option<String>,
+    pub user_id: String,
     /// 用户 IP
-    pub user_ip: Option<String>,
+    pub user_ip: String,
     /// 用户昵称
     pub user_name: String,
     /// 用户类型
@@ -74,7 +74,7 @@ pub struct OperateLogCreateReqDTO {
     pub trace_id: String,
     /// 用户编号
     /// 关联 MemberUserDO 的 id 属性，或者 AdminUserDO 的 id 属性
-    pub user_id: Option<String>,
+    pub user_id: String,
     /// 用户类型
     /// 关联 UserTypeEnum
     pub user_type: UserTypeEnum,
@@ -91,13 +91,13 @@ pub struct OperateLogCreateReqDTO {
     /// 例如说，记录订单编号，{ orderId: "1"}
     pub extra: Json,
     /// 请求方法名
-    pub request_method: Option<String>,
+    pub request_method: String,
     /// 请求地址
     pub request_url: String,
     /// 用户 IP
-    pub user_ip: Option<String>,
+    pub user_ip: String,
     /// 浏览器 UA
-    pub user_agent: Option<String>,
+    pub user_agent: String,
     /// 租户编号
-    pub tenant_id: Option<String>,
+    pub tenant_id: String,
 }
