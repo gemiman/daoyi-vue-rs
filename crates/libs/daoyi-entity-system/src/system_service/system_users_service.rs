@@ -7,6 +7,7 @@ use crate::system_service::{
 use daoyi_common_support::database;
 use daoyi_common_support::enumeration::CommonStatusEnum;
 use daoyi_common_support::error::{ApiError, ApiResult};
+use daoyi_common_support::logger::OperateLogBuilder;
 use daoyi_common_support::models::pagination::PageResult;
 use daoyi_common_support::password::hash_password;
 use daoyi_common_support::vo::system_vo::{
@@ -88,6 +89,13 @@ pub async fn create_user(req_vo: UserSaveReqVO) -> ApiResult<system_users::Model
     {
         system_user_post_service::save_batch(&model.id, post_ids).await?;
     }
+    // 记录日志
+    OperateLogBuilder::new("用户模块", "新增用户")
+        .biz_id(&model.id)
+        .action(format!("创建了用户: {}", model.username))
+        .detail(&model) // 记录完整对象快照
+        .record()
+        .await?;
     Ok(model)
 }
 async fn validate_user_for_create_or_update(
