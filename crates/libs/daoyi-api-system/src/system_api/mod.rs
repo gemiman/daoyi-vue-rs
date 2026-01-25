@@ -25,7 +25,7 @@ pub fn create_router() -> Router<AppState> {
         .nest("/post", dept::posts::create_router())
         .nest("/dict-data", dict::dict_data::create_router())
         .nest("/dict-type", dict::dict_type::create_router())
-        .nest("/ip", ip::create_router())
+        .nest("/area", ip::create_router())
         .nest("/login-log", logger::login_log::create_router())
         .nest("/operate-log", logger::operate_log::create_router())
         .nest("/mail-account", mail::mail_account::create_router())
