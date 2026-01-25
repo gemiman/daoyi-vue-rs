@@ -1,5 +1,6 @@
 use crate::system_entity::prelude::*;
 use crate::system_entity::system_operate_log;
+use crate::system_service::system_users_service;
 use daoyi_common_support::database;
 use daoyi_common_support::error::ApiResult;
 use daoyi_common_support::models::pagination::PageResult;
@@ -8,6 +9,7 @@ use daoyi_common_support::vo::system_vo::operate_log_vo::{
 };
 use sea_orm::entity::prelude::*;
 use sea_orm::{QueryOrder, QueryTrait};
+use std::collections::HashSet;
 
 pub async fn get_operate_log_page(
     params: &OperateLogPageReqVO,
@@ -37,12 +39,25 @@ pub async fn get_operate_log_page(
         .paginate(&db, params.pagination.page_size);
 
     let total = paginator.num_items().await?;
-    let list = paginator
+    let mut list = paginator
         .fetch_page(params.pagination.page_no - 1)
         .await?
         .into_iter()
         .map(Into::into)
-        .collect();
+        .collect::<Vec<OperateLogRespVO>>();
+    if !list.is_empty() {
+        let user_ids = list
+            .iter()
+            .map(|item| item.user_id.clone())
+            .collect::<HashSet<_>>();
+        let user_map = system_users_service::get_user_map(user_ids).await?;
+        for item in &mut list {
+            item.user_name = user_map
+                .get(&item.user_id)
+                .map(|u| u.nickname.clone())
+                .unwrap_or_default();
+        }
+    }
     let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
 }

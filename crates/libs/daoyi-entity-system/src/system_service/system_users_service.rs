@@ -16,7 +16,7 @@ use daoyi_common_support::vo::system_vo::{
 use daoyi_macros::transactional;
 use sea_orm::entity::prelude::*;
 use sea_orm::{IntoActiveModel, QueryOrder, QueryTrait, Set, Unchanged};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub async fn update_user_password(vo: UserUpdatePasswordReqVo) -> ApiResult<()> {
     // 1. 校验用户存在
@@ -80,7 +80,7 @@ pub async fn create_user(req_vo: UserSaveReqVO) -> ApiResult<system_users::Model
     .await?;
     // 2.1 插入用户
     let db = database::get_db_async().await;
-    let mut active_model: system_users::ActiveModel = req_vo.into();
+    let mut active_model: system_users::ActiveModel = req_vo.clone().into();
     active_model.status = Set(CommonStatusEnum::Enable);
     let model = active_model.insert(&db).await?;
     // 2.2 插入关联岗位
@@ -93,7 +93,7 @@ pub async fn create_user(req_vo: UserSaveReqVO) -> ApiResult<system_users::Model
     OperateLogBuilder::new("用户模块", "新增用户")
         .biz_id(&model.id)
         .action(format!("创建了用户: {}", model.username))
-        .detail(&model) // 记录完整对象快照
+        .detail(&req_vo) // 记录完整对象快照
         .record()
         .await?;
     Ok(model)
@@ -314,6 +314,37 @@ pub async fn get_user_page(params: &UserPageReqVO) -> ApiResult<PageResult<UserR
     // 拼接数据
     let page = PageResult::from_pagination(&params.pagination, total, list);
     Ok(page)
+}
+
+pub async fn get_user_map<I, S>(ids: I) -> ApiResult<HashMap<String, system_users::Model>>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<String>,
+{
+    let map = get_user_list(ids)
+        .await?
+        .into_iter()
+        .map(|item| (item.id.clone(), item))
+        .collect::<HashMap<_, _>>();
+    Ok(map)
+}
+
+pub async fn get_user_list<I, S>(ids: I) -> ApiResult<Vec<system_users::Model>>
+where
+    I: IntoIterator<Item = S>,
+    S: Into<String>,
+{
+    let ids_vec: Vec<String> = ids.into_iter().map(|s| s.into()).collect();
+    if ids_vec.is_empty() {
+        return Ok(vec![]);
+    }
+    let db = database::get_db_async().await;
+    let list = SystemUsers::find_perm_with_tenant()
+        .await
+        .filter(system_users::Column::Id.is_in(&ids_vec))
+        .all(&db)
+        .await?;
+    Ok(list)
 }
 
 #[transactional]

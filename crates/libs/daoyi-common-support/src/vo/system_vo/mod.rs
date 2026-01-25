@@ -55,7 +55,7 @@ pub struct PermissionAssignRoleDataScopeReqVO {
 }
 
 /// UserSaveReqVO，管理后台 - 用户创建/修改 Request VO
-#[derive(Debug, Deserialize, Validate, Default)]
+#[derive(Debug, Deserialize, Validate, Default, Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserSaveReqVO {
     /// 用户账号

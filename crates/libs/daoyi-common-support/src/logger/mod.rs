@@ -1,6 +1,5 @@
 use crate::configs::AppConfig;
 use crate::context::HttpRequestContext;
-use crate::enumeration::ID_ROOT;
 use crate::enumeration::redis_keys::{OPERATE_LOG_GROUP_NAME, OPERATE_LOG_STREAM_KEY};
 use crate::error::{ApiError, ApiResult};
 use crate::response::ApiResponse;

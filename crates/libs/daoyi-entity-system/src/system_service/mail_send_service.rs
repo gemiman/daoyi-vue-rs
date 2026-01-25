@@ -3,14 +3,11 @@ use crate::system_service::{
     system_mail_account_service, system_mail_log_service, system_mail_template_service,
     system_users_service,
 };
-use daoyi_common_support::enumeration::{
-    CommonStatusEnum, ID_ROOT, MailSendStatusEnum, UserTypeEnum,
-};
+use daoyi_common_support::enumeration::{CommonStatusEnum, MailSendStatusEnum, UserTypeEnum};
 use daoyi_common_support::error::{ApiError, ApiResult};
 use daoyi_common_support::utils::templates;
 use daoyi_common_support::{mail_server, redis_utils};
 
-use daoyi_common_support::context::HttpRequestContext;
 use daoyi_common_support::enumeration::redis_keys::MAIL_SEND_STREAM_KEY;
 use daoyi_common_support::vo::MqMsgBody;
 use daoyi_common_support::vo::system_vo::MailSendMessage;
