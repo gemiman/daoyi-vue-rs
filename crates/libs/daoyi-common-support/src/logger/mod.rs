@@ -1,12 +1,12 @@
 use crate::configs::AppConfig;
 use crate::context::HttpRequestContext;
 use crate::enumeration::ID_ROOT;
-use crate::enumeration::redis_keys::CHANNEL_OPERATE_LOG;
+use crate::enumeration::redis_keys::{OPERATE_LOG_GROUP_NAME, OPERATE_LOG_STREAM_KEY};
 use crate::error::{ApiError, ApiResult};
-use crate::redis_utils;
 use crate::response::ApiResponse;
 use crate::vo::MqMsgBody;
 use crate::vo::system_vo::operate_log_vo::OperateLogCreateReqDTO;
+use crate::{id_util, redis_utils};
 use tracing_appender::{non_blocking, rolling};
 use tracing_subscriber::EnvFilter;
 use tracing_subscriber::layer::SubscriberExt;
@@ -128,7 +128,7 @@ pub async fn record_operate_log(
         user_agent,
         tenant_id,
     };
-    let mq_msg = MqMsgBody::new(CHANNEL_OPERATE_LOG, req)
+    let mq_msg = MqMsgBody::new(OPERATE_LOG_STREAM_KEY, req)
         .with_token(
             HttpRequestContext::get_token()
                 .as_deref()
@@ -154,26 +154,41 @@ pub async fn record_operate_log(
 pub async fn init_operate_log_subscriber() -> ApiResult<()> {
     tracing::info!("Initializing operate log subscriber...");
     tokio::spawn(async {
-        let result = redis_utils::subscribe(CHANNEL_OPERATE_LOG, |msg: String| async move {
-            match serde_json::from_str::<MqMsgBody<OperateLogCreateReqDTO>>(&msg) {
-                Ok(req) => {
-                    if let Err(e) = create_operate_log(req).await {
-                        tracing::error!("Failed to create operate log from redis: {}", e);
+        let consumer_name = format!("consumer-{}", id_util::xid());
+        tracing::info!(
+            "启动操作日志队列监听(Stream): {}, Consumer: {}",
+            OPERATE_LOG_STREAM_KEY,
+            consumer_name
+        );
+
+        let result = redis_utils::consume_stream(
+            OPERATE_LOG_STREAM_KEY,
+            OPERATE_LOG_GROUP_NAME,
+            &consumer_name,
+            |msg_payload| async move {
+                match serde_json::from_str::<MqMsgBody<OperateLogCreateReqDTO>>(&msg_payload) {
+                    Ok(msg) => {
+                        if let Err(e) = create_operate_log(msg).await {
+                            tracing::error!("操作日志发送失败 error: {}", e);
+                            // 注意：即使发送失败，我们这里返回 Ok，以便 ACK 该消息，防止无限重试。
+                            // 实际业务中，可能需要根据错误类型决定是否抛出 Err 触发重试，或者记录到死信队列。
+                            // 这里我们已经在 do_send_mail 中更新了数据库状态为"失败"，所以认为任务已终结。
+                            return Ok(());
+                        }
+                        Ok(())
+                    }
+                    Err(e) => {
+                        tracing::error!("解析操作日志消息失败: {}, payload: {}", e, msg_payload);
+                        // 解析失败的消息无法处理，直接确认跳过
+                        Ok(())
                     }
                 }
-                Err(e) => {
-                    tracing::error!(
-                        "Failed to deserialize operate log message: {}, error: {}",
-                        msg,
-                        e
-                    );
-                }
-            }
-        })
+            },
+        )
         .await;
 
         if let Err(e) = result {
-            tracing::error!("Operate log subscriber failed: {}", e);
+            tracing::error!("操作日志队列监听异常退出: {}", e);
         }
     });
     Ok(())

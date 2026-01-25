@@ -74,9 +74,11 @@ pub struct UserSaveReqVO {
     /// 岗位编号数组
     pub post_ids: Option<Vec<String>>,
     /// 用户邮箱
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     #[validate(email(message = "邮箱格式不正确"))]
     pub email: Option<String>,
     /// 手机号码
+    #[serde(default, deserialize_with = "empty_string_as_none")]
     #[validate(custom(function = "validation::is_mobile_phone"))]
     pub mobile: Option<String>,
     /// 用户性别，参见 SexEnum 枚举类
