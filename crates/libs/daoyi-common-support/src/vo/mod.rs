@@ -1,3 +1,5 @@
+use crate::context::HttpRequestContext;
+use crate::enumeration::ID_ROOT;
 use serde::{Deserialize, Serialize};
 
 pub mod cti_vo;
@@ -13,6 +15,19 @@ pub struct MqMsgBody<T> {
 }
 
 impl<T> MqMsgBody<T> {
+    pub fn build_with_token_with_tenant<S: Into<String>>(topic: S, payload: T) -> Self {
+        Self::new(topic, payload)
+            .with_token(
+                HttpRequestContext::get_token()
+                    .as_deref()
+                    .unwrap_or(ID_ROOT),
+            )
+            .with_tenant_id(
+                HttpRequestContext::get_tenant_id()
+                    .as_deref()
+                    .unwrap_or(ID_ROOT),
+            )
+    }
     pub fn new<S: Into<String>>(topic: S, payload: T) -> Self {
         Self {
             topic: topic.into(),

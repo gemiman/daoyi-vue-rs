@@ -151,17 +151,7 @@ pub async fn send_single_mail(
             content,
         };
 
-        let mq_msg = MqMsgBody::new(MAIL_SEND_STREAM_KEY, message)
-            .with_token(
-                HttpRequestContext::get_token()
-                    .as_deref()
-                    .unwrap_or(ID_ROOT),
-            )
-            .with_tenant_id(
-                HttpRequestContext::get_tenant_id()
-                    .as_deref()
-                    .unwrap_or(ID_ROOT),
-            );
+        let mq_msg = MqMsgBody::build_with_token_with_tenant(MAIL_SEND_STREAM_KEY, message);
         match redis_utils::send_mq_msg(&mq_msg).await {
             Ok(msg_id) => {
                 tracing::info!(

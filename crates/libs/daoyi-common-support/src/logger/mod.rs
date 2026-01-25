@@ -128,17 +128,7 @@ pub async fn record_operate_log(
         user_agent,
         tenant_id,
     };
-    let mq_msg = MqMsgBody::new(OPERATE_LOG_STREAM_KEY, req)
-        .with_token(
-            HttpRequestContext::get_token()
-                .as_deref()
-                .unwrap_or(ID_ROOT),
-        )
-        .with_tenant_id(
-            HttpRequestContext::get_tenant_id()
-                .as_deref()
-                .unwrap_or(ID_ROOT),
-        );
+    let mq_msg = MqMsgBody::build_with_token_with_tenant(OPERATE_LOG_STREAM_KEY, req);
     match redis_utils::send_mq_msg(&mq_msg).await {
         Ok(msg_id) => {
             tracing::info!("发送日志消息到Redis Stream成功 msg_id: {}", msg_id);
