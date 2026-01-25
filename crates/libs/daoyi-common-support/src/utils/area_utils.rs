@@ -25,52 +25,51 @@ impl AreaType {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct Area {
-    pub id: i32,
+    pub id: String,
     pub name: String,
     #[serde(rename = "type")]
     pub type_: i32,
     #[serde(rename = "parentId")]
-    pub parent_id: i32,
+    pub parent_id: String,
 }
 
 pub struct AreaUtils;
 
-static AREA_DATA: OnceLock<(HashMap<i32, Area>, HashMap<i32, Vec<i32>>)> = OnceLock::new();
+static AREA_DATA: OnceLock<(HashMap<String, Area>, HashMap<String, Vec<String>>)> = OnceLock::new();
 
 // Embed the CSV file
 const AREA_CSV: &str = include_str!("../resources/area.csv");
 
 // Constants matching Java Area.java
-pub const ID_GLOBAL: i32 = 0;
-pub const ID_CHINA: i32 = 1;
+pub const ID_GLOBAL: &str = "0";
+pub const ID_CHINA: &str = "1";
 
 impl AreaUtils {
-    fn get_data() -> &'static (HashMap<i32, Area>, HashMap<i32, Vec<i32>>) {
+    fn get_data() -> &'static (HashMap<String, Area>, HashMap<String, Vec<String>>) {
         AREA_DATA.get_or_init(|| {
             let mut reader = ReaderBuilder::new()
                 .has_headers(true)
                 .from_reader(AREA_CSV.as_bytes());
 
             let mut areas = HashMap::new();
-            let mut children_map: HashMap<i32, Vec<i32>> = HashMap::new();
+            let mut children_map: HashMap<String, Vec<String>> = HashMap::new();
 
             // Add Global node if not present in CSV (Java code adds it manually)
-            // But CSV might not have it. Java adds ID_GLOBAL=0 manually.
             let global = Area {
-                id: ID_GLOBAL,
+                id: ID_GLOBAL.to_string(),
                 name: "全球".to_string(),
                 type_: 0,
-                parent_id: -1, // No parent
+                parent_id: "-1".to_string(), // No parent
             };
-            areas.insert(ID_GLOBAL, global);
+            areas.insert(ID_GLOBAL.to_string(), global);
 
 
             for result in reader.deserialize() {
                 match result {
                     Ok(area) => {
                         let area: Area = area;
-                        children_map.entry(area.parent_id).or_default().push(area.id);
-                        areas.insert(area.id, area);
+                        children_map.entry(area.parent_id.clone()).or_default().push(area.id.clone());
+                        areas.insert(area.id.clone(), area);
                     }
                     Err(e) => {
                         eprintln!("Failed to parse area CSV record: {}", e);
@@ -81,12 +80,12 @@ impl AreaUtils {
         })
     }
 
-    pub fn get_area(id: i32) -> Option<&'static Area> {
-        Self::get_data().0.get(&id)
+    pub fn get_area(id: &str) -> Option<&'static Area> {
+        Self::get_data().0.get(id)
     }
 
-    pub fn get_children(id: i32) -> Option<&'static Vec<i32>> {
-        Self::get_data().1.get(&id)
+    pub fn get_children(id: &str) -> Option<&'static Vec<String>> {
+        Self::get_data().1.get(id)
     }
 
     /// 获得指定区域对应的编号
@@ -135,12 +134,12 @@ impl AreaUtils {
 
 
     /// 格式化区域，例如：北京市 北京市 东城区
-    pub fn format(id: i32) -> String {
+    pub fn format(id: &str) -> String {
         Self::format_with_separator(id, " ")
     }
 
-    pub fn format_with_separator(id: i32, separator: &str) -> String {
-        let mut current_id = id;
+    pub fn format_with_separator(id: &str, separator: &str) -> String {
+        let mut current_id = id.to_string();
         let mut names = Vec::new();
         let (areas, _) = Self::get_data();
 
@@ -152,25 +151,19 @@ impl AreaUtils {
             names.push(area.name.as_str());
             
             // "递归"父节点
-            let parent_id = area.parent_id;
+            let parent_id = &area.parent_id;
             
             // Java: if parent is null or ID_GLOBAL or ID_CHINA -> break
             if parent_id == ID_GLOBAL || parent_id == ID_CHINA {
-                 // But wait, Java adds current area BEFORE checking parent breaks.
-                 // "sb.insert(0, area.getName()); area = area.getParent(); if (area == null || ... ID_CHINA) break;"
-                 // So if current is China, we added China, then parent is 0, we break.
-                 // But typically format is called for a leaf.
-                 // If we are at Beijing (110000), parent is 1 (China). We add Beijing. Parent is 1. Break.
-                 // So China is NOT added.
                  break;
             }
             
             // Also need to check if parent exists
-            if !areas.contains_key(&parent_id) {
+            if !areas.contains_key(parent_id) {
                 break;
             }
 
-            current_id = parent_id;
+            current_id = parent_id.clone();
             
             count += 1;
             if count > 10 { break; }
@@ -187,22 +180,22 @@ impl AreaUtils {
              .collect()
     }
     
-    pub fn get_parent_id_by_type(id: i32, type_: AreaType) -> Option<i32> {
+    pub fn get_parent_id_by_type(id: &str, type_: AreaType) -> Option<String> {
         let (areas, _) = Self::get_data();
-        let mut current_id = id;
+        let mut current_id = id.to_string();
         let target_type = type_ as i32;
 
         // Loop max 127 times (Java: Byte.MAX_VALUE)
         for _ in 0..127 {
              if let Some(area) = areas.get(&current_id) {
                  if area.type_ == target_type {
-                     return Some(area.id);
+                     return Some(area.id.clone());
                  }
                  // Check if root
-                 if area.parent_id == 0 || area.parent_id == -1 {
+                 if area.parent_id == ID_GLOBAL || area.parent_id == "-1" {
                      return None;
                  }
-                 current_id = area.parent_id;
+                 current_id = area.parent_id.clone();
              } else {
                  return None;
              }
@@ -217,7 +210,7 @@ mod tests {
 
     #[test]
     fn test_area_load() {
-        let area = AreaUtils::get_area(110101); // Beijing Dongcheng
+        let area = AreaUtils::get_area("110101"); // Beijing Dongcheng
         assert!(area.is_some());
         assert_eq!(area.unwrap().name, "东城区");
     }
@@ -225,7 +218,7 @@ mod tests {
     #[test]
     fn test_format() {
         // 110101 -> 东城区 -> 北京市(City) -> 北京市(Province) -> 中国
-        let formatted = AreaUtils::format(110101);
+        let formatted = AreaUtils::format("110101");
         println!("Formatted: {}", formatted);
         assert_eq!(formatted, "北京市 北京市 东城区");
     }
@@ -234,7 +227,7 @@ mod tests {
     fn test_parse_area() {
         let area = AreaUtils::parse_area("北京市/北京市/东城区");
         assert!(area.is_some());
-        assert_eq!(area.unwrap().id, 110101);
+        assert_eq!(area.unwrap().id, "110101");
         
         let area_prov = AreaUtils::parse_area("河南省");
         assert!(area_prov.is_some());
@@ -244,7 +237,7 @@ mod tests {
     #[test]
     fn test_get_parent_id_by_type() {
         // 110101 (District) -> Province (2) -> 110000
-        let parent = AreaUtils::get_parent_id_by_type(110101, AreaType::Province);
-        assert_eq!(parent, Some(110000));
+        let parent = AreaUtils::get_parent_id_by_type("110101", AreaType::Province);
+        assert_eq!(parent, Some("110000".to_string()));
     }
 }

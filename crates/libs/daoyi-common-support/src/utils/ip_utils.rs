@@ -25,20 +25,18 @@ impl IPUtils {
     }
 
     /// 查询 IP 对应的地区编号
-    pub fn get_area_id(ip: &str) -> Option<i32> {
+    pub fn get_area_id(ip: &str) -> Option<String> {
         let searcher_lock = Self::get_searcher();
         let searcher = searcher_lock.lock().unwrap();
         match searcher.search(ip) {
             Ok(region_str) => {
                 // The XDB in this project returns an Area ID string (e.g. "320100")
-                match region_str.trim().parse::<i32>() {
-                    Ok(id) => Some(id),
-                    Err(_) => {
-                        // If parsing fails, maybe it IS a standard region string?
-                        // But based on Java code `Integer.parseInt`, it expects a number.
-                        tracing::warn!("IP search result '{}' is not a valid Area ID for IP: {}", region_str, ip);
-                        None
-                    }
+                // Since we are now using String IDs, we just return it trimmed.
+                let id_str = region_str.trim();
+                if id_str.is_empty() {
+                    None
+                } else {
+                    Some(id_str.to_string())
                 }
             }
             Err(e) => {
@@ -51,7 +49,7 @@ impl IPUtils {
     /// 查询 IP 对应的地区
     pub fn get_area(ip: &str) -> Option<&'static Area> {
         if let Some(id) = Self::get_area_id(ip) {
-            AreaUtils::get_area(id)
+            AreaUtils::get_area(&id)
         } else {
             None
         }
@@ -62,7 +60,7 @@ impl IPUtils {
     /// Java AreaUtils.format(id)
     pub fn get_region(ip: &str) -> Option<String> {
         if let Some(id) = Self::get_area_id(ip) {
-            Some(AreaUtils::format(id))
+            Some(AreaUtils::format(&id))
         } else {
             None
         }
@@ -81,10 +79,11 @@ mod tests {
     #[test]
     fn test_ip_area_id() {
         // 114.114.114.114 -> Nanjing, Jiangsu.
-        // ID should be 320100 (Nanjing City) or similar.
+        // ID should be "320100" (Nanjing City) or similar.
         let id = IPUtils::get_area_id("114.114.114.114");
         println!("IP Area ID: {:?}", id);
         assert!(id.is_some());
+        // assert_eq!(id.unwrap(), "320100"); // Depends on xdb data
     }
 
     #[test]
