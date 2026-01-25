@@ -36,9 +36,7 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             let mut context = HttpRequestContext::new();
             context.tracing_id = Some(Arc::new(id_util::xid()));
             // 获取连接信息
-            if let Some(ConnectInfo(addr)) = request.extensions().get::<ConnectInfo<SocketAddr>>() {
-                context.user_ip = Some(Arc::new(addr.ip().to_string()));
-            }
+            context.user_ip = Some(Arc::new(get_real_client_ip(&request)));
             // 获取 User-Agent
             let headers = request.headers();
             let user_agent = headers
@@ -139,6 +137,39 @@ impl AsyncAuthorizeRequest<Body> for ThreadLocalLayer {
             request.extensions_mut().insert(context);
             Ok(request)
         })
+    }
+}
+
+// 添加此函数来获取真实客户端IP
+fn get_real_client_ip<B>(request: &Request<B>) -> String {
+    let headers = vec![
+        "X-Forwarded-For",
+        "X-Real-IP",
+        "Proxy-Client-IP",
+        "WL-Proxy-Client-IP",
+        "HTTP_CLIENT_IP",
+        "HTTP_X_FORWARDED_FOR",
+    ];
+    // 检查 头部（可能包含多个IP，第一个通常是原始客户端IP）
+    for header in headers {
+        if let Some(forwarded_for) = request.headers().get(header) {
+            if let Ok(forwarded_str) = forwarded_for.to_str() {
+                // X-Forwarded-For 可能包含多个IP地址，以逗号分隔
+                if let Some(client_ip) = forwarded_str.split(',').next() {
+                    let trimmed_ip = client_ip.trim();
+                    // 验证是否为有效的IP地址格式
+                    if let Ok(_) = trimmed_ip.parse::<std::net::IpAddr>() {
+                        return trimmed_ip.to_string();
+                    }
+                }
+            }
+        }
+    }
+    // 如果以上头部都不存在或无效，则返回连接的远程地址
+    if let Some(ConnectInfo(addr)) = request.extensions().get::<ConnectInfo<SocketAddr>>() {
+        addr.ip().to_string()
+    } else {
+        "unknown".to_string()
     }
 }
 
