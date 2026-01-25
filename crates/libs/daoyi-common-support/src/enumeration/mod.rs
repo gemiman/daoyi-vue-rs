@@ -631,3 +631,36 @@ pub enum CodegenFrontTypeEnum {
     #[sea_orm(string_value = "60")]
     Vue3AdminUniappWot,
 }
+
+/// 区域类型枚举
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    EnumIter,
+    DeriveActiveEnum,
+    DaoyiIntoActiveValue,
+    DaoyiStringOrNumberSerde,
+)]
+#[sea_orm(rs_type = "String", db_type = "String(StringLen::None)")]
+pub enum AreaTypeEnum {
+    ///     全球,
+    #[sea_orm(string_value = "0")]
+    EARTH,
+    ///     COUNTRY(1, "国家"),
+    #[sea_orm(string_value = "1")]
+    COUNTRY,
+    ///     PROVINCE(2, "省份"),
+    #[sea_orm(string_value = "2")]
+    PROVINCE,
+    ///     CITY(3, "城市"),
+    #[sea_orm(string_value = "3")]
+    CITY,
+    ///     DISTRICT(4, "地区"), // 县、镇、区等
+    #[sea_orm(string_value = "4")]
+    DISTRICT,
+}
