@@ -42,12 +42,19 @@ pub async fn update_user(vo: UserUpdateReqVO) -> ApiResult<()> {
     .ok_or_else(|| ApiError::biz("用户不存在"))?;
     // 2.1 更新用户
     let mut active_model: system_users::ActiveModel = vo.into();
-    active_model.password = Unchanged(old_user.password);
+    active_model.password = Unchanged(old_user.password.clone());
     let db = database::get_db_async().await;
     let model = active_model.update(&db).await?;
     // 2.2 更新岗位
-    let post_ids = &model.post_ids.unwrap_or_default();
+    let post_ids = &model.post_ids.clone().unwrap_or_default();
     system_user_post_service::save_batch(&model.id, post_ids).await?;
+    // 记录日志
+    OperateLogBuilder::new("用户模块", "新增用户")
+        .biz_id(&model.id)
+        .action(format!("修改了用户: {}", &model.username))
+        .diff(&old_user, &model) // 记录完整对象快照
+        .record()
+        .await?;
     Ok(())
 }
 
