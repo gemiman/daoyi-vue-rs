@@ -1,7 +1,7 @@
 use crate::configs::AppConfig;
 use crate::context::HttpRequestContext;
 use crate::enumeration::ID_ROOT;
-use crate::enumeration::redis_keys::{CHANNEL_OPERATE_LOG, MAIL_SEND_STREAM_KEY};
+use crate::enumeration::redis_keys::CHANNEL_OPERATE_LOG;
 use crate::error::{ApiError, ApiResult};
 use crate::redis_utils;
 use crate::response::ApiResponse;
