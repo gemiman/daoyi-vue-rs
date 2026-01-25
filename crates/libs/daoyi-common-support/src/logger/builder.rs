@@ -108,7 +108,7 @@ impl OperateLogBuilder {
 
                     let old_str = value_to_simple_string(v_old);
                     let new_str = value_to_simple_string(v_new);
-                    changes.push(format!("将{}从{}更新为{}", k, old_str, new_str));
+                    changes.push(format!("将【{}】从【{}】更新为【{}】", k, old_str, new_str));
                 }
             }
         }
