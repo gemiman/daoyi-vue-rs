@@ -174,12 +174,6 @@ CREATE TABLE infra.infra_codegen_column
 );
 create table infra.infra_data_source_config
 (
-    tableoid           oid                               not null,
-    cmax               cid                               not null,
-    xmax               xid                               not null,
-    cmin               cid                               not null,
-    xmin               xid                               not null,
-    ctid               tid                               not null,
     id                 character varying(32) primary key not null,                           -- 主键编号
     name               character varying(100)            not null default '',                -- 参数名称
     url                character varying(1024)           not null,                           -- 数据源连接
